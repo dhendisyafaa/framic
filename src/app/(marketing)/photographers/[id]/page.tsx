@@ -6,11 +6,12 @@ import { BookingButton } from "@/components/features/booking/booking-button"
 import Link from "next/link"
 import { notFound } from "next/navigation"
 import { cn } from "@/lib/utils"
+import { getBaseUrl } from "@/lib/api-url"
 
 import { PortfolioGallery } from "@/components/features/portfolio/portfolio-gallery"
 
 async function getPhotographerDetail(id: string) {
-  const res = await fetch(`${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/api/photographers/${id}`, {
+  const res = await fetch(`${getBaseUrl()}/api/photographers/${id}`, {
     cache: 'no-store'
   })
   if (!res.ok) return null

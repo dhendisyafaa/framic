@@ -1,7 +1,7 @@
 import { EventCard } from "@/components/features/event/event-card"
 import { Users, Briefcase, Info } from "lucide-react"
 import { currentUser } from "@clerk/nextjs/server"
-import { getBaseUrl } from "@/lib/utils"
+import { getBaseUrl } from "@/lib/api-url"
 
 async function getOpenRecruitments() {
   const res = await fetch(`${getBaseUrl()}/api/events/open`, {

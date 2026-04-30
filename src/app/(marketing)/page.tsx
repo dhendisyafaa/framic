@@ -2,9 +2,10 @@ import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card"
 import { Star, MapPin, Camera, CheckCircle, ShieldCheck, Instagram, ArrowRight } from "lucide-react"
+import { getBaseUrl } from "@/lib/api-url"
 
 async function getTopPhotographers() {
-  const res = await fetch(`${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/api/photographers?limit=8&sortBy=rating`, {
+  const res = await fetch(`${getBaseUrl()}/api/photographers?limit=8&sortBy=rating`, {
     next: { revalidate: 0 } // Cache disabled for testing
   })
   if (!res.ok) return []

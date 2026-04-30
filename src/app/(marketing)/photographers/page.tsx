@@ -1,5 +1,6 @@
 import { PhotographerCard } from "@/components/features/photographer/photographer-card"
 import { PhotographerFilter } from "@/components/features/photographer/photographer-filter"
+import { getBaseUrl } from "@/lib/api-url"
 import { Camera } from "lucide-react"
 
 async function getPhotographers(searchParams: { [key: string]: string | string[] | undefined }) {
@@ -9,7 +10,7 @@ async function getPhotographers(searchParams: { [key: string]: string | string[]
   if (searchParams.minRating) params.set("minRating", searchParams.minRating as string)
   if (searchParams.sortBy) params.set("sortBy", searchParams.sortBy as string)
 
-  const res = await fetch(`${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/api/photographers?${params.toString()}`, {
+  const res = await fetch(`${getBaseUrl()}/api/photographers?${params.toString()}`, {
     cache: 'no-store'
   })
 

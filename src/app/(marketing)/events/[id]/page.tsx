@@ -11,7 +11,7 @@ import { currentUser } from "@clerk/nextjs/server"
 import { db } from "@/db"
 import { photographerProfiles } from "@/db/schema"
 import { eq } from "drizzle-orm"
-import { getBaseUrl } from "@/lib/utils"
+import { getBaseUrl } from "@/lib/api-url"
 
 async function getEventDetail(id: string) {
   const res = await fetch(`${getBaseUrl()}/api/events/${id}`, {
