@@ -11,9 +11,10 @@ import { currentUser } from "@clerk/nextjs/server"
 import { db } from "@/db"
 import { photographerProfiles } from "@/db/schema"
 import { eq } from "drizzle-orm"
+import { getBaseUrl } from "@/lib/utils"
 
 async function getEventDetail(id: string) {
-  const res = await fetch(`${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/api/events/${id}`, {
+  const res = await fetch(`${getBaseUrl()}/api/events/${id}`, {
     cache: 'no-store'
   })
   if (!res.ok) return null
@@ -29,7 +30,7 @@ export default async function EventDetailPage({
   const { id: eventId } = await params
   const event = await getEventDetail(eventId)
   const user = await currentUser()
-  
+
   // Periksa role dari Clerk
   let isPhotographer = user?.publicMetadata?.role === "photographer"
 
@@ -40,7 +41,7 @@ export default async function EventDetailPage({
       .from(photographerProfiles)
       .where(eq(photographerProfiles.clerkId, user.id))
       .limit(1)
-    
+
     if (pgProfile) {
       isPhotographer = true
     }
@@ -74,12 +75,12 @@ export default async function EventDetailPage({
                 </div>
               )}
             </div>
-            
+
             <CardContent className="p-8 flex flex-col gap-6">
               {event.isOpenRecruitment && (
                 <div className="flex flex-col gap-4 border-b border-border/50 pb-6">
                   <h3 className="font-bold text-slate-900 border-l-4 border-primary pl-3">Info Lowongan</h3>
-                  
+
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center">
                       <Users className="w-4 h-4 text-slate-500" />
@@ -101,14 +102,14 @@ export default async function EventDetailPage({
                       </span>
                     </div>
                   </div>
-                  
+
                   {isPhotographer ? (
                     (() => {
                       // Cek apakah fotografer ini sudah ada di daftar pengisi acara (termasuk yang sudah accepted/mitra tetap)
                       const isAlreadyAssigned = event.photographers?.some(
                         (p: any) => p.clerkId === user?.id
                       );
-                      
+
                       if (isAlreadyAssigned) {
                         return (
                           <div className="bg-emerald-50 text-emerald-700 p-4 rounded-xl text-sm border border-emerald-200 mt-2 font-bold flex items-center gap-2">
@@ -117,7 +118,7 @@ export default async function EventDetailPage({
                           </div>
                         );
                       }
-                      
+
                       return <div className="w-full mt-2"><RequestEventButton eventId={event.id} isPhotographer={isPhotographer} /></div>;
                     })()
                   ) : (
@@ -150,7 +151,7 @@ export default async function EventDetailPage({
         <div className="flex-1 flex flex-col gap-8 w-full mt-2">
           <div className="flex flex-col gap-4">
             <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight text-slate-900">{event.namaEvent}</h1>
-            
+
             <div className="flex flex-wrap gap-4 text-sm font-medium mt-2">
               <div className="flex items-center gap-2 bg-slate-100 text-slate-700 px-4 py-2 rounded-full">
                 <Calendar className="w-4 h-4 text-slate-500" />

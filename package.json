@@ -22,6 +22,8 @@
     "db:migrate": "npx dotenv-cli -e .env.local -- drizzle-kit migrate",
     "db:studio": "npx dotenv-cli -e .env.local -- drizzle-kit studio",
     "db:push": "npx dotenv-cli -e .env.local -- drizzle-kit push",
+    "db:push:prod": "npx dotenv-cli -e .env.production -- drizzle-kit push",
+    "db:migrate:prod": "npx dotenv-cli -e .env.production -- drizzle-kit migrate",
     "approve:pg": "npx dotenv-cli -e .env.local -- tsx scripts/approve-pg.ts",
     "approve:mitra": "npx dotenv-cli -e .env.local -- tsx scripts/approve-mitra.ts",
     "db:clear": "npx dotenv-cli -e .env.local -- tsx scripts/clear-db.ts"

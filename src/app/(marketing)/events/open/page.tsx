@@ -1,9 +1,10 @@
 import { EventCard } from "@/components/features/event/event-card"
 import { Users, Briefcase, Info } from "lucide-react"
 import { currentUser } from "@clerk/nextjs/server"
+import { getBaseUrl } from "@/lib/utils"
 
 async function getOpenRecruitments() {
-  const res = await fetch(`${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/api/events/open`, {
+  const res = await fetch(`${getBaseUrl()}/api/events/open`, {
     cache: 'no-store'
   })
   if (!res.ok) return []
@@ -31,13 +32,13 @@ export default async function OpenRecruitmentPage() {
       </div>
 
       <div className="bg-blue-50/50 border border-blue-100 p-6 rounded-2xl flex items-start gap-4 max-w-4xl mx-auto">
-         <Info className="w-5 h-5 text-blue-500 mt-1 flex-shrink-0" />
-         <div className="flex flex-col gap-1">
-            <h4 className="font-bold text-blue-900">Cara Melamar?</h4>
-            <p className="text-sm text-blue-800/80 leading-relaxed">
-               Untuk saat ini, silakan hubungi mitra atau admin melalui kontak yang tersedia untuk pengajuan diri. Fitur <strong>"Lamar Langsung"</strong> dari dashboard sedang dalam proses pengembangan Phase 6.
-            </p>
-         </div>
+        <Info className="w-5 h-5 text-blue-500 mt-1 flex-shrink-0" />
+        <div className="flex flex-col gap-1">
+          <h4 className="font-bold text-blue-900">Cara Melamar?</h4>
+          <p className="text-sm text-blue-800/80 leading-relaxed">
+            Untuk saat ini, silakan hubungi mitra atau admin melalui kontak yang tersedia untuk pengajuan diri. Fitur <strong>"Lamar Langsung"</strong> dari dashboard sedang dalam proses pengembangan Phase 6.
+          </p>
+        </div>
       </div>
 
       {/* Grid Results */}
@@ -48,11 +49,11 @@ export default async function OpenRecruitmentPage() {
           ))
         ) : (
           <div className="col-span-full py-24 flex flex-col items-center justify-center gap-4 bg-slate-50 border-2 border-dashed rounded-[2.5rem]">
-             <Users className="w-12 h-12 text-slate-300" />
-             <div className="text-center">
-               <p className="text-slate-500 font-bold text-lg">Belum ada lowongan aktif.</p>
-               <p className="text-muted-foreground text-sm">Cek kembali nanti untuk melihat update dari mitra kami.</p>
-             </div>
+            <Users className="w-12 h-12 text-slate-300" />
+            <div className="text-center">
+              <p className="text-slate-500 font-bold text-lg">Belum ada lowongan aktif.</p>
+              <p className="text-muted-foreground text-sm">Cek kembali nanti untuk melihat update dari mitra kami.</p>
+            </div>
           </div>
         )}
       </div>
