@@ -49,7 +49,7 @@ export default function AdminVerificationPage() {
          return json
       },
       onSuccess: () => {
-         toast.success("Berhasil menyetujui request! 🎉")
+         toast.success("Berhasil menyetujui request!")
          queryClient.invalidateQueries({ queryKey: ["admin-verifications"] })
       },
       onError: (err: any) => {
