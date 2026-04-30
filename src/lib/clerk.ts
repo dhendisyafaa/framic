@@ -75,6 +75,9 @@ export function getRolesFromMetadata(
  * Cek apakah user memiliki role tertentu.
  */
 export function hasRole(roles: UserRole[], role: UserRole): boolean {
+  if (role === "photographer") {
+    return roles.includes("photographer")
+  }
   return roles.includes(role)
 }
 

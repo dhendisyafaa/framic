@@ -1,5 +1,5 @@
 import { currentUser } from "@clerk/nextjs/server"
-import { getRolesFromMetadata } from "@/lib/clerk"
+import { getRolesFromMetadata, isPhotographer, isMitra } from "@/lib/clerk"
 import { CustomerDashboard } from "@/components/features/dashboard/customer-dashboard"
 import { PhotographerDashboard } from "@/components/features/dashboard/photographer-dashboard"
 import { MitraDashboard } from "@/components/features/dashboard/mitra-dashboard"
@@ -39,12 +39,12 @@ export default async function DashboardPage() {
   // B. Tentukan Dashboard yang ditampilkan berdasarkan prioritas & status suspensi
 
   // 1. Mitra (Hanya jika tidak disuspend)
-  if (roles.includes("mitra") && !isMitraSuspended && mitra) {
+  if (isMitra(roles) && !isMitraSuspended && mitra) {
     return <MitraDashboard clerkId={clerkUser.id} mitraId={mitra.id} />
   }
 
   // 2. Photographer (Hanya jika tidak disuspend)
-  if (roles.includes("photographer") && !isPgSuspended) {
+  if (isPhotographer(roles) && !isPgSuspended) {
     return <PhotographerDashboard clerkId={clerkUser.id} />
   }
 

@@ -148,9 +148,14 @@ adminRouter.post("/verifications/:targetClerkId/approve-photographer", async (c)
       await tx.update(users).set({ roles: dbRoles }).where(eq(users.clerkId, targetClerkId))
 
       // Update Clerk Metadata
+      const clerkUser = await clerk.users.getUser(targetClerkId)
+      const existingRoles = getRolesFromMetadata(clerkUser.publicMetadata)
+      const newRoles = Array.from(new Set([...existingRoles, "photographer" as const]))
+
       await clerk.users.updateUserMetadata(targetClerkId, { 
         publicMetadata: { 
-          role: "photographer" 
+          roles: newRoles,
+          role: newRoles // Backwards compatibility for single role logic if any
         } 
       })
     })
@@ -183,9 +188,14 @@ adminRouter.post("/verifications/:targetClerkId/approve-mitra", async (c) => {
       await tx.update(users).set({ roles: dbRoles }).where(eq(users.clerkId, targetClerkId))
 
       // Update Clerk Metadata
+      const clerkUser = await clerk.users.getUser(targetClerkId)
+      const existingRoles = getRolesFromMetadata(clerkUser.publicMetadata)
+      const newRoles = Array.from(new Set([...existingRoles, "mitra" as const]))
+
       await clerk.users.updateUserMetadata(targetClerkId, { 
         publicMetadata: { 
-          role: "mitra" 
+          roles: newRoles,
+          role: newRoles
         } 
       })
     })
