@@ -64,7 +64,7 @@ export async function getCurrentUserId(): Promise<string | null> {
 export function getRolesFromMetadata(
   publicMetadata: Record<string, unknown>,
 ): UserRole[] {
-  const roles = publicMetadata?.roles
+  const roles = publicMetadata?.roles || publicMetadata?.role
   if (Array.isArray(roles) && roles.length > 0) {
     return roles as UserRole[]
   }
