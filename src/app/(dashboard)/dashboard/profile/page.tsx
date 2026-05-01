@@ -20,6 +20,7 @@ import { zodResolver } from "@hookform/resolvers/zod"
 import { useUser } from "@clerk/nextjs"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import {
+  AlertCircle,
   ArrowLeft,
   Camera,
   CheckCircle2,
@@ -293,7 +294,7 @@ export default function ManageProfilePage() {
             <AlertCircle className="w-6 h-6 text-amber-500" />
           </div>
         </div>
-        
+
         <div className="space-y-3 max-w-md">
           <h2 className="text-4xl font-black text-slate-900 tracking-tight uppercase">Profil Sedang Ditinjau</h2>
           <p className="text-slate-500 font-medium leading-relaxed">
@@ -302,7 +303,7 @@ export default function ManageProfilePage() {
         </div>
 
         <div className="flex flex-col sm:flex-row gap-4 w-full max-w-xs">
-          <Button 
+          <Button
             className="flex-1 bg-slate-900 hover:bg-black text-white font-bold rounded-2xl h-14 shadow-xl"
             onClick={() => window.location.href = "/dashboard"}
           >
