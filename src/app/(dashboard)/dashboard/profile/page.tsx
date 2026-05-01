@@ -282,17 +282,39 @@ export default function ManageProfilePage() {
     )
   }
 
-  if (!photographer) {
+  if (!photographer || photographer.verificationStatus !== "verified") {
     return (
-      <div className="container mx-auto p-12 text-center flex flex-col items-center gap-6">
-        <div className="w-20 h-20 bg-rose-100 text-rose-600 rounded-3xl flex items-center justify-center animate-bounce">
-          <CheckCircle2 size={40} />
+      <div className="container mx-auto p-12 text-center flex flex-col items-center gap-8 min-h-[70vh] justify-center">
+        <div className="relative">
+          <div className="w-24 h-24 bg-amber-100 text-amber-600 rounded-[2rem] flex items-center justify-center animate-pulse shadow-xl shadow-amber-500/10">
+            <Clock size={48} />
+          </div>
+          <div className="absolute -bottom-2 -right-2 bg-white p-2 rounded-full shadow-lg">
+            <AlertCircle className="w-6 h-6 text-amber-500" />
+          </div>
         </div>
-        <h2 className="text-3xl font-black text-slate-900 tracking-tight">Profil Belum Siap</h2>
-        <p className="text-slate-500 max-w-md mx-auto font-medium">
-          Anda belum terdaftar sebagai fotografer atau pendaftaran Anda masih menunggu verifikasi admin.
-        </p>
-        <Button onClick={() => window.location.href = "/dashboard"}>Kembali ke Dashboard</Button>
+        
+        <div className="space-y-3 max-w-md">
+          <h2 className="text-4xl font-black text-slate-900 tracking-tight uppercase">Profil Sedang Ditinjau</h2>
+          <p className="text-slate-500 font-medium leading-relaxed">
+            Halaman manajemen profil hanya dapat diakses setelah akun fotografer Anda <span className="text-indigo-600 font-bold">Terverifikasi</span> oleh tim Admin Framic.
+          </p>
+        </div>
+
+        <div className="flex flex-col sm:flex-row gap-4 w-full max-w-xs">
+          <Button 
+            className="flex-1 bg-slate-900 hover:bg-black text-white font-bold rounded-2xl h-14 shadow-xl"
+            onClick={() => window.location.href = "/dashboard"}
+          >
+            <ArrowLeft className="w-5 h-5 mr-2" /> Dashboard
+          </Button>
+        </div>
+
+        <div className="pt-8 border-t border-slate-100 w-full max-w-sm">
+          <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em]">
+            Status Saat Ini: <span className="text-amber-600">{photographer?.verificationStatus || "Pending"}</span>
+          </p>
+        </div>
       </div>
     )
   }
