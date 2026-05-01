@@ -136,34 +136,50 @@ adminRouter.post("/verifications/:targetClerkId/approve-photographer", async (c)
 
   try {
     await db.transaction(async (tx) => {
-      // Update DB Profile
-      await tx
+      // 1. Update status di database (photographer_profiles)
+      const [pg] = await tx
         .update(photographerProfiles)
-        .set({ verificationStatus: "verified", updatedAt: new Date() })
+        .set({ 
+          verificationStatus: "verified", 
+          verifiedAt: new Date(),
+          updatedAt: new Date() 
+        })
         .where(eq(photographerProfiles.clerkId, targetClerkId))
+        .returning()
 
-      // Update DB User Roles
+      if (!pg) throw new Error("Profil fotografer tidak ditemukan")
+
+      // 2. Update role di database (users)
       const [dbUser] = await tx.select().from(users).where(eq(users.clerkId, targetClerkId)).limit(1)
-      const dbRoles = Array.from(new Set([...(dbUser?.roles || []), "photographer" as const]))
-      await tx.update(users).set({ roles: dbRoles }).where(eq(users.clerkId, targetClerkId))
+      const currentRoles = dbUser?.roles || []
+      const newRoles = Array.from(new Set([...currentRoles, "photographer" as const]))
+      
+      await tx.update(users)
+        .set({ 
+          roles: newRoles,
+          updatedAt: new Date()
+        })
+        .where(eq(users.clerkId, targetClerkId))
 
-      // Update Clerk Metadata
+      // 3. Update Metadata di Clerk
       const clerkUser = await clerk.users.getUser(targetClerkId)
-      const existingRoles = getRolesFromMetadata(clerkUser.publicMetadata)
-      const newRoles = Array.from(new Set([...existingRoles, "photographer" as const]))
+      const currentMetadata = clerkUser.publicMetadata || {}
+      const existingRolesMetadata = getRolesFromMetadata(currentMetadata)
+      const finalRolesMetadata = Array.from(new Set([...existingRolesMetadata, "photographer" as const]))
 
       await clerk.users.updateUserMetadata(targetClerkId, { 
         publicMetadata: { 
-          roles: newRoles,
-          role: newRoles // Backwards compatibility for single role logic if any
+          ...currentMetadata,
+          roles: finalRolesMetadata,
+          role: finalRolesMetadata // Backwards compatibility
         } 
       })
     })
 
     return c.json({ success: true, message: "Photographer approved" })
-  } catch (err) {
+  } catch (err: any) {
     captureError(err, { context: "admin-approve-pg", targetClerkId })
-    return c.json({ success: false, error: "Failed to approve" }, 500)
+    return c.json({ success: false, error: err.message || "Failed to approve" }, 500)
   }
 })
 
@@ -176,34 +192,50 @@ adminRouter.post("/verifications/:targetClerkId/approve-mitra", async (c) => {
 
   try {
     await db.transaction(async (tx) => {
-      // Update DB Profile
-      await tx
+      // 1. Update status di database (mitra_profiles)
+      const [mitra] = await tx
         .update(mitraProfiles)
-        .set({ verificationStatus: "verified", updatedAt: new Date() })
+        .set({ 
+          verificationStatus: "verified", 
+          verifiedAt: new Date(),
+          updatedAt: new Date() 
+        })
         .where(eq(mitraProfiles.clerkId, targetClerkId))
+        .returning()
 
-      // Update DB User Roles
+      if (!mitra) throw new Error("Profil mitra tidak ditemukan")
+
+      // 2. Update role di database (users)
       const [dbUser] = await tx.select().from(users).where(eq(users.clerkId, targetClerkId)).limit(1)
-      const dbRoles = Array.from(new Set([...(dbUser?.roles || []), "mitra" as const]))
-      await tx.update(users).set({ roles: dbRoles }).where(eq(users.clerkId, targetClerkId))
+      const currentRoles = dbUser?.roles || []
+      const newRoles = Array.from(new Set([...currentRoles, "mitra" as const]))
+      
+      await tx.update(users)
+        .set({ 
+          roles: newRoles,
+          updatedAt: new Date()
+        })
+        .where(eq(users.clerkId, targetClerkId))
 
-      // Update Clerk Metadata
+      // 3. Update Metadata di Clerk
       const clerkUser = await clerk.users.getUser(targetClerkId)
-      const existingRoles = getRolesFromMetadata(clerkUser.publicMetadata)
-      const newRoles = Array.from(new Set([...existingRoles, "mitra" as const]))
+      const currentMetadata = clerkUser.publicMetadata || {}
+      const existingRolesMetadata = getRolesFromMetadata(currentMetadata)
+      const finalRolesMetadata = Array.from(new Set([...existingRolesMetadata, "mitra" as const]))
 
       await clerk.users.updateUserMetadata(targetClerkId, { 
         publicMetadata: { 
-          roles: newRoles,
-          role: newRoles
+          ...currentMetadata,
+          roles: finalRolesMetadata,
+          role: finalRolesMetadata
         } 
       })
     })
 
     return c.json({ success: true, message: "Mitra approved" })
-  } catch (err) {
+  } catch (err: any) {
     captureError(err, { context: "admin-approve-mitra", targetClerkId })
-    return c.json({ success: false, error: "Failed to approve" }, 500)
+    return c.json({ success: false, error: err.message || "Failed to approve" }, 500)
   }
 })
 
