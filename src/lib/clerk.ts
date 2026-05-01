@@ -64,7 +64,7 @@ export async function getCurrentUserId(): Promise<string | null> {
 export function getRolesFromMetadata(
   publicMetadata: Record<string, unknown>,
 ): UserRole[] {
-  const roles = publicMetadata?.roles || publicMetadata?.role
+  const roles = publicMetadata?.roles
   if (Array.isArray(roles) && roles.length > 0) {
     return roles as UserRole[]
   }
@@ -75,9 +75,6 @@ export function getRolesFromMetadata(
  * Cek apakah user memiliki role tertentu.
  */
 export function hasRole(roles: UserRole[], role: UserRole): boolean {
-  if (role === "photographer") {
-    return roles.includes("photographer")
-  }
   return roles.includes(role)
 }
 

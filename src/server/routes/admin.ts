@@ -170,8 +170,7 @@ adminRouter.post("/verifications/:targetClerkId/approve-photographer", async (c)
       await clerk.users.updateUserMetadata(targetClerkId, { 
         publicMetadata: { 
           ...currentMetadata,
-          roles: finalRolesMetadata,
-          role: finalRolesMetadata // Backwards compatibility
+          roles: finalRolesMetadata
         } 
       })
     })
@@ -226,8 +225,7 @@ adminRouter.post("/verifications/:targetClerkId/approve-mitra", async (c) => {
       await clerk.users.updateUserMetadata(targetClerkId, { 
         publicMetadata: { 
           ...currentMetadata,
-          roles: finalRolesMetadata,
-          role: finalRolesMetadata
+          roles: finalRolesMetadata
         } 
       })
     })
