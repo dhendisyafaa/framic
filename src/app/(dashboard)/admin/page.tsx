@@ -14,14 +14,41 @@ import {
    Mail,
    MapPin,
    Calendar,
-   AlertCircle
+   AlertCircle,
+   Globe,
+   Phone,
+   ExternalLink,
+   FileText,
+   Tag,
+   Link as LinkIcon
 } from "lucide-react"
 import { toast } from "sonner"
 import { format } from "date-fns"
 
 interface VerificationData {
-   photographers: any[]
-   mitra: any[]
+   photographers: Array<{
+      clerkId: string
+      name: string
+      email: string
+      bio: string
+      kota: string
+      username: string
+      kategori: string[]
+      portfolioUrls: string[]
+      createdAt: string
+   }>
+   mitra: Array<{
+      clerkId: string
+      name: string
+      email: string
+      namaOrg: string
+      tipeMitra: string
+      alamat: string
+      nomorTelepon: string
+      websiteUrl: string | null
+      dokumenLegalitasUrl: string | null
+      createdAt: string
+   }>
 }
 
 export default function AdminVerificationPage() {
@@ -49,7 +76,25 @@ export default function AdminVerificationPage() {
          return json
       },
       onSuccess: () => {
-         toast.success("Berhasil menyetujui request!")
+         toast.success("Berhasil menyetujui pengajuan!")
+         queryClient.invalidateQueries({ queryKey: ["admin-verifications"] })
+      },
+      onError: (err: any) => {
+         toast.error(err.message)
+      }
+   })
+
+   const rejectMutation = useMutation({
+      mutationFn: async ({ clerkId, type }: { clerkId: string; type: "photographer" | "mitra" }) => {
+         const res = await fetch(`/api/admin/verifications/${clerkId}/reject-${type}`, {
+            method: "POST",
+         })
+         const json = await res.json()
+         if (!json.success) throw new Error(json.error)
+         return json
+      },
+      onSuccess: () => {
+         toast.success("Berhasil menolak pengajuan!")
          queryClient.invalidateQueries({ queryKey: ["admin-verifications"] })
       },
       onError: (err: any) => {
@@ -102,25 +147,81 @@ export default function AdminVerificationPage() {
                                  </CardDescription>
                               </div>
                            </CardHeader>
-                           <CardContent className="p-6 space-y-4">
-                              <div className="space-y-3">
-                                 <div className="flex items-center gap-2 text-xs font-bold text-slate-400 uppercase tracking-widest">
-                                    <MapPin className="w-3.5 h-3.5" /> Domisili: <span className="text-slate-900">{pg.kota}</span>
+                           <CardContent className="p-6 space-y-6">
+                              <div className="space-y-4">
+                                 <div className="flex flex-wrap gap-2">
+                                    {pg.kategori.map((kat: string) => (
+                                       <Badge key={kat} variant="secondary" className="bg-indigo-50 text-indigo-700 border-none px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider">
+                                          <Tag className="w-3 h-3 mr-1" /> {kat}
+                                       </Badge>
+                                    ))}
                                  </div>
-                                 <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100 text-sm text-slate-600 leading-relaxed">
-                                    "{pg.bio}"
+
+                                 <div className="grid grid-cols-2 gap-4">
+                                    <div className="space-y-1">
+                                       <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Username</div>
+                                       <div className="text-sm font-bold text-slate-900">@{pg.username}</div>
+                                    </div>
+                                    <div className="space-y-1">
+                                       <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Lokasi</div>
+                                       <div className="text-sm font-bold text-slate-900 flex items-center gap-1">
+                                          <MapPin className="w-3.5 h-3.5 text-rose-500" /> {pg.kota}
+                                       </div>
+                                    </div>
+                                 </div>
+
+                                 <div className="space-y-2">
+                                    <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Bio / Deskripsi</div>
+                                    <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100 text-sm text-slate-600 leading-relaxed italic">
+                                       "{pg.bio}"
+                                    </div>
+                                 </div>
+
+                                 {pg.portfolioUrls.length > 0 && (
+                                    <div className="space-y-3">
+                                       <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Portofolio (Preview)</div>
+                                       <div className="grid grid-cols-2 gap-3">
+                                          {pg.portfolioUrls.map((url: string, idx: number) => (
+                                             <a
+                                                key={idx}
+                                                href={url}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                className="group/porto relative aspect-[4/3] rounded-2xl overflow-hidden border border-slate-100 bg-slate-100 shadow-sm"
+                                             >
+                                                <img
+                                                   src={url}
+                                                   alt={`Portofolio ${idx + 1}`}
+                                                   className="w-full h-full object-cover transition-transform duration-500 group-hover/porto:scale-110"
+                                                />
+                                                <div className="absolute inset-0 bg-black/40 opacity-0 group-hover/porto:opacity-100 transition-opacity flex items-center justify-center">
+                                                   <ExternalLink className="w-5 h-5 text-white" />
+                                                </div>
+                                             </a>
+                                          ))}
+                                       </div>
+                                    </div>
+                                 )}
+
+                                 <div className="flex items-center gap-2 text-[10px] font-bold text-slate-400 uppercase tracking-widest pt-2">
+                                    <Calendar className="w-3.5 h-3.5" /> Diajukan: <span className="text-slate-900">{format(new Date(pg.createdAt), "d MMM yyyy, HH:mm")}</span>
                                  </div>
                               </div>
-                              <div className="pt-4 flex items-center gap-3 border-t border-slate-100">
+
+                              <div className="pt-6 flex items-center gap-3 border-t border-slate-100">
                                  <Button
-                                    className="flex-1 bg-emerald-600 hover:bg-emerald-700 font-bold rounded-xl"
+                                    className="flex-1 bg-primary hover:bg-primary/90 text-white font-bold rounded-xl py-3 transition-all"
                                     onClick={() => approveMutation.mutate({ clerkId: pg.clerkId, type: "photographer" })}
-                                    disabled={approveMutation.isPending}
+                                    disabled={approveMutation.isPending || rejectMutation.isPending}
                                  >
-                                    <CheckCircle2 className="w-4 h-4 mr-2" /> Approve
+                                    <CheckCircle2 className="w-4 h-4 mr-2" /> Setujui
                                  </Button>
-                                 <Button variant="ghost" className="rounded-xl text-rose-500 font-bold">
-                                    <XCircle className="w-4 h-4" />
+                                 <Button
+                                    className="flex-1 bg-rose-600 hover:bg-rose-700 text-white font-bold rounded-xl py-3 transition-all"
+                                    onClick={() => rejectMutation.mutate({ clerkId: pg.clerkId, type: "photographer" })}
+                                    disabled={approveMutation.isPending || rejectMutation.isPending}
+                                 >
+                                    <XCircle className="w-4 h-4 mr-2" /> Tolak
                                  </Button>
                               </div>
                            </CardContent>
@@ -157,17 +258,88 @@ export default function AdminVerificationPage() {
                                  </CardDescription>
                               </div>
                            </CardHeader>
-                           <CardContent className="p-6">
-                              <div className="flex flex-col gap-4">
-                                 <div className="flex items-center gap-2 text-xs font-bold text-slate-400 uppercase tracking-widest leading-none">
-                                    <Calendar className="w-3.5 h-3.5" /> Diajukan: <span className="text-slate-900">{format(new Date(m.createdAt), "d MMM yyyy")}</span>
+                           <CardContent className="p-6 space-y-6">
+                              <div className="space-y-5">
+                                 <div className="grid grid-cols-1 gap-4">
+                                    <div className="flex items-center gap-3">
+                                       <div className="w-10 h-10 rounded-full bg-blue-50 flex items-center justify-center text-blue-600 shrink-0">
+                                          <Building2 size={18} />
+                                       </div>
+                                       <div className="space-y-0.5">
+                                          <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Tipe Mitra</div>
+                                          <div className="text-sm font-bold text-slate-900 capitalize">{m.tipeMitra.replace(/_/g, ' ')}</div>
+                                       </div>
+                                    </div>
+
+                                    <div className="flex items-center gap-3">
+                                       <div className="w-10 h-10 rounded-full bg-emerald-50 flex items-center justify-center text-emerald-600 shrink-0">
+                                          <Phone size={18} />
+                                       </div>
+                                       <div className="space-y-0.5">
+                                          <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Kontak</div>
+                                          <div className="text-sm font-bold text-slate-900">{m.nomorTelepon}</div>
+                                       </div>
+                                    </div>
                                  </div>
+
+                                 <div className="space-y-2">
+                                    <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Alamat</div>
+                                    <div className="p-4 bg-slate-50 border border-slate-100 rounded-2xl text-sm text-slate-600 leading-relaxed">
+                                       <MapPin className="w-3.5 h-3.5 inline mr-1 text-rose-500" /> {m.alamat}
+                                    </div>
+                                 </div>
+
+                                 <div className="flex flex-col gap-2">
+                                    <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Dokumen & Link</div>
+                                    {m.websiteUrl && (
+                                       <a
+                                          href={m.websiteUrl}
+                                          target="_blank"
+                                          rel="noopener noreferrer"
+                                          className="flex items-center gap-3 p-3 bg-white border border-slate-100 rounded-xl text-xs font-bold text-slate-600 hover:bg-blue-50 hover:border-blue-200 transition-all"
+                                       >
+                                          <Globe className="w-4 h-4 text-blue-500" /> Website Perusahaan
+                                          <ExternalLink className="w-3 h-3 ml-auto text-slate-300" />
+                                       </a>
+                                    )}
+                                    {m.dokumenLegalitasUrl && (
+                                       <div className="space-y-2">
+                                          <a
+                                             href={m.dokumenLegalitasUrl}
+                                             target="_blank"
+                                             rel="noopener noreferrer"
+                                             className="block relative aspect-video rounded-2xl overflow-hidden border border-slate-100 bg-slate-50 group/preview"
+                                          >
+                                             <img
+                                                src={m.dokumenLegalitasUrl.endsWith('.pdf') ? m.dokumenLegalitasUrl.replace('.pdf', '.jpg') : m.dokumenLegalitasUrl}
+                                                alt="Dokumen Legalitas"
+                                                className="w-full h-full object-cover transition-transform duration-500 group-hover/preview:scale-105"
+                                             />
+                                             <div className="absolute inset-0 bg-slate-900/10 group-hover/preview:bg-transparent transition-colors" />
+                                          </a>
+                                       </div>
+                                    )}
+                                 </div>
+
+                                 <div className="flex items-center gap-2 text-[10px] font-bold text-slate-400 uppercase tracking-widest pt-2">
+                                    <Calendar className="w-3.5 h-3.5" /> Diajukan: <span className="text-slate-900">{format(new Date(m.createdAt), "d MMM yyyy, HH:mm")}</span>
+                                 </div>
+                              </div>
+
+                              <div className="pt-6 flex items-center gap-3 border-t border-slate-100">
                                  <Button
-                                    className="w-full bg-blue-600 hover:bg-blue-700 font-bold rounded-xl py-6"
+                                    className="flex-1 bg-primary hover:bg-primary/90 text-white font-bold rounded-xl py-3 transition-all"
                                     onClick={() => approveMutation.mutate({ clerkId: m.clerkId, type: "mitra" })}
-                                    disabled={approveMutation.isPending}
+                                    disabled={approveMutation.isPending || rejectMutation.isPending}
                                  >
-                                    <ShieldCheck className="w-4 h-4 mr-2" /> Approve & Beri Akses Mitra
+                                    <ShieldCheck className="w-4 h-4 mr-2" /> Setujui
+                                 </Button>
+                                 <Button
+                                    className="flex-1 bg-rose-600 hover:bg-rose-700 text-white font-bold rounded-xl py-3 transition-all"
+                                    onClick={() => rejectMutation.mutate({ clerkId: m.clerkId, type: "mitra" })}
+                                    disabled={approveMutation.isPending || rejectMutation.isPending}
+                                 >
+                                    <XCircle className="w-4 h-4 mr-2" /> Tolak
                                  </Button>
                               </div>
                            </CardContent>

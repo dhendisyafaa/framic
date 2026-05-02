@@ -77,6 +77,9 @@ adminRouter.get("/verifications", async (c) => {
         clerkId: photographerProfiles.clerkId,
         bio: photographerProfiles.bio,
         kota: photographerProfiles.kotaDomisili,
+        username: photographerProfiles.username,
+        kategori: photographerProfiles.kategori,
+        portfolioUrls: photographerProfiles.portfolioUrls,
         status: photographerProfiles.verificationStatus,
         createdAt: photographerProfiles.createdAt,
       })
@@ -88,6 +91,11 @@ adminRouter.get("/verifications", async (c) => {
         id: mitraProfiles.id,
         clerkId: mitraProfiles.clerkId,
         namaOrg: mitraProfiles.namaOrganisasi,
+        tipeMitra: mitraProfiles.tipeMitra,
+        alamat: mitraProfiles.alamat,
+        nomorTelepon: mitraProfiles.nomorTelepon,
+        websiteUrl: mitraProfiles.websiteUrl,
+        dokumenLegalitasUrl: mitraProfiles.dokumenLegalitasUrl,
         status: mitraProfiles.verificationStatus,
         createdAt: mitraProfiles.createdAt,
       })
@@ -234,6 +242,56 @@ adminRouter.post("/verifications/:targetClerkId/approve-mitra", async (c) => {
   } catch (err: any) {
     captureError(err, { context: "admin-approve-mitra", targetClerkId })
     return c.json({ success: false, error: err.message || "Failed to approve" }, 500)
+  }
+})
+
+/**
+ * POST /api/admin/verifications/:targetClerkId/reject-photographer
+ */
+adminRouter.post("/verifications/:targetClerkId/reject-photographer", async (c) => {
+  const targetClerkId = c.req.param("targetClerkId")
+
+  try {
+    const [pg] = await db
+      .update(photographerProfiles)
+      .set({ 
+        verificationStatus: "rejected", 
+        updatedAt: new Date() 
+      })
+      .where(eq(photographerProfiles.clerkId, targetClerkId))
+      .returning()
+
+    if (!pg) throw new Error("Profil fotografer tidak ditemukan")
+
+    return c.json({ success: true, message: "Photographer rejected" })
+  } catch (err: any) {
+    captureError(err, { context: "admin-reject-pg", targetClerkId })
+    return c.json({ success: false, error: err.message || "Failed to reject" }, 500)
+  }
+})
+
+/**
+ * POST /api/admin/verifications/:targetClerkId/reject-mitra
+ */
+adminRouter.post("/verifications/:targetClerkId/reject-mitra", async (c) => {
+  const targetClerkId = c.req.param("targetClerkId")
+
+  try {
+    const [mitra] = await db
+      .update(mitraProfiles)
+      .set({ 
+        verificationStatus: "rejected", 
+        updatedAt: new Date() 
+      })
+      .where(eq(mitraProfiles.clerkId, targetClerkId))
+      .returning()
+
+    if (!mitra) throw new Error("Profil mitra tidak ditemukan")
+
+    return c.json({ success: true, message: "Mitra rejected" })
+  } catch (err: any) {
+    captureError(err, { context: "admin-reject-mitra", targetClerkId })
+    return c.json({ success: false, error: err.message || "Failed to reject" }, 500)
   }
 })
 

@@ -259,23 +259,13 @@ export function PhotographerDashboard({ clerkId }: { clerkId: string }) {
                           </div>
                         </div>
                         <Link href={`/orders/${order.id}`}>
-                          <Button size="sm" variant="outline" className="rounded-full font-bold px-6">Detail Order</Button>
+                          <Button size="sm" variant="outline" className="rounded-full font-bold px-6 cursor-pointer">Detail Order</Button>
                         </Link>
                       </div>
                       <div className="flex flex-col sm:flex-row items-center gap-3 mt-6">
                         <Button
-                          className="w-full sm:flex-1 rounded-xl bg-emerald-600 hover:bg-emerald-700 shadow-sm shadow-emerald-200"
-                          onClick={() => actionMutation.mutate({
-                            path: `orders/${order.id}/confirm`,
-                            invalidateKeys: ["photographer-orders"]
-                          })}
-                          disabled={actionMutation.isPending}
-                        >
-                          {actionMutation.isPending ? "Memproses..." : "Konfirmasi Order"}
-                        </Button>
-                        <Button
                           variant="outline"
-                          className="w-full sm:flex-1 rounded-xl border-slate-200 text-rose-600 hover:bg-rose-50 hover:border-rose-100"
+                          className="w-full sm:flex-1 rounded-xl border-slate-200 text-rose-600 hover:bg-rose-50 hover:border-rose-100 cursor-pointer"
                           onClick={() => actionMutation.mutate({
                             path: `orders/${order.id}/reject`,
                             invalidateKeys: ["photographer-orders"]
@@ -283,6 +273,16 @@ export function PhotographerDashboard({ clerkId }: { clerkId: string }) {
                           disabled={actionMutation.isPending}
                         >
                           Tolak Order
+                        </Button>
+                        <Button
+                          className="w-full sm:flex-1 rounded-xl bg-emerald-600 hover:bg-emerald-700 shadow-sm shadow-emerald-200 cursor-pointer"
+                          onClick={() => actionMutation.mutate({
+                            path: `orders/${order.id}/confirm`,
+                            invalidateKeys: ["photographer-orders"]
+                          })}
+                          disabled={actionMutation.isPending}
+                        >
+                          {actionMutation.isPending ? "Memproses..." : "Konfirmasi Order"}
                         </Button>
                       </div>
                     </CardContent>
