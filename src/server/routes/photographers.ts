@@ -536,15 +536,26 @@ photographersRouter.get("/:id", async (c) => {
     .orderBy(packages.harga) // termurah di atas
 
   // Fetch recent Reviews (max 5)
-  // Catatan MVP: Hanya me-return sekumpulan record reviews murni dari tabel.
-  // Untuk data "nama customer" akan di-resolve di frontend via Clerk Components (cth: UserProfile/User),
-  // sehingga tidak perlu ada bulk fetch Clerk tambahan di rute ini.
   const pgReviews = await db
     .select()
     .from(reviews)
     .where(eq(reviews.photographerId, pgId))
     .orderBy(sql`${reviews.createdAt} DESC`)
     .limit(5)
+
+  // Resolve customer names & avatars for reviews via Clerk
+  const enrichedReviews = await Promise.all(pgReviews.map(async (rev) => {
+    let customerName = "Customer"
+    let customerAvatarUrl = ""
+    try {
+      const u = await clerk.users.getUser(rev.customerClerkId)
+      customerName = `${u.firstName || ""} ${u.lastName || ""}`.trim() || "Customer"
+      customerAvatarUrl = u.imageUrl
+    } catch (err) {
+      console.warn(`[Review] Gagal mengambil data customer ${rev.customerClerkId} dari Clerk:`, err)
+    }
+    return { ...rev, customerName, customerAvatarUrl }
+  }))
 
   return c.json({
     success: true,
@@ -553,7 +564,7 @@ photographersRouter.get("/:id", async (c) => {
       nama,
       avatarUrl,
       packages: pgPackages,
-      recentReviews: pgReviews,
+      recentReviews: enrichedReviews,
     },
   })
 })

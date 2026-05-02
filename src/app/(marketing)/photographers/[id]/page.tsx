@@ -165,11 +165,21 @@ export default async function PhotographerDetailPage({
                   <div key={i} className="flex flex-col gap-3 pb-6 border-b border-slate-100 last:border-0">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-full bg-slate-200 flex items-center justify-center text-slate-500 font-bold text-xs uppercase tracking-widest">
-                          {rev.customerClerkId ? rev.customerClerkId.slice(0, 2) : "C"}
+                        <div className="w-10 h-10 rounded-full bg-slate-200 flex items-center justify-center text-slate-500 font-black text-sm uppercase tracking-widest overflow-hidden">
+                          {rev.customerAvatarUrl ? (
+                            <img src={rev.customerAvatarUrl} alt={rev.customerName} className="w-full h-full object-cover" />
+                          ) : (
+                            (rev.customerName || "C").slice(0, 1)
+                          )}
                         </div>
                         <div className="flex flex-col">
-                          <span className="font-bold text-sm">Customer #{rev.customerClerkId ? rev.customerClerkId.slice(-4) : "User"}</span>
+                          <span className="font-bold text-sm">
+                            {(() => {
+                              const name = rev.customerName || "Customer"
+                              if (name.length <= 2) return name + "*"
+                              return name.slice(0, 2) + "****" + name.slice(-1)
+                            })()}
+                          </span>
                           <div className="flex items-center gap-1">
                             {Array.from({ length: 5 }).map((_, j) => (
                               <Star key={j} className={cn("w-3 h-3", j < rev.rating ? "fill-primary text-primary" : "text-slate-200")} />
