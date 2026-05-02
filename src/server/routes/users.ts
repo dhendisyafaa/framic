@@ -227,6 +227,7 @@ usersRouter.post(
           kategori: data.kategori,
           portfolioUrls: data.portfolioUrls || [],
           verificationStatus: "pending", // Reset ke pending
+          createdAt: new Date(), // Update waktu pengajuan ke sekarang
           updatedAt: new Date(),
         })
         .where(eq(photographerProfiles.clerkId, clerkId))
@@ -245,6 +246,7 @@ usersRouter.post(
         portfolioUrls: data.portfolioUrls || [],
         verificationStatus: "pending",
         isAcceptingOrders: true,
+        createdAt: new Date(),
       })
       .returning()
 
@@ -315,7 +317,11 @@ usersRouter.post(
         const file = data.dokumenLegalitas
         const arrayBuffer = await file.arrayBuffer()
         const buffer = Buffer.from(arrayBuffer)
-        const result = await uploadToCloudinary(buffer, "framic/mitra-documents", { resourceType: "auto" })
+        const publicId = `Dokumen Legalitas - ${data.namaOrganisasi} - ${clerkUser.name}`
+        const result = await uploadToCloudinary(buffer, "framic/mitra-documents", {
+          resourceType: "auto",
+          publicId
+        })
         dokumenLegalitasUrl = result.secureUrl
       }
 
@@ -328,7 +334,8 @@ usersRouter.post(
           nomorTelepon: data.nomorTelepon,
           websiteUrl: data.websiteUrl || null,
           dokumenLegalitasUrl,
-          verificationStatus: "pending", // Reset ke pending
+          verificationStatus: "pending",
+          createdAt: new Date(),
           updatedAt: new Date(),
         })
         .where(eq(mitraProfiles.clerkId, clerkId))
@@ -343,8 +350,12 @@ usersRouter.post(
       const file = data.dokumenLegalitas
       const arrayBuffer = await file.arrayBuffer()
       const buffer = Buffer.from(arrayBuffer)
+      const publicId = `Dokumen Legalitas - ${data.namaOrganisasi} - ${clerkUser.name}`
       // Upload ke Cloudinary menggunakan helper
-      const result = await uploadToCloudinary(buffer, "framic/mitra-documents", { resourceType: "auto" })
+      const result = await uploadToCloudinary(buffer, "framic/mitra-documents", {
+        resourceType: "auto",
+        publicId
+      })
       dokumenLegalitasUrl = result.secureUrl
     }
 
@@ -360,6 +371,7 @@ usersRouter.post(
         dokumenLegalitasUrl,
         verificationStatus: "pending",
         platformFeePercent: 10,
+        createdAt: new Date(),
       })
       .returning()
 
