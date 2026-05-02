@@ -167,7 +167,7 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
                 <CardDescription className="font-medium text-slate-500">Fotografer telah mengunggah {order.photos?.length || 0} foto hasil sesi Anda.</CardDescription>
               </CardHeader>
               <CardContent className="p-8">
-                {/* FIX: ntar adain fitur button download all foto to zip, add lightbox for preview photo before download, and add watermark to all photo when customer doesn't full payment. */}
+                {/* FIX: ntar adain fitur button download all foto to zip, add lightbox for preview photo before download */}
                 {order.photos && order.photos.length > 0 ? (
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                     {order.photos.map((photo) => (
@@ -258,7 +258,7 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
                         onClick={() => actionMutation.mutate({ path: `payments/${orderId}/dp`, method: "POST" })}
                         disabled={actionMutation.isPending}
                       >
-                        <CreditCardIcon className="mr-3 w-5 h-5" /> Bayar DP Sekarang
+                        <CreditCardIcon className="mr-3 w-5 h-5" /> Bayar Uang Muka
                       </Button>
                     )}
                     {status === "delivered" && order.payment?.statusPelunasan !== "paid" && (
