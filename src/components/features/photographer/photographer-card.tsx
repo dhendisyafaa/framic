@@ -40,7 +40,7 @@ export function PhotographerCard({ pg }: PhotographerCardProps) {
           </div>
         )}
 
-        <div className="absolute bottom-4 left-4 right-4 bg-white/90 backdrop-blur-md p-3 rounded-xl shadow-lg flex justify-between items-center translate-y-2 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-300">
+        <div className="absolute bottom-4 left-4 right-4 bg-white/90 backdrop-blur-md p-3 rounded-xl shadow-lg flex justify-between items-center transition-all duration-300 opacity-100 translate-y-0 md:opacity-0 md:translate-y-2 md:group-hover:translate-y-0 md:group-hover:opacity-100">
           <div className="flex flex-col">
             <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Mulai dari</span>
             <span className="text-sm font-bold text-slate-900">
@@ -74,7 +74,7 @@ export function PhotographerCard({ pg }: PhotographerCardProps) {
       </CardContent>
       <CardFooter className="p-5 pt-0">
         <Link href={`/photographers/${pg.id}`} className="w-full">
-          <Button variant="outline" className="w-full border-slate-200 group-hover:bg-primary group-hover:text-white group-hover:border-primary transition-all">
+          <Button variant="outline" className="w-full transition-all bg-primary text-white border-primary md:bg-transparent md:text-slate-900 md:border-slate-200 md:group-hover:bg-primary md:group-hover:text-white md:group-hover:border-primary">
             Lihat Profil
           </Button>
         </Link>
