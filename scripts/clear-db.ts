@@ -10,7 +10,7 @@ dotenv.config({ path: path.resolve(process.cwd(), ".env.local") })
 const connectionString = process.env.DATABASE_URL
 
 if (!connectionString) {
-  console.error("❌ DATABASE_URL tidak ditemukan di .env.local")
+  console.error("DATABASE_URL tidak ditemukan di .env.local")
   process.exit(1)
 }
 
@@ -40,14 +40,14 @@ async function clearDatabase() {
     ]
 
     for (const table of tables) {
-      console.log(`🧹 Menghapus data dari tabel: ${table}...`)
+      console.log(`Menghapus data dari tabel: ${table}...`)
       await db.execute(`DELETE FROM ${table};`)
     }
 
-    console.log("✅ Database berhasil dibersihkan seluruhnya!")
+    console.log("Database berhasil dibersihkan seluruhnya!")
     process.exit(0)
   } catch (error) {
-    console.error("❌ Terjadi kesalahan saat membersihkan database:", error)
+    console.error("Terjadi kesalahan saat membersihkan database:", error)
     process.exit(1)
   }
 }

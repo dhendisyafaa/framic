@@ -38,8 +38,6 @@ reviewsRouter.get(
       .limit(limit)
       .offset(offset)
 
-    console.log("rows", rows)
-
     return c.json({
       success: true,
       data: rows,

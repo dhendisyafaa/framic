@@ -1,10 +1,10 @@
 import { db } from "./index"
-import { 
-  users, 
-  photographerProfiles, 
-  packages, 
-  mitraProfiles, 
-  events, 
+import {
+  users,
+  photographerProfiles,
+  packages,
+  mitraProfiles,
+  events,
   eventPhotographers,
   orders,
   reviews
@@ -202,11 +202,11 @@ async function seed() {
     }).onConflictDoNothing()
   }
 
-  console.log("✅ Seed completed!")
+  console.log("Seed completed!")
   process.exit(0)
 }
 
 seed().catch((err) => {
-  console.error("❌ Seed failed:", err)
+  console.error("Seed failed:", err)
   process.exit(1)
 })

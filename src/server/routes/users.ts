@@ -80,16 +80,16 @@ usersRouter.get("/me", async (c) => {
   // -------------------------------------------------------------------------
   const clerk = await clerkClient()
   const clerkUserRecord = await clerk.users.getUser(clerkUser.clerkId)
-  
+
   // Ambil roles yang ada di metadata (support roles jamak)
   const currentMetadata = clerkUserRecord.publicMetadata || {}
   const currentClerkRoles = (currentMetadata.roles as string[]) || []
-  
+
   // Tentukan roles dasar (customer + verified status)
   const targetRoles: string[] = ["customer"]
   if (photographer?.verificationStatus === "verified") targetRoles.push("photographer")
   if (mitra?.verificationStatus === "verified") targetRoles.push("mitra")
-  
+
   // Pertahankan role "admin" jika sudah ada di metadata
   if (currentClerkRoles.includes("admin")) {
     targetRoles.push("admin")
@@ -99,12 +99,11 @@ usersRouter.get("/me", async (c) => {
   const finalRoles = Array.from(new Set(targetRoles))
 
   // Cek apakah ada perubahan (bandingkan isi array)
-  const isChanged = 
-    finalRoles.length !== currentClerkRoles.length || 
+  const isChanged =
+    finalRoles.length !== currentClerkRoles.length ||
     !finalRoles.every(r => currentClerkRoles.includes(r))
 
   if (isChanged) {
-    console.log(`[AUTH_SYNC] Syncing roles for ${clerkUser.clerkId}:`, finalRoles)
     await clerk.users.updateUserMetadata(clerkUser.clerkId, {
       publicMetadata: {
         ...currentMetadata,
@@ -112,7 +111,7 @@ usersRouter.get("/me", async (c) => {
         role: undefined // Hapus key lama (tunggal) jika ada
       }
     })
-    
+
     // Update juga di tabel users lokal agar sinkron
     await db.update(users)
       .set({ roles: finalRoles as any, updatedAt: new Date() })
@@ -194,7 +193,7 @@ usersRouter.post(
     const clerkId = clerkUser.clerkId
 
     const data = c.req.valid("json")
-    
+
     // Memastikan user sudah tercatat di datastore utama kita
     await ensureUserExists(clerkId)
 
@@ -218,7 +217,7 @@ usersRouter.post(
       if (existingPg.verificationStatus !== "rejected") {
         return c.json({ success: false, error: "Anda sudah melakukan pengajuan fotografer" }, 400)
       }
-      
+
       // Jika rejected, update record lama
       const [updatedProfile] = await db
         .update(photographerProfiles)
@@ -309,7 +308,7 @@ usersRouter.post(
       if (existingMitra.verificationStatus !== "rejected") {
         return c.json({ success: false, error: "Anda sudah melakukan pengajuan mitra" }, 400)
       }
-      
+
       // Handle upload dokumen baru jika ada
       let dokumenLegalitasUrl = existingMitra.dokumenLegalitasUrl
       if (data.dokumenLegalitas && data.dokumenLegalitas.size > 0) {
