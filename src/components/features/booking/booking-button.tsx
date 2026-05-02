@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useMutation } from "@tanstack/react-query"
 import { useRouter } from "next/navigation"
 import { useForm } from "react-hook-form"
@@ -52,7 +52,13 @@ export function BookingButton({ photographer }: BookingButtonProps) {
   const [open, setOpen] = useState(false)
   const [showExitConfirm, setShowExitConfirm] = useState(false)
   const [step, setStep] = useState(1)
+  const [mounted, setMounted] = useState(false)
   const router = useRouter()
+
+  useEffect(() => {
+    setMounted(true)
+  }, [])
+
 
   const form = useForm<BookingValues>({
     resolver: zodResolver(bookingSchema),
@@ -138,6 +144,32 @@ export function BookingButton({ photographer }: BookingButtonProps) {
     { title: "Pilih Jadwal", id: 2 },
     { title: "Konfirmasi Orderan", id: 3 },
   ]
+
+  if (!mounted) {
+    return (
+      <Button
+        disabled={!photographer.isAcceptingOrders}
+        className={cn(
+          "flex-1 font-black shadow-2xl rounded-[1.25rem] py-6 text-base group transition-all duration-500",
+          photographer.isAcceptingOrders
+            ? "bg-primary hover:bg-primary/90 text-primary-foreground shadow-primary/20 hover:scale-[1.02]"
+            : "bg-slate-100 text-slate-400 border-slate-200 cursor-not-allowed shadow-none"
+        )}
+      >
+        {photographer.isAcceptingOrders ? (
+          <>
+            Pesan Sesi Foto
+            <ChevronRight className="ml-2 w-6 h-6" />
+          </>
+        ) : (
+          <>
+            <Clock className="mr-2 w-5 h-5" />
+            Booking Ditutup
+          </>
+        )}
+      </Button>
+    )
+  }
 
   return (
     <>
@@ -426,7 +458,7 @@ export function BookingButton({ photographer }: BookingButtonProps) {
                 className="w-full h-14 rounded-2xl font-black bg-slate-900 text-white hover:bg-slate-800"
                 onClick={() => setShowExitConfirm(false)}
               >
-                LANJUTKAN ORDER
+                Lanjutkan Order
               </Button>
               <Button
                 variant="ghost"
