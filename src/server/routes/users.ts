@@ -80,24 +80,42 @@ usersRouter.get("/me", async (c) => {
   // -------------------------------------------------------------------------
   const clerk = await clerkClient()
   const clerkUserRecord = await clerk.users.getUser(clerkUser.clerkId)
-  const currentClerkRole = clerkUserRecord.publicMetadata.role as string | undefined
+  
+  // Ambil roles yang ada di metadata (support roles jamak)
+  const currentMetadata = clerkUserRecord.publicMetadata || {}
+  const currentClerkRoles = (currentMetadata.roles as string[]) || []
+  
+  // Tentukan roles dasar (customer + verified status)
+  const targetRoles: string[] = ["customer"]
+  if (photographer?.verificationStatus === "verified") targetRoles.push("photographer")
+  if (mitra?.verificationStatus === "verified") targetRoles.push("mitra")
+  
+  // Pertahankan role "admin" jika sudah ada di metadata
+  if (currentClerkRoles.includes("admin")) {
+    targetRoles.push("admin")
+  }
 
-  let targetRole = "customer" // Default role
-  if (photographer?.verificationStatus === "verified") targetRole = "photographer"
-  else if (mitra?.verificationStatus === "verified") targetRole = "mitra"
+  // Buat set unik untuk memastikan tidak ada duplikasi
+  const finalRoles = Array.from(new Set(targetRoles))
 
-  // Jika ada perbedaan, paksa update ke Clerk
-  if (currentClerkRole !== targetRole) {
-    console.log(`[AUTH_SYNC] Syncing role for ${clerkUser.clerkId}: ${currentClerkRole} -> ${targetRole}`)
+  // Cek apakah ada perubahan (bandingkan isi array)
+  const isChanged = 
+    finalRoles.length !== currentClerkRoles.length || 
+    !finalRoles.every(r => currentClerkRoles.includes(r))
+
+  if (isChanged) {
+    console.log(`[AUTH_SYNC] Syncing roles for ${clerkUser.clerkId}:`, finalRoles)
     await clerk.users.updateUserMetadata(clerkUser.clerkId, {
       publicMetadata: {
-        role: targetRole
+        ...currentMetadata,
+        roles: finalRoles,
+        role: undefined // Hapus key lama (tunggal) jika ada
       }
     })
     
     // Update juga di tabel users lokal agar sinkron
     await db.update(users)
-      .set({ roles: [targetRole as any], updatedAt: new Date() })
+      .set({ roles: finalRoles as any, updatedAt: new Date() })
       .where(eq(users.clerkId, clerkUser.clerkId))
   }
 
@@ -109,7 +127,8 @@ usersRouter.get("/me", async (c) => {
       name: clerkUser.name,
       avatarUrl: clerkUser.avatarUrl,
       // Roles yang tercatat di database kita (setelah sinkronisasi)
-      roles: [targetRole],
+      roles: finalRoles,
+      isActive: dbUser?.isActive ?? true,
       customerProfile: customer || null,
       photographerProfile: photographer || null,
       mitraProfile: mitra || null,
