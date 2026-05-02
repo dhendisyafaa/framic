@@ -105,6 +105,17 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
   const isPG = user?.id === order.photographer?.clerkId
   const status = order.status
 
+  // Helper: Inject watermark for unpaid customers
+  const getDisplayUrl = (url: string) => {
+    const isPaid = order.payment?.statusPelunasan === "paid"
+    // Watermark only for customers if not paid
+    if (!isPG && !isPaid) {
+      // Cloudinary transformation: text overlay 'FRAMIC', opacity 30, center
+      return url.replace("/upload/", "/upload/l_text:Arial_100_bold:FRAMIC,o_30,q_auto,f_auto/")
+    }
+    return url
+  }
+
   return (
     <div className="container mx-auto p-4 md:p-8 animate-in fade-in slide-in-from-bottom-2 duration-700 max-w-6xl">
       {/* Back Button */}
@@ -231,11 +242,22 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                       {order.photos.map((photo) => (
                         <div key={photo.id} className="aspect-square rounded-2xl overflow-hidden border border-slate-100 relative group bg-slate-100">
-                          <img src={photo.fotoUrl} alt="Hasil Foto" className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
+                          <img
+                            src={getDisplayUrl(photo.fotoUrl)}
+                            alt="Hasil Foto"
+                            className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
+                          />
                           <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
-                            {/* FIX: ini buat apa ya? */}
-                            <Button variant="secondary" size="icon" className="rounded-full w-8 h-8"><EyeIcon className="w-4 h-4" /></Button>
-                            <Button size="icon" className="rounded-full w-8 h-8 bg-white text-slate-900 hover:bg-slate-200"><UploadIcon className="w-4 h-4 rotate-180" /></Button>
+                            <Button asChild variant="secondary" size="icon" className="rounded-full w-8 h-8">
+                              <a href={getDisplayUrl(photo.fotoUrl)} target="_blank" rel="noopener noreferrer">
+                                <EyeIcon className="w-4 h-4" />
+                              </a>
+                            </Button>
+                            <Button asChild size="icon" className="rounded-full w-8 h-8 bg-white text-slate-900 hover:bg-slate-200">
+                              <a href={getDisplayUrl(photo.fotoUrl)} download={`photo-${photo.id}`}>
+                                <UploadIcon className="w-4 h-4 rotate-180" />
+                              </a>
+                            </Button>
                           </div>
                         </div>
                       ))}
@@ -278,7 +300,7 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
               <div className="space-y-6">
                 <div className="flex justify-between items-start">
                   <div>
-                    <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Down Payment (50%)</span>
+                    <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Uang Muka (50%)</span>
                     <div className="font-black text-slate-800 text-lg">Rp {order.payment?.jumlahDp.toLocaleString("id-ID")}</div>
                   </div>
                   <Badge variant="outline" className={`rounded-full px-3 text-[9px] font-black ${order.payment?.statusDp === "paid" ? "bg-emerald-50 text-emerald-600 border-emerald-100" : "bg-amber-50 text-amber-600 border-amber-100"}`}>
