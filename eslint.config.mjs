@@ -17,7 +17,7 @@ const eslintConfig = defineConfig([
   // Framic custom rules — TypeScript strict
   {
     rules: {
-      // ❌ DILARANG KERAS — sesuai framic-rules.md
+      // DILARANG KERAS — sesuai framic-rules.md
       "@typescript-eslint/no-explicit-any": "error",
       // Catch unused variables (ignore underscore-prefixed)
       "@typescript-eslint/no-unused-vars": [
