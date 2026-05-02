@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
@@ -99,6 +99,30 @@ export default function OnboardingPage() {
     },
   })
 
+  // Pre-fill Photographer Form
+  useEffect(() => {
+    if (userData?.photographerProfile) {
+      pgForm.reset({
+        bio: userData.photographerProfile.bio || "",
+        kotaDomisili: userData.photographerProfile.kotaDomisili || "",
+        kategori: userData.photographerProfile.kategori || [],
+      })
+    }
+  }, [userData?.photographerProfile, pgForm])
+
+  // Pre-fill Mitra Form
+  useEffect(() => {
+    if (userData?.mitraProfile) {
+      mitraForm.reset({
+        namaOrganisasi: userData.mitraProfile.namaOrganisasi || "",
+        tipeMitra: userData.mitraProfile.tipeMitra || "",
+        alamat: userData.mitraProfile.alamat || "",
+        nomorTelepon: userData.mitraProfile.nomorTelepon || "",
+        websiteUrl: userData.mitraProfile.websiteUrl || "",
+      })
+    }
+  }, [userData?.mitraProfile, mitraForm])
+
   const handleSkip = () => {
     router.push("/")
   }
@@ -173,7 +197,7 @@ export default function OnboardingPage() {
           <div className="grid gap-8 md:grid-cols-2 w-full">
             {/* CARD FOTOGRAFER */}
             <button
-              onClick={() => !isPgRegistered && setSelectedRole("photographer")}
+              onClick={() => (!isPgRegistered || pgStatus === 'rejected') && setSelectedRole("photographer")}
               disabled={isPgRegistered && pgStatus !== 'rejected'}
               className={`group flex flex-col text-left bg-white p-8 rounded-[2.5rem] border border-slate-200 shadow-sm transition-all duration-500 relative overflow-hidden ${isPgRegistered && pgStatus !== 'rejected'
                 ? 'grayscale-[0.5] cursor-not-allowed border-emerald-100 bg-emerald-50/10'
@@ -204,20 +228,28 @@ export default function OnboardingPage() {
                   <div className="flex items-center gap-2 font-bold text-emerald-600">
                     <CheckCircle2 className="w-4 h-4" /> Akun Terdaftar
                   </div>
-                  <Link href={"/dashboard"} className="flex items-center gap-2 bg-primary text-white px-4 py-2 rounded-full">
+                  <Link href={"/dashboard"} className="flex items-center gap-2 bg-primary text-white px-4 py-2 rounded-full shadow-lg shadow-primary/20">
                     <LayoutDashboard className="w-4 h-4" /> Dashboard
                   </Link>
                 </div>
               ) : (
-                <div className="mt-auto flex items-center gap-2 font-bold text-primary opacity-0 group-hover:opacity-100 translate-x-4 group-hover:translate-x-0 transition-all">
-                  Mulai Berkarir <ArrowRight className="w-4 h-4" />
+                <div className="mt-auto flex items-center gap-2 font-black text-primary transition-all">
+                  {pgStatus === 'rejected' ? (
+                    <span className="flex items-center gap-2 text-rose-600 bg-rose-50 px-4 py-2 rounded-full">
+                      Ajukan Ulang <ArrowRight className="w-4 h-4" />
+                    </span>
+                  ) : (
+                    <span className="flex items-center gap-2">
+                      Mulai Berkarir <ArrowRight className="w-4 h-4" />
+                    </span>
+                  )}
                 </div>
               )}
             </button>
 
             {/* CARD MITRA */}
             <button
-              onClick={() => !isMitraRegistered && setSelectedRole("mitra")}
+              onClick={() => (!isMitraRegistered || mitraStatus === 'rejected') && setSelectedRole("mitra")}
               disabled={isMitraRegistered && mitraStatus !== 'rejected'}
               className={`group flex flex-col text-left bg-white p-8 rounded-[2.5rem] border border-slate-200 shadow-sm transition-all duration-500 relative overflow-hidden ${isMitraRegistered && mitraStatus !== 'rejected'
                 ? 'grayscale-[0.5] cursor-not-allowed border-blue-100 bg-blue-50/10'
@@ -248,13 +280,21 @@ export default function OnboardingPage() {
                   <div className="mt-auto flex items-center gap-2 font-bold text-blue-600">
                     <CheckCircle2 className="w-4 h-4" /> Mitra Terdaftar
                   </div>
-                  <Link href={"/dashboard"} className="flex items-center gap-2 bg-primary text-white px-4 py-2 rounded-full">
+                  <Link href={"/dashboard"} className="flex items-center gap-2 bg-primary text-white px-4 py-2 rounded-full shadow-lg shadow-primary/20">
                     <LayoutDashboard className="w-4 h-4" /> Dashboard
                   </Link>
                 </div>
               ) : (
-                <div className="mt-auto flex items-center gap-2 font-bold text-blue-500 opacity-0 group-hover:opacity-100 translate-x-4 group-hover:translate-x-0 transition-all">
-                  Bangun Ekosistem <ArrowRight className="w-4 h-4" />
+                <div className="mt-auto flex items-center gap-2 font-black text-blue-500 transition-all">
+                  {mitraStatus === 'rejected' ? (
+                    <span className="flex items-center gap-2 text-rose-600 bg-rose-50 px-4 py-2 rounded-full cursor-pointer">
+                      Ajukan Ulang <ArrowRight className="w-4 h-4" />
+                    </span>
+                  ) : (
+                    <span className="flex items-center gap-2 cursor-pointer">
+                      Bangun Ekosistem <ArrowRight className="w-4 h-4" />
+                    </span>
+                  )}
                 </div>
               )}
             </button>
