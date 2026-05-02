@@ -31,7 +31,6 @@ export default function PendingVerificationPage() {
   // 2. Automatic redirect if verified or suspended
   useEffect(() => {
     // Jika verified atau suspended, lempar ke dashboard
-    // Dashboard akan menghandle tampilan suspended secara mendalam
     if (pgStatus === "verified" || mitraStatus === "verified" || pgStatus === "suspended" || mitraStatus === "suspended" || !isActive) {
       if (pgStatus === "verified" || mitraStatus === "verified") {
         toast.success("Selamat! Akun Anda telah diverifikasi.")
@@ -78,7 +77,7 @@ export default function PendingVerificationPage() {
           </CardContent>
           <CardFooter className="p-8 pt-4 flex flex-col gap-3">
             <Button onClick={() => router.push("/onboarding")} className="w-full h-14 rounded-2xl font-black text-lg bg-rose-600 hover:bg-rose-700 shadow-xl shadow-rose-200">
-              Ajukan Ulang <ArrowRight className="ml-2 h-5 h-5" />
+              Ajukan Ulang <ArrowRight className="ml-2 h-5" />
             </Button>
             <Button variant="ghost" onClick={() => router.push("/")} className="w-full text-slate-400 font-bold">
               Kembali ke Beranda
