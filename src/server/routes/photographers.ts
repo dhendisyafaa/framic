@@ -354,76 +354,9 @@ photographersRouter.get("/me", async (c) => {
 })
 
 // ---------------------------------------------------------------------------
-// PATCH /api/photographers/me/username
-// Update username PG — maksimal sekali per 14 hari, format Instagram-style
+// GET /api/photographers/search?username=xxx
+// Cari PG berdasarkan username (untuk fitur invite mitra)
 // ---------------------------------------------------------------------------
-const usernameSchema = z.object({
-  username: z
-    .string()
-    .min(1)
-    .max(30)
-    .regex(
-      /^[a-zA-Z0-9](?!.*\.{2})[a-zA-Z0-9._]{0,28}[a-zA-Z0-9]$|^[a-zA-Z0-9]$/,
-      "Username tidak valid. Hanya boleh huruf, angka, titik, atau underscore. Tidak boleh ada dua titik berturut-turut atau diawali/diakhiri titik."
-    ),
-})
-
-photographersRouter.patch("/me/username", zValidator("json", usernameSchema), async (c) => {
-  try {
-    const { clerkId } = await requireRole("photographer")
-    const { username } = c.req.valid("json")
-
-    const [profile] = await db
-      .select({ id: photographerProfiles.id, usernameUpdatedAt: photographerProfiles.usernameUpdatedAt })
-      .from(photographerProfiles)
-      .where(eq(photographerProfiles.clerkId, clerkId))
-      .limit(1)
-
-    if (!profile) {
-      return c.json({ success: false, error: "Profil tidak ditemukan" }, 404)
-    }
-
-    // Cek cooldown 14 hari
-    if (profile.usernameUpdatedAt) {
-      const daysSinceLastChange = (Date.now() - new Date(profile.usernameUpdatedAt).getTime()) / (1000 * 60 * 60 * 24)
-      if (daysSinceLastChange < 14) {
-        const daysLeft = Math.ceil(14 - daysSinceLastChange)
-        return c.json(
-          { success: false, error: `Username baru bisa diganti ${daysLeft} hari lagi.` },
-          400
-        )
-      }
-    }
-
-    // Cek apakah username sudah dipakai orang lain
-    const [existing] = await db
-      .select({ id: photographerProfiles.id })
-      .from(photographerProfiles)
-      .where(eq(photographerProfiles.username, username.toLowerCase()))
-      .limit(1)
-
-    if (existing && existing.id !== profile.id) {
-      return c.json({ success: false, error: "Username sudah digunakan orang lain." }, 409)
-    }
-
-    const [updated] = await db
-      .update(photographerProfiles)
-      .set({
-        username: username.toLowerCase(),
-        usernameUpdatedAt: new Date(),
-        updatedAt: new Date(),
-      })
-      .where(eq(photographerProfiles.clerkId, clerkId))
-      .returning()
-
-    return c.json({ success: true, data: updated })
-  } catch (err) {
-    if (err instanceof AuthError) {
-      return c.json({ success: false, error: err.message }, err.statusCode)
-    }
-    throw err
-  }
-})
 
 // ---------------------------------------------------------------------------
 // GET /api/photographers/search?username=xxx
@@ -627,8 +560,6 @@ photographersRouter.get(
 // Update setting profil personal PG (isAvailable, dsb)
 // ---------------------------------------------------------------------------
 const updatePgSchema = z.object({
-  name: z.string().optional(),
-  email: z.string().email().optional(),
   bio: z.string().optional(),
   kotaDomisili: z.string().optional(),
   kategori: z.array(z.string()).optional(),
@@ -643,53 +574,11 @@ photographersRouter.patch(
     const userRoleInfo = await requireRole("photographer")
     const data = c.req.valid("json")
 
-    // Auth data (name, email) dikelola oleh Clerk, BUKAN database lokal
-    const { name, email, ...dbData } = data
-
-    const clerk = await clerkClient()
-
-    try {
-      // 1. Jika ada update pada kolom nama
-      if (name) {
-        const parts = name.trim().split(" ")
-        const firstName = parts[0]
-        const lastName = parts.length > 1 ? parts.slice(1).join(" ") : ""
-        await clerk.users.updateUser(userRoleInfo.clerkId, { firstName, lastName })
-      }
-
-      // 2. Jika ada update email
-      if (email) {
-        const user = await clerk.users.getUser(userRoleInfo.clerkId)
-        const currentPrimaryEmail = user.emailAddresses.find(e => e.id === user.primaryEmailAddressId)?.emailAddress
-
-        if (currentPrimaryEmail !== email) {
-          // Cari apakah user sudah punya email config ini tapi belum primary
-          const existingEmailObj = user.emailAddresses.find(e => e.emailAddress === email)
-
-          if (existingEmailObj) {
-            await clerk.users.updateUser(userRoleInfo.clerkId, { primaryEmailAddressID: existingEmailObj.id })
-          } else {
-            // Buat email baru dan jadikan primary
-            await clerk.emailAddresses.createEmailAddress({
-              userId: userRoleInfo.clerkId,
-              emailAddress: email,
-              verified: true,
-              primary: true
-            })
-          }
-        }
-      }
-    } catch (err: any) {
-      console.error("Gagal sinkronisasi data Auth ke Clerk:", err)
-      // Tangkap dan lempar kembali error bawaan Clerk (misal: "Email address is already taken")
-      return c.json({ success: false, error: err.errors?.[0]?.message || err.message || "Gagal menyimpan akun ke sistem pusat." }, 400)
-    }
-
-    // 3. Simpan sisa data ke Postgres Lokal
+    // Simpan data ke Postgres Lokal
     const [updated] = await db
       .update(photographerProfiles)
       .set({
-        ...dbData,
+        ...data,
         updatedAt: new Date(),
       })
       .where(eq(photographerProfiles.clerkId, userRoleInfo.clerkId))

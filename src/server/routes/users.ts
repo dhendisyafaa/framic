@@ -23,7 +23,7 @@ export const usersRouter = new Hono()
 // Helper: Memastikan record user & customer profile di DB eksis
 // MVP: Menggantikan fungsi webhook Clerk
 // ---------------------------------------------------------------------------
-async function ensureUserExists(clerkId: string) {
+async function ensureUserExists(clerkId: string, username?: string | null) {
   const [existingUser] = await db
     .select()
     .from(users)
@@ -33,11 +33,17 @@ async function ensureUserExists(clerkId: string) {
     await db.transaction(async (tx) => {
       await tx.insert(users).values({
         clerkId,
+        username: username || null,
         roles: ["customer"],
         isActive: true,
       })
       await tx.insert(customerProfiles).values({ clerkId })
     })
+  } else if (username && existingUser.username !== username) {
+    // Sync username if it changed or was missing
+    await db.update(users)
+      .set({ username, updatedAt: new Date() })
+      .where(eq(users.clerkId, clerkId))
   }
 }
 
@@ -51,7 +57,7 @@ usersRouter.get("/me", async (c) => {
     throw new AuthError(401, "Harus login terlebih dahulu")
   }
 
-  await ensureUserExists(clerkUser.clerkId)
+  await ensureUserExists(clerkUser.clerkId, clerkUser.username)
 
   // Ambil profil lengkap setelah dipastikan user ada
   const [dbUser] = await db

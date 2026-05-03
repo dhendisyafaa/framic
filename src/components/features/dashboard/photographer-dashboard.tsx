@@ -18,6 +18,7 @@ import {
   ChevronRightIcon,
   AlertCircleIcon,
   TentIcon,
+  User,
 } from "lucide-react"
 import { format } from "date-fns"
 import { id as localeId } from "date-fns/locale"
@@ -133,13 +134,13 @@ export function PhotographerDashboard({ clerkId }: { clerkId: string }) {
         </div>
         <div className="flex flex-wrap items-center gap-3">
           <Link href="/dashboard/profile">
-            <Button className="px-8 rounded-full font-bold shadow-xl shadow-primary/25">
-              Edit Profil
+            <Button className="px-8 rounded-full font-bold shadow-xl shadow-primary/25 h-12 bg-primary hover:bg-primary/90 transition-all">
+              Lengkapi Profil
             </Button>
           </Link>
           {pgProfile && (
             <Link href={`/photographers/${pgProfile.id}`}>
-              <Button variant="outline" className="rounded-full px-6 border-slate-200 font-bold">
+              <Button variant="ghost" className="rounded-full px-6 font-bold h-12 text-slate-500 hover:text-slate-900">
                 Lihat Profil Publik
               </Button>
             </Link>

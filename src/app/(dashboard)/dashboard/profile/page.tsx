@@ -17,7 +17,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Textarea } from "@/components/ui/textarea"
 import type { Package as PackageType, PhotographerProfile } from "@/types"
 import { zodResolver } from "@hookform/resolvers/zod"
-import { useUser } from "@clerk/nextjs"
+import { useUser, useClerk } from "@clerk/nextjs"
+import { KATEGORI_OPTIONS } from "@/lib/constants"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import {
   AlertCircle,
@@ -44,12 +45,6 @@ import * as z from "zod"
 
 // --- SCHEMAS ---
 const profileSchema = z.object({
-  name: z.string().min(3, "Nama lengkap minimal 3 karakter"),
-  username: z.string()
-    .min(3, "Username minimal 3 karakter")
-    .max(30, "Username maksimal 30 karakter")
-    .regex(/^[a-zA-Z0-9](?!.*\.{2})[a-zA-Z0-9._]{0,28}[a-zA-Z0-9]$|^[a-zA-Z0-9]$/, "Format username tidak valid (hanya huruf, angka, titik, underscore)"),
-  email: z.string().optional(),
   bio: z.string().min(10, "Bio minimal 10 karakter"),
   kotaDomisili: z.string().min(3, "Kota minimal 3 karakter"),
   kategori: z.array(z.string()).min(1, "Pilih minimal 1 kategori"),
@@ -73,6 +68,7 @@ type PackageValues = z.input<typeof packageSchema>
 export default function ManageProfilePage() {
   const queryClient = useQueryClient()
   const { user: clerkFrontUser } = useUser()
+  const { openUserProfile } = useClerk()
   const [activeTab, setActiveTab] = useState("profile")
 
   // 1. Fetch User Profile Data
@@ -107,9 +103,6 @@ export default function ManageProfilePage() {
   const profileForm = useForm<ProfileValues>({
     resolver: zodResolver(profileSchema),
     values: {
-      name: clerkUser?.name || "",
-      username: photographer?.username || "",
-      email: clerkUser?.email || "",
       bio: photographer?.bio || "",
       kotaDomisili: photographer?.kotaDomisili || "",
       kategori: photographer?.kategori || [],
@@ -120,55 +113,22 @@ export default function ManageProfilePage() {
 
   const updateProfileMutation = useMutation({
     mutationFn: async (values: Partial<ProfileValues>) => {
-      // 1. Ekstrak field khusus
-      const { username, ...updateData } = values
-
-      let isGeneralSuccess = false
-      let usernameErrorMsg: string | null = null
-
-      // 2. Update data profil umum (jika ada data yang dikirim)
-      if (Object.keys(updateData).length > 0) {
+      if (Object.keys(values).length > 0) {
         const res = await fetch("/api/photographers/me", {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(updateData),
+          body: JSON.stringify(values),
         })
         if (!res.ok) {
           const errorData = await res.json()
           throw new Error(errorData.error || "Gagal update profil umum")
         }
-        isGeneralSuccess = true
       }
-
-      // 3. Update username (hanya jika ada perubahan dan nilainya baru)
-      if (username !== undefined && username !== photographer?.username) {
-        const userRes = await fetch("/api/photographers/me/username", {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ username }),
-        })
-        if (!userRes.ok) {
-          const errorData = await userRes.json()
-          // JANGAN throw error, tampung pesan error agar data umum tetap bisa tervisualisasi (invalidate)
-          usernameErrorMsg = errorData.error || "Gagal update username"
-        }
-      }
-
-      return { isGeneralSuccess, usernameErrorMsg }
+      return { success: true }
     },
-    onSuccess: (data) => {
-      // Selalu invalidate agar data yang berhasil (meski ada parsial error) tampil di UI
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["user-me"] })
-
-      if (data.usernameErrorMsg) {
-        if (data.isGeneralSuccess) {
-          toast.warning(`Profil diperbarui, namun Username gagal: ${data.usernameErrorMsg}`)
-        } else {
-          toast.error(data.usernameErrorMsg)
-        }
-      } else {
-        toast.success("Profil berhasil diperbarui!")
-      }
+      toast.success("Profil berhasil diperbarui!")
     },
     onError: (err: any) => toast.error(err.message)
   })
@@ -447,72 +407,30 @@ export default function ManageProfilePage() {
                   <CardDescription className="text-slate-500 font-medium tracking-tight">Ceritakan keahlian dan kepribadian Anda kepada kustomer.</CardDescription>
                 </CardHeader>
                 <CardContent className="py-3">
+                  {/* Clerk Account Data Info (Read Only) */}
+                  <div className="bg-indigo-50/50 border border-indigo-100 rounded-[2rem] p-8 mb-8 flex flex-col md:flex-row items-center justify-between gap-6">
+                    <div className="flex items-center gap-5">
+                      <div className="w-16 h-16 bg-white rounded-2xl flex items-center justify-center text-indigo-600 shadow-sm border border-indigo-50">
+                        <User size={32} />
+                      </div>
+                      <div>
+                        <h4 className="font-black text-slate-900 text-lg leading-tight">{clerkFrontUser?.fullName}</h4>
+                        <p className="text-sm text-slate-500 font-bold uppercase tracking-widest mt-1">@{clerkFrontUser?.username}</p>
+                        <p className="text-xs text-slate-400 font-medium">{clerkFrontUser?.primaryEmailAddress?.emailAddress}</p>
+                      </div>
+                    </div>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      className="rounded-xl border-indigo-200 text-indigo-600 font-bold hover:bg-indigo-100 px-6"
+                      onClick={() => openUserProfile()}
+                    >
+                      Edit Data Akun di Clerk
+                    </Button>
+                  </div>
+
                   <Form {...profileForm}>
                     <form onSubmit={profileForm.handleSubmit((v) => updateProfileMutation.mutate(v))} className="space-y-8">
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                        <FormField
-                          control={profileForm.control}
-                          name="name"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel className="text-slate-900 font-bold">Nama Lengkap</FormLabel>
-                              <FormControl>
-                                <Input
-                                  placeholder="Nama lengkap profesional Anda"
-                                  className="rounded-2xl border-slate-200 h-14 font-bold text-slate-700"
-                                  {...field}
-                                />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                        <FormField
-                          control={profileForm.control}
-                          name="username"
-                          render={({ field }) => (
-                            <FormItem className="relative">
-                              <FormLabel className="text-slate-900 font-bold">Username (@framic_id)</FormLabel>
-                              <FormControl>
-                                <div className="relative">
-                                  <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 font-black">@</div>
-                                  <Input
-                                    placeholder="username_anda"
-                                    className="pl-10 rounded-2xl border-slate-200 h-14 font-black text-indigo-600"
-                                    {...field}
-                                  />
-                                </div>
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                      </div>
-
-                      <FormField
-                        control={profileForm.control}
-                        name="email"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel className="text-slate-900 font-bold flex items-center gap-2">
-                              Email Akun
-                            </FormLabel>
-                            <FormControl>
-                              <div className="relative">
-                                <Globe className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300 w-5 h-5" />
-                                <Input
-                                  className="pl-12 rounded-2xl border-slate-200 h-14 font-medium"
-                                  {...field}
-                                />
-                              </div>
-                            </FormControl>
-                            <FormDescription className="text-[10px] leading-tight text-slate-400 font-medium">
-                              * Email ini akan digunakan sebagai email utama dan tersinkronisasi otomatis dengan akun Anda.
-                            </FormDescription>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
 
                       <FormField
                         control={profileForm.control}
@@ -558,7 +476,7 @@ export default function ManageProfilePage() {
                             <FormItem>
                               <FormLabel className="text-slate-900 font-bold">Kategori Spesialis</FormLabel>
                               <div className="flex flex-wrap gap-2 pt-1">
-                                {["wedding", "wisuda", "portrait", "event", "product"].map((kat) => (
+                                {KATEGORI_OPTIONS.map((kat) => (
                                   <button
                                     key={kat}
                                     type="button"

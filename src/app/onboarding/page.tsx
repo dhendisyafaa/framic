@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import * as z from "zod"
+import { KATEGORI_OPTIONS } from "@/lib/constants"
 import { Camera, Building2, ArrowRight, Loader2, LayoutDashboard } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
@@ -364,7 +365,7 @@ export default function OnboardingPage() {
                     <FormItem>
                       <FormLabel>Kategori Keahlian</FormLabel>
                       <div className="flex flex-wrap gap-2">
-                        {["wedding", "wisuda", "portrait", "event", "product"].map((kat) => (
+                        {KATEGORI_OPTIONS.map((kat) => (
                           <button
                             key={kat}
                             type="button"
@@ -380,7 +381,7 @@ export default function OnboardingPage() {
                               : "bg-white hover:bg-slate-50 border-slate-200 text-slate-600"
                               }`}
                           >
-                            {kat.charAt(0).toUpperCase() + kat.slice(1)}
+                            {kat}
                           </button>
                         ))}
                       </div>
