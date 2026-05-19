@@ -178,24 +178,6 @@ export default function ManageProfilePage() {
     onError: (err: any) => toast.error(err.message)
   })
 
-  // 4b. Avatar Upload directly via Clerk SDK
-  const [isAvatarUploading, setIsAvatarUploading] = useState(false)
-  const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (!file || !clerkFrontUser) return
-
-    setIsAvatarUploading(true)
-    try {
-      await clerkFrontUser.setProfileImage({ file })
-      toast.success("Foto profil berhasil diperbarui!")
-      queryClient.invalidateQueries({ queryKey: ["user-me"] })
-    } catch (err: any) {
-      toast.error(err.errors?.[0]?.message || err.message || "Gagal upload foto profil")
-    } finally {
-      setIsAvatarUploading(false)
-    }
-  }
-
   // 5. Portfolio Section
   const [isUploading, setIsUploading] = useState(false)
   const handlePortfolioUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -308,26 +290,15 @@ export default function ManageProfilePage() {
         <div className="relative z-20 flex flex-col md:flex-row items-center gap-10">
           {/* Avatar Container */}
           <div className="relative group z-20">
-            <label htmlFor="avatar-upload" className="block relative w-36 h-36 md:w-48 md:h-48 rounded-[3rem] border-[6px] border-white/10 overflow-hidden bg-white/5 shadow-2xl group-hover:scale-105 group-hover:-rotate-2 transition-all duration-700 ring-4 ring-black/20 cursor-pointer [transform:translateZ(0)]">
+            <div className="block relative w-36 h-36 md:w-48 md:h-48 rounded-[3rem] border-[6px] border-white/10 overflow-hidden bg-white/5 shadow-2xl transition-all duration-700 ring-4 ring-black/20 [transform:translateZ(0)]">
               {clerkUser?.avatarUrl ? (
-                <img src={clerkUser.avatarUrl} alt={clerkUser.name} className={`w-full h-full object-cover transition-all duration-700 ${isAvatarUploading ? 'opacity-50 blur-sm' : 'grayscale-[0.2] group-hover:grayscale-0'}`} />
+                <img src={clerkUser.avatarUrl} alt={clerkUser.name} className="w-full h-full object-cover" />
               ) : (
                 <div className="w-full h-full flex items-center justify-center text-white/10">
                   <User size={80} />
                 </div>
               )}
-              <div className="absolute inset-0 rounded-[2.5rem] bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center backdrop-blur-sm">
-                {isAvatarUploading ? <Loader2 className="w-8 h-8 text-white animate-spin" /> : <Camera className="w-8 h-8 text-white/90" />}
-              </div>
-            </label>
-            <input
-              type="file"
-              id="avatar-upload"
-              className="hidden"
-              accept="image/*"
-              onChange={handleAvatarUpload}
-              disabled={isAvatarUploading}
-            />
+            </div>
 
             {/* Status Floating Badge */}
             <div className="absolute -bottom-3 -right-3 bg-emerald-500 text-white p-4 rounded-[1.5rem] border-4 border-indigo-950 shadow-[0_8px_16px_rgba(16,185,129,0.3)] font-black text-xs">
@@ -337,7 +308,7 @@ export default function ManageProfilePage() {
 
           <div className="flex flex-col gap-5 text-center md:text-left flex-1">
             <div className="space-y-2">
-              <span className="text-xs font-black text-primary uppercase tracking-[0.4em] mb-1 block">PHOTOGRAPHER</span>
+              <span className="text-xs font-black text-primary uppercase tracking-[0.4em] mb-1 block">Fotografer</span>
               <h1 className="text-5xl md:text-7xl font-black tracking-tighter leading-tight ">{clerkUser?.name}</h1>
             </div>
 
@@ -415,7 +386,7 @@ export default function ManageProfilePage() {
                       </div>
                       <div>
                         <h4 className="font-black text-slate-900 text-lg leading-tight">{clerkFrontUser?.fullName}</h4>
-                        <p className="text-sm text-slate-500 font-bold uppercase tracking-widest mt-1">@{clerkFrontUser?.username}</p>
+                        <p className="text-sm text-slate-500 font-bold tracking-widest mt-1">@{clerkFrontUser?.username}</p>
                         <p className="text-xs text-slate-400 font-medium">{clerkFrontUser?.primaryEmailAddress?.emailAddress}</p>
                       </div>
                     </div>
@@ -425,7 +396,7 @@ export default function ManageProfilePage() {
                       className="rounded-xl border-indigo-200 text-indigo-600 font-bold hover:bg-indigo-100 px-6"
                       onClick={() => openUserProfile()}
                     >
-                      Edit Data Akun di Clerk
+                      Edit Profil
                     </Button>
                   </div>
 
