@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react"
 import Link from "next/link"
-import { Show, UserButton, SignInButton } from "@clerk/nextjs"
+import { Show, UserButton, SignInButton, SignUpButton } from "@clerk/nextjs"
 import { Button } from "@/components/ui/button"
 
 export function Navbar() {
@@ -60,11 +60,20 @@ export function Navbar() {
           {mounted ? (
             <>
               <Show when="signed-out">
-                <SignInButton mode="modal" fallbackRedirectUrl="/onboarding" signUpFallbackRedirectUrl="/onboarding">
-                  <Button variant="default" size="sm" className="rounded-full px-6 font-bold">
-                    Masuk / Daftar
-                  </Button>
-                </SignInButton>
+                <div className="flex items-center gap-3">
+                  <SignInButton mode="modal" fallbackRedirectUrl="/onboarding" signUpFallbackRedirectUrl="/onboarding">
+                    <Button variant="ghost" className="rounded-full px-5 h-10 font-bold text-slate-600 hover:text-emerald-600 hover:bg-emerald-50">
+                      Masuk
+                    </Button>
+                  </SignInButton>
+                  <SignUpButton mode="modal" fallbackRedirectUrl="/onboarding" signInFallbackRedirectUrl="/onboarding">
+                    <Button 
+                      className="rounded-full px-7 h-10 font-black tracking-tight text-sm bg-emerald-600 hover:bg-emerald-500 text-white shadow-lg shadow-emerald-600/20 hover:shadow-emerald-600/40 hover:-translate-y-0.5 transition-all duration-300 active:translate-y-0"
+                    >
+                      Daftar
+                    </Button>
+                  </SignUpButton>
+                </div>
               </Show>
 
               <Show when="signed-in">
