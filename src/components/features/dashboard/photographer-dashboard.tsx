@@ -1,6 +1,7 @@
 "use client"
 
 import Link from "next/link"
+import { useUser } from "@clerk/nextjs"
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { toast } from "sonner"
 import { OrderWithPackage, PhotographerProfile } from "@/types"
@@ -18,6 +19,7 @@ import {
   ChevronRightIcon,
   AlertCircleIcon,
   TentIcon,
+  User,
 } from "lucide-react"
 import { format } from "date-fns"
 import { id as localeId } from "date-fns/locale"
@@ -30,6 +32,8 @@ import { Skeleton } from "@/components/ui/skeleton"
  * Fokus: Order masuk yang butuh konfirmasi dan progress kerja.
  */
 export function PhotographerDashboard({ clerkId }: { clerkId: string }) {
+  const { user } = useUser()
+
   // 1. Fetch data profil PG sendiri
   const { data: profileRes, isLoading: profileLoading } = useQuery({
     queryKey: ["photographer-me", clerkId],
@@ -96,7 +100,7 @@ export function PhotographerDashboard({ clerkId }: { clerkId: string }) {
 
   if (ordersLoading || profileLoading) return <DashboardSkeleton />
 
-  const isUsernameMissing = !pgProfile?.username
+  const isUsernameMissing = !pgProfile?.username && !user?.username
   const isPortfolioMissing = !pgProfile?.portfolioUrls || pgProfile.portfolioUrls.length === 0
   const isPackagesMissing = !packagesLoading && (!packagesRes?.data || packagesRes.data.length === 0)
   const isProfileIncomplete = pgProfile && (isUsernameMissing || isPortfolioMissing || isPackagesMissing)
@@ -113,11 +117,11 @@ export function PhotographerDashboard({ clerkId }: { clerkId: string }) {
             <div className="flex-1 text-center md:text-left">
               <h3 className="text-lg font-black text-rose-900 mb-1">Peringatan: Lengkapi Profil Anda</h3>
               <p className="text-sm text-rose-700 font-medium max-w-2xl">
-                Pastikan Anda sudah melengkapi Username, Minimal 1 Paket, dan Portfolio. Akun yang belum lengkap tidak akan tampil di pencarian publik dan tidak bisa menerima order baru.
+                Pastikan Anda sudah melengkapi username, minimal mempunyai 1 paket, dan upload portofolio. Akun fotografer yang belum lengkap tidak akan tampil di pencarian kustomer dan tidak bisa menerima order.
               </p>
             </div>
             <Link href="/dashboard/profile" className="shrink-0 w-full md:w-auto">
-              <Button className="w-full bg-rose-600 hover:bg-rose-700 font-black rounded-2xl px-8 shadow-lg shadow-rose-200">
+              <Button className="w-full bg-rose-600 cursor-pointer hover:bg-rose-700 font-black rounded-2xl px-8 shadow-lg shadow-rose-200">
                 Lengkapi Sekarang
               </Button>
             </Link>
@@ -132,15 +136,10 @@ export function PhotographerDashboard({ clerkId }: { clerkId: string }) {
           <p className="text-slate-500 font-medium tracking-tight">Kelola jadwal pemotretan dan konfirmasi order baru Anda di sini.</p>
         </div>
         <div className="flex flex-wrap items-center gap-3">
-          <Link href="/dashboard/profile">
-            <Button className="px-8 rounded-full font-bold shadow-xl shadow-primary/25">
-              Edit Profil
-            </Button>
-          </Link>
-          {pgProfile && (
-            <Link href={`/photographers/${pgProfile.id}`}>
-              <Button variant="outline" className="rounded-full px-6 border-slate-200 font-bold">
-                Lihat Profil Publik
+          {!isProfileIncomplete && (
+            <Link href="/dashboard/profile">
+              <Button className="px-8 rounded-full font-bold shadow-xl shadow-primary/25 h-12 bg-primary hover:bg-primary/90 transition-all">
+                Edit Profil
               </Button>
             </Link>
           )}

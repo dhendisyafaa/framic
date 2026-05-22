@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import * as z from "zod"
+import { KATEGORI_OPTIONS } from "@/lib/constants"
 import { Camera, Building2, ArrowRight, Loader2, LayoutDashboard } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
@@ -42,6 +43,7 @@ const photographerSchema = z.object({
   bio: z.string().min(10, "Bio minimal 10 karakter"),
   kotaDomisili: z.string().min(3, "Kota minimal 3 karakter"),
   kategori: z.array(z.string()).min(1, "Pilih minimal 1 kategori"),
+  portfolioUrl: z.string().url("Format URL tidak valid").min(1, "Link portofolio wajib diisi"),
 })
 
 const mitraSchema = z.object({
@@ -85,6 +87,7 @@ export default function OnboardingPage() {
       bio: "",
       kotaDomisili: "",
       kategori: [],
+      portfolioUrl: "",
     },
   })
 
@@ -106,6 +109,7 @@ export default function OnboardingPage() {
         bio: userData.photographerProfile.bio || "",
         kotaDomisili: userData.photographerProfile.kotaDomisili || "",
         kategori: userData.photographerProfile.kategori || [],
+        portfolioUrl: userData.photographerProfile.portfolioUrls?.[0] || "",
       })
     }
   }, [userData?.photographerProfile, pgForm])
@@ -134,14 +138,16 @@ export default function OnboardingPage() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          ...values,
-          portfolioUrls: [],
+          bio: values.bio,
+          kotaDomisili: values.kotaDomisili,
+          kategori: values.kategori,
+          portfolioUrls: values.portfolioUrl ? [values.portfolioUrl] : [],
         }),
       })
       const data = await res.json()
       if (!data.success) throw new Error(data.error)
 
-      toast.success("Aplikasi fotografer berhasil diajukan!")
+      toast.success("Pengajuan fotografer berhasil diajukan!")
       router.push("/pending")
     } catch (err: any) {
       toast.error(err.message)
@@ -169,7 +175,7 @@ export default function OnboardingPage() {
       const data = await res.json()
       if (!data.success) throw new Error(data.error)
 
-      toast.success("Aplikasi mitra berhasil diajukan!")
+      toast.success("Pengajuan mitra berhasil diajukan!")
       router.push("/pending")
     } catch (err: any) {
       toast.error(err.message)
@@ -359,12 +365,29 @@ export default function OnboardingPage() {
 
                 <FormField
                   control={pgForm.control}
+                  name="portfolioUrl"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Link Portofolio (Instagram / Google Drive / Website)</FormLabel>
+                      <FormControl>
+                        <Input placeholder="" {...field} />
+                      </FormControl>
+                      <FormDescription>
+                        Tautan eksternal yang menunjukkan hasil karya fotografi Anda agar dapat ditinjau oleh Admin.
+                      </FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={pgForm.control}
                   name="kategori"
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Kategori Keahlian</FormLabel>
                       <div className="flex flex-wrap gap-2">
-                        {["wedding", "wisuda", "portrait", "event", "product"].map((kat) => (
+                        {KATEGORI_OPTIONS.map((kat) => (
                           <button
                             key={kat}
                             type="button"
@@ -380,7 +403,7 @@ export default function OnboardingPage() {
                               : "bg-white hover:bg-slate-50 border-slate-200 text-slate-600"
                               }`}
                           >
-                            {kat.charAt(0).toUpperCase() + kat.slice(1)}
+                            {kat}
                           </button>
                         ))}
                       </div>

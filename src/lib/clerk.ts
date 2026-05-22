@@ -17,6 +17,7 @@ export interface FramicUser {
   name: string
   avatarUrl: string | null
   roles: UserRole[]
+  username: string | null
 }
 
 // ---------------------------------------------------------------------------
@@ -40,6 +41,7 @@ export async function getCurrentUser(): Promise<FramicUser | null> {
     name: `${user.firstName ?? ""} ${user.lastName ?? ""}`.trim(),
     avatarUrl: user.imageUrl ?? null,
     roles,
+    username: user.username ?? null,
   }
 }
 

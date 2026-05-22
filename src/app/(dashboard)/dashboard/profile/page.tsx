@@ -17,7 +17,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Textarea } from "@/components/ui/textarea"
 import type { Package as PackageType, PhotographerProfile } from "@/types"
 import { zodResolver } from "@hookform/resolvers/zod"
-import { useUser } from "@clerk/nextjs"
+import { useUser, useClerk } from "@clerk/nextjs"
+import { KATEGORI_OPTIONS } from "@/lib/constants"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import {
   AlertCircle,
@@ -44,12 +45,6 @@ import * as z from "zod"
 
 // --- SCHEMAS ---
 const profileSchema = z.object({
-  name: z.string().min(3, "Nama lengkap minimal 3 karakter"),
-  username: z.string()
-    .min(3, "Username minimal 3 karakter")
-    .max(30, "Username maksimal 30 karakter")
-    .regex(/^[a-zA-Z0-9](?!.*\.{2})[a-zA-Z0-9._]{0,28}[a-zA-Z0-9]$|^[a-zA-Z0-9]$/, "Format username tidak valid (hanya huruf, angka, titik, underscore)"),
-  email: z.string().optional(),
   bio: z.string().min(10, "Bio minimal 10 karakter"),
   kotaDomisili: z.string().min(3, "Kota minimal 3 karakter"),
   kategori: z.array(z.string()).min(1, "Pilih minimal 1 kategori"),
@@ -73,6 +68,7 @@ type PackageValues = z.input<typeof packageSchema>
 export default function ManageProfilePage() {
   const queryClient = useQueryClient()
   const { user: clerkFrontUser } = useUser()
+  const { openUserProfile } = useClerk()
   const [activeTab, setActiveTab] = useState("profile")
 
   // 1. Fetch User Profile Data
@@ -88,6 +84,9 @@ export default function ManageProfilePage() {
   const actualUserData = userData?.json?.data || userData?.data
   const photographer = actualUserData?.photographerProfile as PhotographerProfile | null
   const clerkUser = actualUserData
+
+  const portfolioImages = photographer?.portfolioUrls?.filter(url => url.includes("cloudinary") || url.includes("res.cloudinary.com") || /\.(jpg|jpeg|png|webp|avif|gif)$/i.test(url)) || []
+  const externalPortfolioUrls = photographer?.portfolioUrls?.filter(url => !portfolioImages.includes(url)) || []
 
   // 2. Fetch Packages
   const { data: packagesData, isLoading: packagesLoading } = useQuery({
@@ -107,9 +106,6 @@ export default function ManageProfilePage() {
   const profileForm = useForm<ProfileValues>({
     resolver: zodResolver(profileSchema),
     values: {
-      name: clerkUser?.name || "",
-      username: photographer?.username || "",
-      email: clerkUser?.email || "",
       bio: photographer?.bio || "",
       kotaDomisili: photographer?.kotaDomisili || "",
       kategori: photographer?.kategori || [],
@@ -120,55 +116,22 @@ export default function ManageProfilePage() {
 
   const updateProfileMutation = useMutation({
     mutationFn: async (values: Partial<ProfileValues>) => {
-      // 1. Ekstrak field khusus
-      const { username, ...updateData } = values
-
-      let isGeneralSuccess = false
-      let usernameErrorMsg: string | null = null
-
-      // 2. Update data profil umum (jika ada data yang dikirim)
-      if (Object.keys(updateData).length > 0) {
+      if (Object.keys(values).length > 0) {
         const res = await fetch("/api/photographers/me", {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(updateData),
+          body: JSON.stringify(values),
         })
         if (!res.ok) {
           const errorData = await res.json()
           throw new Error(errorData.error || "Gagal update profil umum")
         }
-        isGeneralSuccess = true
       }
-
-      // 3. Update username (hanya jika ada perubahan dan nilainya baru)
-      if (username !== undefined && username !== photographer?.username) {
-        const userRes = await fetch("/api/photographers/me/username", {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ username }),
-        })
-        if (!userRes.ok) {
-          const errorData = await userRes.json()
-          // JANGAN throw error, tampung pesan error agar data umum tetap bisa tervisualisasi (invalidate)
-          usernameErrorMsg = errorData.error || "Gagal update username"
-        }
-      }
-
-      return { isGeneralSuccess, usernameErrorMsg }
+      return { success: true }
     },
-    onSuccess: (data) => {
-      // Selalu invalidate agar data yang berhasil (meski ada parsial error) tampil di UI
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["user-me"] })
-
-      if (data.usernameErrorMsg) {
-        if (data.isGeneralSuccess) {
-          toast.warning(`Profil diperbarui, namun Username gagal: ${data.usernameErrorMsg}`)
-        } else {
-          toast.error(data.usernameErrorMsg)
-        }
-      } else {
-        toast.success("Profil berhasil diperbarui!")
-      }
+      toast.success("Profil berhasil diperbarui!")
     },
     onError: (err: any) => toast.error(err.message)
   })
@@ -217,24 +180,6 @@ export default function ManageProfilePage() {
     },
     onError: (err: any) => toast.error(err.message)
   })
-
-  // 4b. Avatar Upload directly via Clerk SDK
-  const [isAvatarUploading, setIsAvatarUploading] = useState(false)
-  const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (!file || !clerkFrontUser) return
-
-    setIsAvatarUploading(true)
-    try {
-      await clerkFrontUser.setProfileImage({ file })
-      toast.success("Foto profil berhasil diperbarui!")
-      queryClient.invalidateQueries({ queryKey: ["user-me"] })
-    } catch (err: any) {
-      toast.error(err.errors?.[0]?.message || err.message || "Gagal upload foto profil")
-    } finally {
-      setIsAvatarUploading(false)
-    }
-  }
 
   // 5. Portfolio Section
   const [isUploading, setIsUploading] = useState(false)
@@ -348,26 +293,15 @@ export default function ManageProfilePage() {
         <div className="relative z-20 flex flex-col md:flex-row items-center gap-10">
           {/* Avatar Container */}
           <div className="relative group z-20">
-            <label htmlFor="avatar-upload" className="block relative w-36 h-36 md:w-48 md:h-48 rounded-[3rem] border-[6px] border-white/10 overflow-hidden bg-white/5 shadow-2xl group-hover:scale-105 group-hover:-rotate-2 transition-all duration-700 ring-4 ring-black/20 cursor-pointer [transform:translateZ(0)]">
+            <div className="block relative w-36 h-36 md:w-48 md:h-48 rounded-[3rem] border-[6px] border-white/10 overflow-hidden bg-white/5 shadow-2xl transition-all duration-700 ring-4 ring-black/20 [transform:translateZ(0)]">
               {clerkUser?.avatarUrl ? (
-                <img src={clerkUser.avatarUrl} alt={clerkUser.name} className={`w-full h-full object-cover transition-all duration-700 ${isAvatarUploading ? 'opacity-50 blur-sm' : 'grayscale-[0.2] group-hover:grayscale-0'}`} />
+                <img src={clerkUser.avatarUrl} alt={clerkUser.name} className="w-full h-full object-cover" />
               ) : (
                 <div className="w-full h-full flex items-center justify-center text-white/10">
                   <User size={80} />
                 </div>
               )}
-              <div className="absolute inset-0 rounded-[2.5rem] bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center backdrop-blur-sm">
-                {isAvatarUploading ? <Loader2 className="w-8 h-8 text-white animate-spin" /> : <Camera className="w-8 h-8 text-white/90" />}
-              </div>
-            </label>
-            <input
-              type="file"
-              id="avatar-upload"
-              className="hidden"
-              accept="image/*"
-              onChange={handleAvatarUpload}
-              disabled={isAvatarUploading}
-            />
+            </div>
 
             {/* Status Floating Badge */}
             <div className="absolute -bottom-3 -right-3 bg-emerald-500 text-white p-4 rounded-[1.5rem] border-4 border-indigo-950 shadow-[0_8px_16px_rgba(16,185,129,0.3)] font-black text-xs">
@@ -377,7 +311,7 @@ export default function ManageProfilePage() {
 
           <div className="flex flex-col gap-5 text-center md:text-left flex-1">
             <div className="space-y-2">
-              <span className="text-xs font-black text-primary uppercase tracking-[0.4em] mb-1 block">PHOTOGRAPHER</span>
+              <span className="text-xs font-black text-primary uppercase tracking-[0.4em] mb-1 block">Fotografer</span>
               <h1 className="text-5xl md:text-7xl font-black tracking-tighter leading-tight ">{clerkUser?.name}</h1>
             </div>
 
@@ -447,72 +381,30 @@ export default function ManageProfilePage() {
                   <CardDescription className="text-slate-500 font-medium tracking-tight">Ceritakan keahlian dan kepribadian Anda kepada kustomer.</CardDescription>
                 </CardHeader>
                 <CardContent className="py-3">
+                  {/* Clerk Account Data Info (Read Only) */}
+                  <div className="bg-indigo-50/50 border border-indigo-100 rounded-[2rem] p-8 mb-8 flex flex-col md:flex-row items-center justify-between gap-6">
+                    <div className="flex items-center gap-5">
+                      <div className="w-16 h-16 bg-white rounded-2xl flex items-center justify-center text-indigo-600 shadow-sm border border-indigo-50">
+                        <User size={32} />
+                      </div>
+                      <div>
+                        <h4 className="font-black text-slate-900 text-lg leading-tight">{clerkFrontUser?.fullName}</h4>
+                        <p className="text-sm text-slate-500 font-bold tracking-widest mt-1">@{clerkFrontUser?.username}</p>
+                        <p className="text-xs text-slate-400 font-medium">{clerkFrontUser?.primaryEmailAddress?.emailAddress}</p>
+                      </div>
+                    </div>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      className="rounded-xl border-indigo-200 text-indigo-600 font-bold hover:bg-indigo-100 px-6"
+                      onClick={() => openUserProfile()}
+                    >
+                      Edit Profil
+                    </Button>
+                  </div>
+
                   <Form {...profileForm}>
                     <form onSubmit={profileForm.handleSubmit((v) => updateProfileMutation.mutate(v))} className="space-y-8">
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                        <FormField
-                          control={profileForm.control}
-                          name="name"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel className="text-slate-900 font-bold">Nama Lengkap</FormLabel>
-                              <FormControl>
-                                <Input
-                                  placeholder="Nama lengkap profesional Anda"
-                                  className="rounded-2xl border-slate-200 h-14 font-bold text-slate-700"
-                                  {...field}
-                                />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                        <FormField
-                          control={profileForm.control}
-                          name="username"
-                          render={({ field }) => (
-                            <FormItem className="relative">
-                              <FormLabel className="text-slate-900 font-bold">Username (@framic_id)</FormLabel>
-                              <FormControl>
-                                <div className="relative">
-                                  <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 font-black">@</div>
-                                  <Input
-                                    placeholder="username_anda"
-                                    className="pl-10 rounded-2xl border-slate-200 h-14 font-black text-indigo-600"
-                                    {...field}
-                                  />
-                                </div>
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                      </div>
-
-                      <FormField
-                        control={profileForm.control}
-                        name="email"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel className="text-slate-900 font-bold flex items-center gap-2">
-                              Email Akun
-                            </FormLabel>
-                            <FormControl>
-                              <div className="relative">
-                                <Globe className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300 w-5 h-5" />
-                                <Input
-                                  className="pl-12 rounded-2xl border-slate-200 h-14 font-medium"
-                                  {...field}
-                                />
-                              </div>
-                            </FormControl>
-                            <FormDescription className="text-[10px] leading-tight text-slate-400 font-medium">
-                              * Email ini akan digunakan sebagai email utama dan tersinkronisasi otomatis dengan akun Anda.
-                            </FormDescription>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
 
                       <FormField
                         control={profileForm.control}
@@ -558,7 +450,7 @@ export default function ManageProfilePage() {
                             <FormItem>
                               <FormLabel className="text-slate-900 font-bold">Kategori Spesialis</FormLabel>
                               <div className="flex flex-wrap gap-2 pt-1">
-                                {["wedding", "wisuda", "portrait", "event", "product"].map((kat) => (
+                                {KATEGORI_OPTIONS.map((kat) => (
                                   <button
                                     key={kat}
                                     type="button"
@@ -665,10 +557,18 @@ export default function ManageProfilePage() {
                       <ImageIcon size={28} className="text-primary" /> Portfolio Galeri
                     </CardTitle>
                     <CardDescription className="text-slate-500 font-medium">Foto portfolio asli adalah penentu utama kustomer mengklik tombol booking.</CardDescription>
+                    {externalPortfolioUrls.length > 0 && (
+                      <div className="mt-2 text-xs font-bold text-slate-500 flex items-center gap-1.5">
+                        <span>Link Portofolio Registrasi:</span>
+                        <a href={externalPortfolioUrls[0]} target="_blank" rel="noopener noreferrer" className="text-indigo-600 hover:text-indigo-700 underline truncate max-w-[250px]">
+                          {externalPortfolioUrls[0]}
+                        </a>
+                      </div>
+                    )}
                   </div>
 
                   <div className="relative">
-                    {(photographer.portfolioUrls?.length || 0) < 5 ? (
+                    {(portfolioImages.length) < 5 ? (
                       <>
                         <input
                           type="file"
@@ -698,8 +598,8 @@ export default function ManageProfilePage() {
                 </CardHeader>
                 <CardContent className="p-8">
                   <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4">
-                    {photographer.portfolioUrls?.length > 0 ? (
-                      photographer.portfolioUrls.map((url, i) => (
+                    {portfolioImages.length > 0 ? (
+                      portfolioImages.map((url, i) => (
                         <div key={i} className="aspect-square rounded-[1.5rem] overflow-hidden border border-slate-100 group relative">
                           <img src={url} alt="Portfolio" className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
                           <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
@@ -902,42 +802,32 @@ export default function ManageProfilePage() {
 
           {/* SIDEBAR RIGHT (PREVIEW & TIPS) */}
           <div className="space-y-6">
-            <Card className="rounded-[2.5rem] border-slate-200 bg-white py-6">
-              <CardHeader className="pb-2">
-                <CardTitle className="text-xs font-black text-slate-400 uppercase tracking-[0.2em]">Profile Status</CardTitle>
+            <Card className="rounded-[2.5rem] border-slate-200 bg-white shadow-xl shadow-slate-200/50">
+              <CardHeader className="p-6 pb-2 border-b border-slate-50">
+                <CardTitle className="text-xs font-black text-slate-400 uppercase tracking-[0.2em]">Status Profil Fotografer</CardTitle>
               </CardHeader>
-              <CardContent className="space-y-6">
+              <CardContent className="p-6 space-y-6">
                 <div className="space-y-4">
-                  <h4 className="font-black text-slate-900  tracking-tighter">Checklist Profil:</h4>
+                  <h4 className="font-black text-slate-900 tracking-tighter">Checklist Kelengkapan:</h4>
                   <div className="space-y-3">
-                    <CheckItem label="Username @Handle" checked={!!photographer.username} />
+                    <CheckItem label="Username (contoh: @framic_id)" checked={!!(photographer.username || clerkFrontUser?.username)} />
                     <CheckItem label="Lengkapi Bio" checked={!!photographer.bio} />
                     <CheckItem label="Unggah Portfolio" checked={photographer.portfolioUrls.length > 0} />
                     <CheckItem label="Buat Minimal 1 Paket" checked={pgPackages.length > 0} />
                   </div>
                 </div>
 
-                <Button variant="outline" className="w-full py-6 rounded-2xl font-bold border-slate-200 gap-2 hover:bg-slate-50" asChild>
-                  <Link href={`/photographers/${photographer.id}`}>
-                    Lihat Tampilan Publik <ArrowRightIcon size={18} />
-                  </Link>
-                </Button>
+                <div className="p-5 rounded-[1.5rem] bg-indigo-50/50 border border-indigo-100 space-y-3">
+                  <div className="flex items-center gap-2 text-indigo-700 font-black tracking-tight text-sm">
+                    <Globe size={18} className="text-indigo-500" /> Syarat Tampil Publik
+                  </div>
+                  <p className="text-xs text-indigo-600/80 font-medium leading-relaxed">
+                    Pastikan seluruh checklist di atas terpenuhi. Profil fotografer yang belum lengkap tidak akan muncul di pencarian kustomer.
+                  </p>
+                </div>
               </CardContent>
             </Card>
-
-            <Card className="rounded-[2.5rem] bg-indigo-900 text-white p-2">
-              <div className="p-6 rounded-[2rem] border border-white/10 bg-white/5 space-y-4">
-                <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center text-white border border-white">
-                  <Globe size={20} />
-                </div>
-                <h3 className="font-bold">Kenapa data saya tidak muncul?</h3>
-                <p className="text-xs text-indigo-100 font-medium leading-relaxed">
-                  Pastikan Anda sudah melengkapi Username, Minimal 1 Paket, dan Portfolio. Akun yang belum lengkap tidak akan tampil di pencarian publik dan tidak bisa menerima order baru.
-                </p>
-              </div>
-            </Card>
           </div>
-
         </div>
       </Tabs>
     </div>

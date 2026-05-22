@@ -16,7 +16,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Button } from "@/components/ui/button"
 import { Search } from "lucide-react"
 
-const KATEGORI_OPTIONS = ["Wedding", "Graduation", "Portrait", "Event", "Product", "Landscape"]
+import { KATEGORI_OPTIONS } from "@/lib/constants"
 const KOTA_OPTIONS = ["Jakarta", "Bandung", "Surabaya", "Yogyakarta", "Bali", "Medan"]
 
 const filterSchema = z.object({

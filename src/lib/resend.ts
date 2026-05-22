@@ -20,7 +20,7 @@ export const resend = new Resend(resendApiKey)
 // ---------------------------------------------------------------------------
 
 /** Alamat pengirim default untuk semua email Framic */
-export const EMAIL_FROM = "Framic <noreply@framic.id>"
+export const EMAIL_FROM = process.env.EMAIL_FROM || "Framic <noreply@framic.id>"
 
 /** Subject prefix untuk konsistensi */
 export const EMAIL_SUBJECT_PREFIX = "[Framic]"

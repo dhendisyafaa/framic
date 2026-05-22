@@ -160,7 +160,7 @@ export default function AdminVerificationPage() {
                                  <div className="grid grid-cols-2 gap-4">
                                     <div className="space-y-1">
                                        <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Username</div>
-                                       <div className="text-sm font-bold text-slate-900">@{pg.username}</div>
+                                       <div className="text-sm font-bold text-slate-900">@{pg.username || "-"}</div>
                                     </div>
                                     <div className="space-y-1">
                                        <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Lokasi</div>
@@ -179,26 +179,44 @@ export default function AdminVerificationPage() {
 
                                  {pg.portfolioUrls.length > 0 && (
                                     <div className="space-y-3">
-                                       <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Portofolio (Preview)</div>
-                                       <div className="grid grid-cols-2 gap-3">
-                                          {pg.portfolioUrls.map((url: string, idx: number) => (
-                                             <a
-                                                key={idx}
-                                                href={url}
-                                                target="_blank"
-                                                rel="noopener noreferrer"
-                                                className="group/porto relative aspect-[4/3] rounded-2xl overflow-hidden border border-slate-100 bg-slate-100 shadow-sm"
-                                             >
-                                                <img
-                                                   src={url}
-                                                   alt={`Portofolio ${idx + 1}`}
-                                                   className="w-full h-full object-cover transition-transform duration-500 group-hover/porto:scale-110"
-                                                />
-                                                <div className="absolute inset-0 bg-black/40 opacity-0 group-hover/porto:opacity-100 transition-opacity flex items-center justify-center">
-                                                   <ExternalLink className="w-5 h-5 text-white" />
-                                                </div>
-                                             </a>
-                                          ))}
+                                       <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Portofolio</div>
+                                       <div className="grid grid-cols-1 gap-2">
+                                          {pg.portfolioUrls.map((url: string, idx: number) => {
+                                             const isImage = url.includes("cloudinary") || url.includes("res.cloudinary.com") || /\.(jpg|jpeg|png|webp|avif|gif)$/i.test(url);
+                                             if (isImage) {
+                                                return (
+                                                   <a
+                                                      key={idx}
+                                                      href={url}
+                                                      target="_blank"
+                                                      rel="noopener noreferrer"
+                                                      className="group/porto relative aspect-[4/3] rounded-2xl overflow-hidden border border-slate-100 bg-slate-100 shadow-sm"
+                                                   >
+                                                      <img
+                                                         src={url}
+                                                         alt={`Portofolio ${idx + 1}`}
+                                                         className="w-full h-full object-cover transition-transform duration-500 group-hover/porto:scale-110"
+                                                      />
+                                                      <div className="absolute inset-0 bg-black/40 opacity-0 group-hover/porto:opacity-100 transition-opacity flex items-center justify-center">
+                                                         <ExternalLink className="w-5 h-5 text-white" />
+                                                      </div>
+                                                   </a>
+                                                )
+                                             }
+
+                                             return (
+                                                <a
+                                                   key={idx}
+                                                   href={url}
+                                                   target="_blank"
+                                                   rel="noopener noreferrer"
+                                                   className="flex items-center justify-between p-3.5 rounded-2xl border border-indigo-100 bg-indigo-50/50 text-indigo-700 hover:bg-indigo-50 font-bold text-xs transition-all gap-2"
+                                                >
+                                                   <span className="truncate flex-1 text-left">{url}</span>
+                                                   <ExternalLink className="w-4 h-4 shrink-0 text-indigo-500" />
+                                                </a>
+                                             )
+                                          })}
                                        </div>
                                     </div>
                                  )}
@@ -210,18 +228,18 @@ export default function AdminVerificationPage() {
 
                               <div className="pt-6 flex items-center gap-3 border-t border-slate-100">
                                  <Button
-                                    className="flex-1 bg-primary hover:bg-primary/90 text-white font-bold rounded-xl py-3 transition-all"
-                                    onClick={() => approveMutation.mutate({ clerkId: pg.clerkId, type: "photographer" })}
-                                    disabled={approveMutation.isPending || rejectMutation.isPending}
-                                 >
-                                    <CheckCircle2 className="w-4 h-4 mr-2" /> Setujui
-                                 </Button>
-                                 <Button
                                     className="flex-1 bg-rose-600 hover:bg-rose-700 text-white font-bold rounded-xl py-3 transition-all"
                                     onClick={() => rejectMutation.mutate({ clerkId: pg.clerkId, type: "photographer" })}
                                     disabled={approveMutation.isPending || rejectMutation.isPending}
                                  >
-                                    <XCircle className="w-4 h-4 mr-2" /> Tolak
+                                    Tolak
+                                 </Button>
+                                 <Button
+                                    className="flex-1 bg-primary hover:bg-primary/90 text-white font-bold rounded-xl py-3 transition-all"
+                                    onClick={() => approveMutation.mutate({ clerkId: pg.clerkId, type: "photographer" })}
+                                    disabled={approveMutation.isPending || rejectMutation.isPending}
+                                 >
+                                    Setujui
                                  </Button>
                               </div>
                            </CardContent>
@@ -328,18 +346,18 @@ export default function AdminVerificationPage() {
 
                               <div className="pt-6 flex items-center gap-3 border-t border-slate-100">
                                  <Button
-                                    className="flex-1 bg-primary hover:bg-primary/90 text-white font-bold rounded-xl py-3 transition-all"
-                                    onClick={() => approveMutation.mutate({ clerkId: m.clerkId, type: "mitra" })}
-                                    disabled={approveMutation.isPending || rejectMutation.isPending}
-                                 >
-                                    <ShieldCheck className="w-4 h-4 mr-2" /> Setujui
-                                 </Button>
-                                 <Button
                                     className="flex-1 bg-rose-600 hover:bg-rose-700 text-white font-bold rounded-xl py-3 transition-all"
                                     onClick={() => rejectMutation.mutate({ clerkId: m.clerkId, type: "mitra" })}
                                     disabled={approveMutation.isPending || rejectMutation.isPending}
                                  >
-                                    <XCircle className="w-4 h-4 mr-2" /> Tolak
+                                    Tolak
+                                 </Button>
+                                 <Button
+                                    className="flex-1 bg-primary hover:bg-primary/90 text-white font-bold rounded-xl py-3 transition-all"
+                                    onClick={() => approveMutation.mutate({ clerkId: m.clerkId, type: "mitra" })}
+                                    disabled={approveMutation.isPending || rejectMutation.isPending}
+                                 >
+                                    Setujui
                                  </Button>
                               </div>
                            </CardContent>

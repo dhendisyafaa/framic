@@ -6,6 +6,7 @@ import { Star, MapPin, Camera } from "lucide-react"
 interface PhotographerCardProps {
   pg: {
     id: string
+    username?: string | null
     nama?: string
     avatarUrl?: string | null
     bio?: string | null
@@ -73,7 +74,7 @@ export function PhotographerCard({ pg }: PhotographerCardProps) {
         </div>
       </CardContent>
       <CardFooter className="p-5 pt-0">
-        <Link href={`/photographers/${pg.id}`} className="w-full">
+        <Link href={`/photographers/${pg.username}`} className="w-full">
           <Button variant="outline" className="w-full transition-all bg-primary text-white border-primary md:bg-transparent md:text-slate-900 md:border-slate-200 md:group-hover:bg-primary md:group-hover:text-white md:group-hover:border-primary">
             Lihat Profil
           </Button>
