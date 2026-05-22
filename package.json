@@ -29,6 +29,7 @@
     "db:clear": "npx dotenv-cli -e .env.local -- tsx scripts/clear-db.ts"
   },
   "dependencies": {
+    "@clerk/localizations": "^4.6.6",
     "@clerk/nextjs": "^7.0.4",
     "@hono/node-server": "^1.19.11",
     "@hono/zod-validator": "^0.7.6",
