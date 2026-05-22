@@ -1,7 +1,6 @@
 import { CalendarView } from "@/components/features/calendar/calendar-view"
-import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
-import { Star, MapPin, Camera, CheckCircle, ShieldCheck, Instagram, Globe, MessageSquare, Clock, Users } from "lucide-react"
+import { Star, MapPin, Camera, CheckCircle, ShieldCheck, Instagram, Globe, Clock, Users } from "lucide-react"
 import { BookingButton } from "@/components/features/booking/booking-button"
 import Link from "next/link"
 import { notFound } from "next/navigation"
@@ -79,9 +78,6 @@ export default async function PhotographerDetailPage({
 
               <div className="flex gap-3 pt-2">
                 <BookingButton photographer={pg} />
-                <Button variant="outline" size="icon" className="rounded-xl">
-                  <MessageSquare className="w-4 h-4" />
-                </Button>
               </div>
             </CardContent>
           </Card>

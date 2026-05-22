@@ -293,18 +293,26 @@ ordersRouter.get("/:id", async (c) => {
     db.select().from(reviews).where(eq(reviews.orderId, orderId)).limit(1)
   ])
 
-  // Resolve Names from Clerk
+  // Resolve Names and Avatars from Clerk
   const clerk = await clerkClient()
   let photographerName = "Fotografer"
   let customerName = "Kustomer"
+  let photographerAvatarUrl: string | undefined
+  let customerAvatarUrl: string | undefined
 
   try {
     const [pgUser, custUser] = await Promise.all([
       orderWithDetails.photographer ? clerk.users.getUser(orderWithDetails.photographer.clerkId) : null,
       clerk.users.getUser(orderWithDetails.order.customerClerkId)
     ])
-    if (pgUser) photographerName = `${pgUser.firstName || ""} ${pgUser.lastName || ""}`.trim()
-    if (custUser) customerName = `${custUser.firstName || ""} ${custUser.lastName || ""}`.trim()
+    if (pgUser) {
+      photographerName = `${pgUser.firstName || ""} ${pgUser.lastName || ""}`.trim() || photographerName
+      photographerAvatarUrl = pgUser.imageUrl
+    }
+    if (custUser) {
+      customerName = `${custUser.firstName || ""} ${custUser.lastName || ""}`.trim() || customerName
+      customerAvatarUrl = custUser.imageUrl
+    }
   } catch (err) {
     // Silent fail if clerk error
   }
@@ -314,11 +322,13 @@ ordersRouter.get("/:id", async (c) => {
     ...orderWithDetails.order,
     package: orderWithDetails.package,
     payment: orderWithDetails.payment,
-    photographer: {
+    photographer: orderWithDetails.photographer ? {
       ...orderWithDetails.photographer,
-      nama: photographerName
-    },
+      nama: photographerName,
+      avatarUrl: photographerAvatarUrl
+    } : null,
     customerName,
+    customerAvatarUrl,
     photos: photosData || [],
     review: reviewData[0] || null
   }
