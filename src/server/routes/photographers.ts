@@ -432,6 +432,8 @@ photographersRouter.get("/:username", async (c) => {
     return c.json({ success: false, error: "Fotografer tidak ditemukan" }, 404)
   }
 
+  const pgId = profile.id
+
   // Mengambil user info
   const clerk = await clerkClient()
   let nama = "Fotografer"
