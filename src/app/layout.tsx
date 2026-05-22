@@ -13,6 +13,7 @@ export const metadata: Metadata = {
 import { ClerkProvider } from "@clerk/nextjs"
 import { idID } from '@clerk/localizations';
 import { QueryProvider } from "@/components/providers/query-provider"
+import { PostHogProvider } from "@/components/providers/posthog-provider"
 import { Toaster } from "sonner"
 
 export default function RootLayout({
@@ -38,10 +39,12 @@ export default function RootLayout({
       }} localization={idID}>
       <html lang="en" className={cn("font-serif", lora.variable)}>
         <body className="antialiased">
-          <QueryProvider>
-            {children}
-            <Toaster richColors position="top-center" />
-          </QueryProvider>
+          <PostHogProvider>
+            <QueryProvider>
+              {children}
+              <Toaster richColors position="top-center" />
+            </QueryProvider>
+          </PostHogProvider>
         </body>
       </html>
     </ClerkProvider>
