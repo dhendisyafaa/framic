@@ -29,21 +29,28 @@ async function ensureUserExists(clerkId: string, username?: string | null) {
     .from(users)
     .where(eq(users.clerkId, clerkId))
 
-  if (!existingUser) {
-    await db.transaction(async (tx) => {
-      await tx.insert(users).values({
-        clerkId,
-        username: username || null,
-        roles: ["customer"],
-        isActive: true,
+  try {
+    if (!existingUser) {
+      await db.transaction(async (tx) => {
+        await tx.insert(users).values({
+          clerkId,
+          username: username || null,
+          roles: ["customer"],
+          isActive: true,
+        })
+        await tx.insert(customerProfiles).values({ clerkId })
       })
-      await tx.insert(customerProfiles).values({ clerkId })
-    })
-  } else if (username && existingUser.username !== username) {
-    // Sync username if it changed or was missing
-    await db.update(users)
-      .set({ username, updatedAt: new Date() })
-      .where(eq(users.clerkId, clerkId))
+    } else if (username && existingUser.username !== username) {
+      // Sync username if it changed or was missing
+      await db.update(users)
+        .set({ username, updatedAt: new Date() })
+        .where(eq(users.clerkId, clerkId))
+    }
+  } catch (error: any) {
+    if (error.code === "23505" || error.message?.includes("unique constraint")) {
+      throw new Error(`Username "${username}" sudah digunakan oleh akun lain di sistem. Silakan gunakan username lain.`);
+    }
+    throw error;
   }
 }
 
@@ -201,7 +208,7 @@ usersRouter.post(
     const data = c.req.valid("json")
 
     // Memastikan user sudah tercatat di datastore utama kita
-    await ensureUserExists(clerkId)
+    await ensureUserExists(clerkId, clerkUser.username)
 
     // Cek apakah sudah punya profil mitra (hanya 1 role tambahan yang diizinkan sesuai instruksi user)
     const [existingMitra] = await db
@@ -228,6 +235,7 @@ usersRouter.post(
       const [updatedProfile] = await db
         .update(photographerProfiles)
         .set({
+          username: clerkUser.username || null,
           bio: data.bio,
           kotaDomisili: data.kotaDomisili,
           kategori: data.kategori,
@@ -246,6 +254,7 @@ usersRouter.post(
       .insert(photographerProfiles)
       .values({
         clerkId,
+        username: clerkUser.username || null,
         bio: data.bio,
         kotaDomisili: data.kotaDomisili,
         kategori: data.kategori,
@@ -294,7 +303,7 @@ usersRouter.post(
     const data = c.req.valid("form")
 
     // Memastikan user sudah tercatat di datastore utama kita
-    await ensureUserExists(clerkId)
+    await ensureUserExists(clerkId, clerkUser.username)
 
     // Cek apakah sudah apply/aktif fotografer (Hanya 1 role tambahan yang diizinkan)
     const [existingPg] = await db

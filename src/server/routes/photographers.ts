@@ -254,6 +254,7 @@ photographersRouter.get("/", zValidator("query", getPhotographersQuerySchema), a
   const rows = await db
     .select({
       id: photographerProfiles.id,
+      username: photographerProfiles.username,
       clerkId: photographerProfiles.clerkId,
       bio: photographerProfiles.bio,
       kotaDomisili: photographerProfiles.kotaDomisili,
@@ -291,6 +292,7 @@ photographersRouter.get("/", zValidator("query", getPhotographersQuerySchema), a
   // Compose responses
   const data = rows.map((r) => ({
     id: r.id,
+    username: r.username,
     bio: r.bio,
     kotaDomisili: r.kotaDomisili,
     kategori: r.kategori,
@@ -407,22 +409,21 @@ photographersRouter.get("/search", async (c) => {
 })
 
 // ---------------------------------------------------------------------------
-// GET /api/photographers/:id
+// GET /api/photographers/:username
 // Detail Photografer lengkap dengan paket & ulasan
 // ---------------------------------------------------------------------------
-photographersRouter.get("/:id", async (c) => {
-  const pgId = c.req.param("id")
+photographersRouter.get("/:username", async (c) => {
+  const username = c.req.param("username")
 
-  // Jika :id adalah 'me', rute di atas harusnya sudah menangkapnya. 
-  // Tapi jika tembus ke sini, kita filter agar tidak menyebabkan UUID error.
-  if (pgId === "me") return c.notFound()
+  // Jika username adalah 'me', rute di atas harusnya sudah menangkapnya. 
+  if (username === "me") return c.notFound()
 
   const [profile] = await db
     .select()
     .from(photographerProfiles)
     .where(
       and(
-        eq(photographerProfiles.id, pgId),
+        eq(photographerProfiles.username, username),
         sql`${photographerProfiles.verificationStatus}::text = 'verified'`
       )
     )
