@@ -85,6 +85,9 @@ export default function ManageProfilePage() {
   const photographer = actualUserData?.photographerProfile as PhotographerProfile | null
   const clerkUser = actualUserData
 
+  const portfolioImages = photographer?.portfolioUrls?.filter(url => url.includes("cloudinary") || url.includes("res.cloudinary.com") || /\.(jpg|jpeg|png|webp|avif|gif)$/i.test(url)) || []
+  const externalPortfolioUrls = photographer?.portfolioUrls?.filter(url => !portfolioImages.includes(url)) || []
+
   // 2. Fetch Packages
   const { data: packagesData, isLoading: packagesLoading } = useQuery({
     queryKey: ["photographer-packages", photographer?.id],
@@ -554,10 +557,18 @@ export default function ManageProfilePage() {
                       <ImageIcon size={28} className="text-primary" /> Portfolio Galeri
                     </CardTitle>
                     <CardDescription className="text-slate-500 font-medium">Foto portfolio asli adalah penentu utama kustomer mengklik tombol booking.</CardDescription>
+                    {externalPortfolioUrls.length > 0 && (
+                      <div className="mt-2 text-xs font-bold text-slate-500 flex items-center gap-1.5">
+                        <span>Link Portofolio Registrasi:</span>
+                        <a href={externalPortfolioUrls[0]} target="_blank" rel="noopener noreferrer" className="text-indigo-600 hover:text-indigo-700 underline truncate max-w-[250px]">
+                          {externalPortfolioUrls[0]}
+                        </a>
+                      </div>
+                    )}
                   </div>
 
                   <div className="relative">
-                    {(photographer.portfolioUrls?.length || 0) < 5 ? (
+                    {(portfolioImages.length) < 5 ? (
                       <>
                         <input
                           type="file"
@@ -587,8 +598,8 @@ export default function ManageProfilePage() {
                 </CardHeader>
                 <CardContent className="p-8">
                   <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4">
-                    {photographer.portfolioUrls?.length > 0 ? (
-                      photographer.portfolioUrls.map((url, i) => (
+                    {portfolioImages.length > 0 ? (
+                      portfolioImages.map((url, i) => (
                         <div key={i} className="aspect-square rounded-[1.5rem] overflow-hidden border border-slate-100 group relative">
                           <img src={url} alt="Portfolio" className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
                           <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
@@ -791,42 +802,32 @@ export default function ManageProfilePage() {
 
           {/* SIDEBAR RIGHT (PREVIEW & TIPS) */}
           <div className="space-y-6">
-            <Card className="rounded-[2.5rem] border-slate-200 bg-white py-6">
-              <CardHeader className="pb-2">
-                <CardTitle className="text-xs font-black text-slate-400 uppercase tracking-[0.2em]">Profile Status</CardTitle>
+            <Card className="rounded-[2.5rem] border-slate-200 bg-white shadow-xl shadow-slate-200/50">
+              <CardHeader className="p-6 pb-2 border-b border-slate-50">
+                <CardTitle className="text-xs font-black text-slate-400 uppercase tracking-[0.2em]">Status Profil Fotografer</CardTitle>
               </CardHeader>
-              <CardContent className="space-y-6">
+              <CardContent className="p-6 space-y-6">
                 <div className="space-y-4">
-                  <h4 className="font-black text-slate-900  tracking-tighter">Checklist Profil:</h4>
+                  <h4 className="font-black text-slate-900 tracking-tighter">Checklist Kelengkapan:</h4>
                   <div className="space-y-3">
-                    <CheckItem label="Username @Handle" checked={!!photographer.username} />
+                    <CheckItem label="Username (contoh: @framic_id)" checked={!!(photographer.username || clerkFrontUser?.username)} />
                     <CheckItem label="Lengkapi Bio" checked={!!photographer.bio} />
                     <CheckItem label="Unggah Portfolio" checked={photographer.portfolioUrls.length > 0} />
                     <CheckItem label="Buat Minimal 1 Paket" checked={pgPackages.length > 0} />
                   </div>
                 </div>
 
-                <Button variant="outline" className="w-full py-6 rounded-2xl font-bold border-slate-200 gap-2 hover:bg-slate-50" asChild>
-                  <Link href={`/photographers/${photographer.id}`}>
-                    Lihat Tampilan Publik <ArrowRightIcon size={18} />
-                  </Link>
-                </Button>
+                <div className="p-5 rounded-[1.5rem] bg-indigo-50/50 border border-indigo-100 space-y-3">
+                  <div className="flex items-center gap-2 text-indigo-700 font-black tracking-tight text-sm">
+                    <Globe size={18} className="text-indigo-500" /> Syarat Tampil Publik
+                  </div>
+                  <p className="text-xs text-indigo-600/80 font-medium leading-relaxed">
+                    Pastikan seluruh checklist di atas terpenuhi. Profil fotografer yang belum lengkap tidak akan muncul di pencarian kustomer.
+                  </p>
+                </div>
               </CardContent>
             </Card>
-
-            <Card className="rounded-[2.5rem] bg-indigo-900 text-white p-2">
-              <div className="p-6 rounded-[2rem] border border-white/10 bg-white/5 space-y-4">
-                <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center text-white border border-white">
-                  <Globe size={20} />
-                </div>
-                <h3 className="font-bold">Kenapa data saya tidak muncul?</h3>
-                <p className="text-xs text-indigo-100 font-medium leading-relaxed">
-                  Pastikan Anda sudah melengkapi Username, Minimal 1 Paket, dan Portfolio. Akun yang belum lengkap tidak akan tampil di pencarian publik dan tidak bisa menerima order baru.
-                </p>
-              </div>
-            </Card>
           </div>
-
         </div>
       </Tabs>
     </div>
