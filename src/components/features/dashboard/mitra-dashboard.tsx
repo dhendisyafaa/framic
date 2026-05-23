@@ -96,12 +96,12 @@ export function MitraDashboard({ clerkId, mitraId }: MitraDashboardProps) {
       {/* Header */}
       <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 mb-10">
         <div>
-          <h1 className="text-3xl font-black tracking-tight text-slate-900 mb-2">Mitra Dashboard</h1>
-          <p className="text-slate-500 font-medium tracking-tight">Pantau performa event dan kelola tim fotografer Anda secara terpusat.</p>
+          <h1 className="text-3xl font-medium tracking-[-0.02em] text-foreground mb-2">Mitra Dashboard</h1>
+          <p className="text-sm text-muted-foreground">Pantau performa event dan kelola tim fotografer Anda secara terpusat.</p>
         </div>
         <Link href="/mitra/events">
-          <Button className="rounded-full px-8 shadow-xl shadow-primary/25 bg-primary hover:bg-primary/90 gap-2 font-bold h-12 transition-all hover:scale-105 active:scale-95">
-            <PlusCircleIcon className="w-5 h-5" />
+          <Button className="rounded-full px-8 shadow-sm bg-primary hover:bg-primary/95 gap-2 font-bold h-11 text-xs">
+            <PlusCircleIcon className="w-4 h-4" />
             Kelola Event
           </Button>
         </Link>
@@ -109,57 +109,57 @@ export function MitraDashboard({ clerkId, mitraId }: MitraDashboardProps) {
 
       {/* Stats Row */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-10">
-        <Card className="border-slate-200 shadow-sm bg-indigo-50/30">
+        <Card className="border-muted bg-card shadow-sm rounded-[24px]">
           <CardContent className="pt-6">
             <div className="flex items-center gap-4">
-              <div className="p-3 bg-indigo-100 rounded-2xl text-indigo-600">
+              <div className="p-3 bg-muted text-foreground rounded-full border border-muted/50">
                 <UsersIcon className="w-5 h-5" />
               </div>
               <div>
-                <CardTitle className="text-xs font-black text-slate-400 uppercase tracking-widest mb-1">PG Aktif</CardTitle>
-                <div className="text-4xl font-black text-slate-900 tracking-tighter">{pgAktif}</div>
+                <CardTitle className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-1">PG Aktif</CardTitle>
+                <div className="text-3xl font-medium text-foreground tracking-[-0.02em]">{pgAktif}</div>
               </div>
             </div>
           </CardContent>
         </Card>
 
-        <Card className="border-slate-200 shadow-sm bg-amber-50/30">
+        <Card className="border-muted bg-card shadow-sm rounded-[24px]">
           <CardContent className="pt-6">
             <div className="flex items-center gap-4">
-              <div className="p-3 bg-amber-100 rounded-2xl text-amber-600">
+              <div className="p-3 bg-muted text-foreground rounded-full border border-muted/50">
                 <ClockIcon className="w-5 h-5" />
               </div>
               <div>
-                <CardTitle className="text-xs font-black text-slate-400 uppercase tracking-widest mb-1">Pending Expiry</CardTitle>
-                <div className="text-4xl font-black text-slate-900 tracking-tighter">{pgPendingExpiry}</div>
+                <CardTitle className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-1">Pending Expiry</CardTitle>
+                <div className="text-3xl font-medium text-foreground tracking-[-0.02em]">{pgPendingExpiry}</div>
               </div>
             </div>
           </CardContent>
         </Card>
 
-        <Card className="border-slate-200 shadow-sm bg-emerald-50/30">
+        <Card className="border-muted bg-card shadow-sm rounded-[24px]">
           <CardContent className="pt-6">
             <div className="flex items-center gap-4">
-              <div className="p-3 bg-emerald-100 rounded-2xl text-emerald-600">
+              <div className="p-3 bg-muted text-foreground rounded-full border border-muted/50">
                 <CheckCircle2Icon className="w-5 h-5" />
               </div>
               <div>
-                <CardTitle className="text-xs font-black text-slate-400 uppercase tracking-widest mb-1">Event Published</CardTitle>
-                <div className="text-4xl font-black text-slate-900 tracking-tighter">{eventPublished}</div>
+                <CardTitle className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-1">Event Published</CardTitle>
+                <div className="text-3xl font-medium text-foreground tracking-[-0.02em]">{eventPublished}</div>
               </div>
             </div>
           </CardContent>
         </Card>
 
-        <Card className="border-slate-200 shadow-sm bg-slate-50/50">
+        <Card className="border-muted bg-card shadow-sm rounded-[24px]">
           <CardContent className="pt-6">
             <div className="flex items-center gap-4">
-              <div className="p-3 bg-slate-100 rounded-2xl text-slate-500">
+              <div className="p-3 bg-muted text-foreground rounded-full border border-muted/50">
                 <FileTextIcon className="w-5 h-5" />
               </div>
               <div>
-                <CardTitle className="text-xs font-black text-slate-400 uppercase tracking-widest mb-1">Event Draft</CardTitle>
-                <div className="text-4xl font-black text-slate-900 tracking-tighter">{eventDraft}</div>
+                <CardTitle className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-1">Event Draft</CardTitle>
+                <div className="text-3xl font-medium text-foreground tracking-[-0.02em]">{eventDraft}</div>
               </div>
             </div>
           </CardContent>
@@ -169,15 +169,15 @@ export function MitraDashboard({ clerkId, mitraId }: MitraDashboardProps) {
       {/* Two-column widgets */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         {/* Widget 1 — Ringkasan Anggota Tetap */}
-        <Card className="border-slate-200 shadow-sm rounded-3xl overflow-hidden">
-          <CardHeader className="p-6 bg-indigo-900 text-white">
+        <Card className="border-muted bg-card shadow-sm rounded-[32px] overflow-hidden">
+          <CardHeader className="p-6 bg-[#141413] text-white">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <UsersIcon className="w-5 h-5 text-indigo-300" />
-                <CardTitle className="text-base font-black">Anggota Tetap</CardTitle>
+                <UsersIcon className="w-5 h-5 text-accent" />
+                <CardTitle className="text-base font-medium">Anggota Tetap</CardTitle>
               </div>
               <Link href="/mitra/photographers">
-                <Button size="sm" variant="ghost" className="text-indigo-200 hover:text-white hover:bg-white/10 rounded-full gap-1 text-xs font-bold">
+                <Button size="sm" variant="ghost" className="text-muted hover:text-white hover:bg-white/10 rounded-full gap-1 text-[10px] font-bold">
                   Kelola <ChevronRightIcon className="w-3 h-3" />
                 </Button>
               </Link>
@@ -186,10 +186,10 @@ export function MitraDashboard({ clerkId, mitraId }: MitraDashboardProps) {
           <CardContent className="p-6">
             {photographers.length === 0 ? (
               <div className="text-center py-8">
-                <UsersIcon className="w-8 h-8 text-slate-300 mx-auto mb-3" />
-                <p className="text-slate-400 text-sm font-medium">Belum ada fotografer tetap.</p>
+                <UsersIcon className="w-8 h-8 text-muted-foreground/40 mx-auto mb-3" />
+                <p className="text-muted-foreground text-xs font-medium">Belum ada fotografer tetap.</p>
                 <Link href="/mitra/photographers">
-                  <Button variant="outline" size="sm" className="mt-4 rounded-full font-bold border-slate-200">
+                  <Button variant="outline" size="sm" className="mt-4 rounded-full font-bold border-muted hover:bg-muted/40 text-xs">
                     + Undang Fotografer
                   </Button>
                 </Link>
@@ -197,11 +197,11 @@ export function MitraDashboard({ clerkId, mitraId }: MitraDashboardProps) {
             ) : (
               <div className="space-y-3">
                 {photographers.slice(0, 4).map(pg => (
-                  <div key={pg.contractId} className="flex items-center justify-between p-3 rounded-2xl bg-slate-50 border border-slate-100">
+                  <div key={pg.contractId} className="flex items-center justify-between p-3 rounded-[16px] bg-background border border-muted">
                     <div>
-                      <div className="font-bold text-slate-900 text-sm">{pg.nama}</div>
+                      <div className="font-bold text-foreground text-xs">{pg.nama}</div>
                       {pg.tanggalSelesai && (
-                        <div className="text-xs text-slate-400 font-medium mt-0.5">
+                        <div className="text-[10px] text-muted-foreground font-medium mt-0.5">
                           s.d. {format(new Date(pg.tanggalSelesai), "d MMM yyyy", { locale: localeId })}
                         </div>
                       )}
@@ -209,25 +209,25 @@ export function MitraDashboard({ clerkId, mitraId }: MitraDashboardProps) {
                     <div className="flex items-center gap-2">
                       <Badge
                         variant="outline"
-                        className={`rounded-full text-[10px] font-black border-2 ${pg.contractStatus === "active"
-                          ? "text-emerald-600 border-emerald-200 bg-emerald-50"
+                        className={`rounded-full text-[9px] font-bold tracking-wider px-2.5 py-0.5 border ${pg.contractStatus === "active"
+                          ? "text-accent border-accent/20 bg-accent/5"
                           : pg.contractStatus === "pending_expiry"
-                            ? "text-amber-600 border-amber-200 bg-amber-50"
-                            : "text-slate-400 border-slate-200 font-bold"
+                            ? "text-accent border-accent/20 bg-accent/5 font-bold"
+                            : "text-muted-foreground border-muted bg-[#F3F0EE]"
                           }`}
                       >
-                        {pg.contractStatus?.toUpperCase() ?? "ACCEPTED"}
+                        {pg.contractStatus ?? "ACCEPTED"}
                       </Badge>
                     </div>
                   </div>
                 ))}
                 {photographers.length > 4 && (
-                  <Link href="/mitra/photographers" className="block text-center text-xs text-indigo-600 font-bold hover:underline pt-1">
+                  <Link href="/mitra/photographers" className="block text-center text-[10px] text-primary font-bold hover:underline pt-1">
                     +{photographers.length - 4} lainnya
                   </Link>
                 )}
                 <Link href="/mitra/photographers">
-                  <Button variant="outline" className="w-full mt-2 rounded-2xl border-slate-200 font-bold text-sm">
+                  <Button variant="outline" className="w-full mt-2 rounded-full border-muted font-bold text-xs h-10 hover:bg-muted/40">
                     Kelola Fotografer
                   </Button>
                 </Link>
@@ -237,15 +237,15 @@ export function MitraDashboard({ clerkId, mitraId }: MitraDashboardProps) {
         </Card>
 
         {/* Widget 2 — Ringkasan Event */}
-        <Card className="border-slate-200 shadow-sm rounded-3xl overflow-hidden">
-          <CardHeader className="p-6 bg-slate-900 text-white">
+        <Card className="border-muted bg-card shadow-sm rounded-[32px] overflow-hidden">
+          <CardHeader className="p-6 bg-[#141413] text-white">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <TentIcon className="w-5 h-5 text-slate-300" />
-                <CardTitle className="text-base font-black">Event</CardTitle>
+                <TentIcon className="w-5 h-5 text-accent" />
+                <CardTitle className="text-base font-medium">Event</CardTitle>
               </div>
               <Link href="/mitra/events">
-                <Button size="sm" variant="ghost" className="text-slate-200 hover:text-white hover:bg-white/10 rounded-full gap-1 text-xs font-bold">
+                <Button size="sm" variant="ghost" className="text-muted hover:text-white hover:bg-white/10 rounded-full gap-1 text-[10px] font-bold">
                   Kelola <ChevronRightIcon className="w-3 h-3" />
                 </Button>
               </Link>
@@ -254,10 +254,10 @@ export function MitraDashboard({ clerkId, mitraId }: MitraDashboardProps) {
           <CardContent className="p-6">
             {allEvents.length === 0 ? (
               <div className="text-center py-8">
-                <CalendarIcon className="w-8 h-8 text-slate-300 mx-auto mb-3" />
-                <p className="text-slate-400 text-sm font-medium">Belum ada event yang dibuat.</p>
+                <CalendarIcon className="w-8 h-8 text-muted-foreground/40 mx-auto mb-3" />
+                <p className="text-muted-foreground text-xs font-medium">Belum ada event yang dibuat.</p>
                 <Link href="/mitra/events">
-                  <Button variant="outline" size="sm" className="mt-4 rounded-full font-bold border-slate-200">
+                  <Button variant="outline" size="sm" className="mt-4 rounded-full font-bold border-muted hover:bg-muted/40 text-xs">
                     + Buat Event
                   </Button>
                 </Link>
@@ -265,18 +265,18 @@ export function MitraDashboard({ clerkId, mitraId }: MitraDashboardProps) {
             ) : (
               <div className="space-y-3">
                 {recentEvents.map(event => (
-                  <div key={event.id} className="flex items-center justify-between p-3 rounded-2xl bg-slate-50 border border-slate-100">
+                  <div key={event.id} className="flex items-center justify-between p-3 rounded-[16px] bg-background border border-muted">
                     <div>
-                      <div className="font-bold text-slate-900 text-sm truncate max-w-[180px]">{event.namaEvent}</div>
-                      <div className="text-xs text-slate-400 font-medium mt-0.5">
+                      <div className="font-bold text-foreground text-xs truncate max-w-[180px]">{event.namaEvent}</div>
+                      <div className="text-[10px] text-muted-foreground font-medium mt-0.5">
                         {format(new Date(event.tanggalMulai), "d MMM yyyy", { locale: localeId })}
                       </div>
                     </div>
                     <Badge
                       variant="outline"
-                      className={`rounded-full text-[10px] font-black border-2 shrink-0 ${event.isPublished
-                        ? "text-emerald-600 border-emerald-200 bg-emerald-50"
-                        : "text-slate-500 border-slate-200 bg-slate-50"
+                      className={`rounded-full text-[9px] font-bold tracking-wider px-2.5 py-0.5 border shrink-0 ${event.isPublished
+                        ? "text-accent border-accent/20 bg-accent/5"
+                        : "text-muted-foreground border-muted bg-[#F3F0EE]"
                         }`}
                     >
                       {event.isPublished ? "PUBLISHED" : "DRAFT"}
@@ -284,12 +284,12 @@ export function MitraDashboard({ clerkId, mitraId }: MitraDashboardProps) {
                   </div>
                 ))}
                 {allEvents.length > 3 && (
-                  <Link href="/mitra/events" className="block text-center text-xs text-indigo-600 font-bold hover:underline pt-1">
+                  <Link href="/mitra/events" className="block text-center text-[10px] text-primary font-bold hover:underline pt-1">
                     +{allEvents.length - 3} event lainnya
                   </Link>
                 )}
                 <Link href="/mitra/events">
-                  <Button variant="outline" className="w-full mt-2 rounded-2xl border-slate-200 font-bold text-sm">
+                  <Button variant="outline" className="w-full mt-2 rounded-full border-muted font-bold text-xs h-10 hover:bg-muted/40">
                     Kelola Event
                   </Button>
                 </Link>
@@ -322,3 +322,4 @@ function MitraDashboardSkeleton() {
     </div>
   )
 }
+

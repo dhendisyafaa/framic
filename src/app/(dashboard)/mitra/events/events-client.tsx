@@ -104,23 +104,23 @@ export function MitraEventsClient({ mitraId }: EventsClientProps) {
 
   return (
     <div className="container mx-auto p-4 md:p-8 max-w-5xl animate-in fade-in duration-700">
-      <Link href="/dashboard" className="inline-flex items-center gap-2 text-slate-500 hover:text-primary font-bold text-sm mb-6 group">
+      <Link href="/dashboard" className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground font-bold text-sm mb-6 group">
         <ArrowLeftIcon className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
         Kembali ke Dashboard
       </Link>
 
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
         <div className="flex items-center gap-4">
-          <div className="w-14 h-14 bg-indigo-100 rounded-2xl flex items-center justify-center text-indigo-600">
+          <div className="w-14 h-14 bg-accent/10 rounded-2xl flex items-center justify-center text-accent">
             <TentIcon className="w-7 h-7" />
           </div>
           <div>
-            <h1 className="text-3xl font-black tracking-tight text-slate-900">Daftar Event</h1>
-            <p className="text-slate-500 font-medium">Kelola event, tugaskan fotografer, dan buka recruitment.</p>
+            <h1 className="text-3xl font-black tracking-tight text-foreground">Daftar Event</h1>
+            <p className="text-muted-foreground font-medium">Kelola event, tugaskan fotografer, dan buka recruitment.</p>
           </div>
         </div>
         <Button
-          className="rounded-full px-6 bg-indigo-600 hover:bg-indigo-700 font-bold shadow-lg shadow-indigo-200"
+          className="rounded-full px-6 bg-accent hover:bg-accent/90 text-white font-bold cursor-pointer"
           onClick={() => setIsDialogOpen(true)}
         >
           <PlusCircleIcon className="w-4 h-4 mr-2" /> Buat Event Baru
@@ -129,13 +129,13 @@ export function MitraEventsClient({ mitraId }: EventsClientProps) {
 
       <div className="space-y-4">
         {events.length === 0 ? (
-          <div className="bg-slate-50 border-2 border-dashed border-slate-200 rounded-3xl p-16 text-center">
-            <TentIcon className="w-12 h-12 text-slate-300 mx-auto mb-4" />
-            <h3 className="text-xl font-black text-slate-900 mb-2">Belum Ada Event</h3>
-            <p className="text-slate-500 font-medium max-w-sm mx-auto mb-6">
+          <div className="bg-muted/10 border-2 border-dashed border-border rounded-3xl p-16 text-center">
+            <TentIcon className="w-12 h-12 text-muted-foreground/30 mx-auto mb-4" />
+            <h3 className="text-xl font-black text-foreground mb-2">Belum Ada Event</h3>
+            <p className="text-muted-foreground font-medium max-w-sm mx-auto mb-6">
               Mulai buat event pertama Anda untuk menugaskan tim fotografer atau mencari talenta baru.
             </p>
-            <Button onClick={() => setIsDialogOpen(true)} className="rounded-full font-bold px-8">
+            <Button onClick={() => setIsDialogOpen(true)} className="rounded-full font-bold px-8 cursor-pointer bg-accent text-white hover:bg-accent/90">
               Buat Event Sekarang
             </Button>
           </div>
@@ -144,9 +144,9 @@ export function MitraEventsClient({ mitraId }: EventsClientProps) {
             const totalKuota = event.kuotaPgTetap + event.kuotaPgPerEvent
 
             return (
-              <Card key={event.id} className="border-slate-200/60 shadow-md shadow-slate-200/20 rounded-3xl overflow-hidden hover:shadow-lg transition-all group">
+              <Card key={event.id} className="border-border bg-card shadow-md shadow-black/5 rounded-3xl overflow-hidden hover:shadow-lg transition-all group">
                 <CardContent className="p-0 sm:flex items-stretch">
-                  <div className="sm:w-48 h-48 sm:h-auto bg-slate-100 relative shrink-0">
+                  <div className="sm:w-48 h-48 sm:h-auto bg-muted relative shrink-0">
                     {event.coverImageUrl ? (
                       <Image
                         src={event.coverImageUrl}
@@ -155,28 +155,28 @@ export function MitraEventsClient({ mitraId }: EventsClientProps) {
                         className="object-cover"
                       />
                     ) : (
-                      <div className="absolute inset-0 flex items-center justify-center text-slate-300">
+                      <div className="absolute inset-0 flex items-center justify-center text-muted-foreground/30">
                         <TentIcon className="w-12 h-12" />
                       </div>
                     )}
-                    <Badge className="absolute top-4 left-4 border-2 font-black bg-emerald-50 text-emerald-600 border-emerald-200">
+                    <Badge className="absolute top-4 left-4 border-2 font-black bg-blue-500/10 text-blue-500 border-blue-500/20">
                       PUBLISHED
                     </Badge>
                   </div>
 
                   <div className="p-6 flex-1 flex flex-col justify-between">
                     <div>
-                      <h3 className="text-xl font-black text-slate-900 mb-2">{event.namaEvent}</h3>
-                      <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-slate-500 font-medium">
+                      <h3 className="text-xl font-black text-foreground mb-2">{event.namaEvent}</h3>
+                      <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-muted-foreground font-medium">
                         <span className="flex items-center gap-1.5"><CalendarIcon className="w-4 h-4" /> {format(new Date(event.tanggalMulai), "dd MMM yyyy", { locale: localeId })}</span>
                         <span className="flex items-center gap-1.5"><MapPinIcon className="w-4 h-4" /> {event.lokasi}</span>
                         <span className="flex items-center gap-1.5"><UsersIcon className="w-4 h-4" /> Fotografer Confirmed: {event.pgConfirmed} / {totalKuota}</span>
                       </div>
                     </div>
 
-                    <div className="mt-6 flex items-center justify-end gap-3 border-t border-slate-100 pt-5">
+                    <div className="mt-6 flex items-center justify-end gap-3 border-t border-border pt-5">
                       <Link href={`/mitra/events/${event.id}`}>
-                        <Button className="rounded-xl font-bold bg-slate-900 hover:bg-slate-800">
+                        <Button className="rounded-xl font-bold bg-primary hover:bg-primary/90 text-primary-foreground cursor-pointer">
                           Kelola <ChevronRightIcon className="w-4 h-4 ml-1" />
                         </Button>
                       </Link>
@@ -329,7 +329,7 @@ function CreateEventDialog({ open, onOpenChange, onSuccess }: { open: boolean, o
         </DialogHeader>
 
         {errorMsg && (
-          <div className="bg-rose-50 border border-rose-200 text-rose-600 p-4 rounded-xl text-sm font-bold flex items-center gap-2 mb-4">
+          <div className="bg-rose-500/10 border border-rose-500/20 text-rose-500 p-4 rounded-xl text-sm font-bold flex items-center gap-2 mb-4">
             <XCircleIcon className="w-5 h-5 flex-shrink-0" /> {errorMsg}
           </div>
         )}
@@ -337,10 +337,10 @@ function CreateEventDialog({ open, onOpenChange, onSuccess }: { open: boolean, o
         <form id="create-event-form" onSubmit={handleSubmit} className="space-y-4">
           <Accordion type="single" collapsible defaultValue="item-1" className="w-full space-y-4">
             {/* SECTION 1: INFO DASAR */}
-            <AccordionItem value="item-1" className="border border-slate-200 rounded-3xl px-6 bg-slate-50/30 overflow-hidden">
+            <AccordionItem value="item-1" className="border border-border rounded-3xl px-6 bg-muted/10 overflow-hidden">
               <AccordionTrigger className="hover:no-underline py-4">
                 <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-full bg-slate-200 flex items-center justify-center text-slate-600">
+                  <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center text-muted-foreground">
                     <InfoIcon className="w-4 h-4" />
                   </div>
                   <span className="text-base font-black">Informasi Dasar Event</span>
@@ -349,17 +349,17 @@ function CreateEventDialog({ open, onOpenChange, onSuccess }: { open: boolean, o
               <AccordionContent className="pb-6 space-y-6 pt-2">
                 {/* Cover Image */}
                 <div className="space-y-2">
-                  <Label className="font-bold text-xs uppercase tracking-wider text-slate-400">Cover Event (Opsional)</Label>
+                  <Label className="font-bold text-xs uppercase tracking-wider text-muted-foreground">Cover Event (Opsional)</Label>
                   <div
-                    className="border-2 border-dashed border-slate-200 rounded-2xl h-36 flex flex-col items-center justify-center bg-white cursor-pointer overflow-hidden relative hover:bg-slate-50 transition-colors"
+                    className="border-2 border-dashed border-border rounded-2xl h-36 flex flex-col items-center justify-center bg-card cursor-pointer overflow-hidden relative hover:bg-muted/50 transition-colors"
                     onClick={() => fileInputRef.current?.click()}
                   >
                     {previewUrl ? (
                       <Image src={previewUrl} alt="Preview" fill className="object-cover" />
                     ) : (
                       <div className="text-center">
-                        <UploadCloudIcon className="w-8 h-8 text-indigo-400 mx-auto mb-2" />
-                        <span className="text-sm font-bold text-slate-400">Pilih gambar cover...</span>
+                        <UploadCloudIcon className="w-8 h-8 text-accent mx-auto mb-2" />
+                        <span className="text-sm font-bold text-muted-foreground">Pilih gambar cover...</span>
                       </div>
                     )}
                   </div>
@@ -396,54 +396,54 @@ function CreateEventDialog({ open, onOpenChange, onSuccess }: { open: boolean, o
             </AccordionItem>
 
             {/* SECTION 2: PG TETAP */}
-            <AccordionItem value="item-2" className="border border-indigo-100 rounded-3xl px-6 bg-indigo-50/20 overflow-hidden">
+            <AccordionItem value="item-2" className="border border-border rounded-3xl px-6 bg-muted/5 overflow-hidden">
               <AccordionTrigger className="hover:no-underline py-4">
-                <div className="flex items-center gap-3 text-indigo-900">
-                  <div className="w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center">
+                <div className="flex items-center gap-3 text-foreground">
+                  <div className="w-8 h-8 rounded-full bg-accent/10 flex items-center justify-center text-accent">
                     <UsersIcon className="w-4 h-4" />
                   </div>
                   <span className="text-base font-black">Fotografer Anggota Tetap</span>
                 </div>
               </AccordionTrigger>
               <AccordionContent className="pb-6 space-y-4 pt-2">
-                <p className="text-xs text-indigo-700/70 font-medium">Buka bagian ini jika Anda ingin menugaskan fotografer yang sudah terikat kontrak tetap dengan Anda.</p>
+                <p className="text-xs text-muted-foreground font-medium">Buka bagian ini jika Anda ingin menugaskan fotografer yang sudah terikat kontrak tetap dengan Anda.</p>
                 <div className="grid grid-cols-2 gap-4 pt-2">
                   <div className="space-y-2">
-                    <Label className="font-bold text-xs text-indigo-900">Fee per PG (Rp)</Label>
-                    <Input type="number" min={0} placeholder="150000" className="rounded-xl bg-white border-indigo-200" value={formData.feePgTetap} onChange={e => setFormData(s => ({ ...s, feePgTetap: e.target.value }))} />
+                    <Label className="font-bold text-xs text-muted-foreground">Fee per PG (Rp)</Label>
+                    <Input type="number" min={0} placeholder="150000" className="rounded-xl" value={formData.feePgTetap} onChange={e => setFormData(s => ({ ...s, feePgTetap: e.target.value }))} />
                   </div>
                   <div className="space-y-2">
-                    <Label className="font-bold text-xs text-indigo-900">Kuota</Label>
-                    <Input type="number" min={0} placeholder="2" className="rounded-xl bg-white border-indigo-200" value={formData.kuotaPgTetap} onChange={e => setFormData(s => ({ ...s, kuotaPgTetap: Number(e.target.value) }))} />
+                    <Label className="font-bold text-xs text-muted-foreground">Kuota</Label>
+                    <Input type="number" min={0} placeholder="2" className="rounded-xl" value={formData.kuotaPgTetap} onChange={e => setFormData(s => ({ ...s, kuotaPgTetap: Number(e.target.value) }))} />
                   </div>
                 </div>
                 {/* Note: In future we can add multi-select assigned PG here */}
-                <div className="mt-2 text-[10px] text-indigo-400 font-bold">
+                <div className="mt-2 text-[10px] text-muted-foreground/60 font-bold">
                   * Anda bisa langsung menugaskan nama PG spesifik setelah event berhasil dibuat.
                 </div>
               </AccordionContent>
             </AccordionItem>
 
             {/* SECTION 3: OPEN REC */}
-            <AccordionItem value="item-3" className="border border-emerald-100 rounded-3xl px-6 bg-emerald-50/20 overflow-hidden">
+            <AccordionItem value="item-3" className="border border-border rounded-3xl px-6 bg-muted/5 overflow-hidden">
               <AccordionTrigger className="hover:no-underline py-4">
-                <div className="flex items-center gap-3 text-emerald-900">
-                  <div className="w-8 h-8 rounded-full bg-emerald-100 flex items-center justify-center">
+                <div className="flex items-center gap-3 text-foreground">
+                  <div className="w-8 h-8 rounded-full bg-accent/10 flex items-center justify-center text-accent">
                     <CalendarIcon className="w-4 h-4" />
                   </div>
                   <span className="text-base font-black">Open Recruitment (PG Independen)</span>
                 </div>
               </AccordionTrigger>
               <AccordionContent className="pb-6 space-y-4 pt-2">
-                <p className="text-xs text-emerald-700/70 font-medium">Aktifkan bagian ini jika Anda butuh tenaga tambahan dari Photographer luar (independen).</p>
+                <p className="text-xs text-muted-foreground font-medium">Aktifkan bagian ini jika Anda butuh tenaga tambahan dari Photographer luar (independen).</p>
                 <div className="grid grid-cols-2 gap-4 pt-2">
                   <div className="space-y-2">
-                    <Label className="font-bold text-xs text-emerald-900">Fee per PG (Rp)</Label>
-                    <Input type="number" min={0} placeholder="200000" className="rounded-xl bg-white border-emerald-200" value={formData.feePgPerEvent} onChange={e => setFormData(s => ({ ...s, feePgPerEvent: e.target.value }))} />
+                    <Label className="font-bold text-xs text-muted-foreground">Fee per PG (Rp)</Label>
+                    <Input type="number" min={0} placeholder="200000" className="rounded-xl" value={formData.feePgPerEvent} onChange={e => setFormData(s => ({ ...s, feePgPerEvent: e.target.value }))} />
                   </div>
                   <div className="space-y-2">
-                    <Label className="font-bold text-xs text-emerald-900">Kuota PG Open</Label>
-                    <Input type="number" min={0} placeholder="3" className="rounded-xl bg-white border-emerald-200" value={formData.kuotaPgPerEvent} onChange={e => {
+                    <Label className="font-bold text-xs text-muted-foreground">Kuota PG Open</Label>
+                    <Input type="number" min={0} placeholder="3" className="rounded-xl" value={formData.kuotaPgPerEvent} onChange={e => {
                       const val = Number(e.target.value);
                       setFormData(s => ({
                         ...s,
@@ -455,12 +455,12 @@ function CreateEventDialog({ open, onOpenChange, onSuccess }: { open: boolean, o
                 </div>
 
                 {formData.kuotaPgPerEvent > 0 && (
-                  <div className="space-y-2 pt-4 border-t border-emerald-100/50 animate-in fade-in slide-in-from-top-2">
-                    <Label className="font-bold text-emerald-900 flex items-center gap-2">
+                  <div className="space-y-2 pt-4 border-t border-border/50 animate-in fade-in slide-in-from-top-2">
+                    <Label className="font-bold text-foreground flex items-center gap-2">
                       Deadline Pendaftaran <span className="text-rose-500 font-bold">*</span>
                     </Label>
-                    <Input type="datetime-local" className="rounded-xl bg-white border-emerald-200" value={formData.deadlineRequest} onChange={e => setFormData(s => ({ ...s, deadlineRequest: e.target.value }))} />
-                    <p className="text-[10px] text-emerald-600 font-medium">Halaman rekrutmen akan ditutup otomatis setelah melewati waktu ini.</p>
+                    <Input type="datetime-local" className="rounded-xl" value={formData.deadlineRequest} onChange={e => setFormData(s => ({ ...s, deadlineRequest: e.target.value }))} />
+                    <p className="text-[10px] text-muted-foreground font-medium">Halaman rekrutmen akan ditutup otomatis setelah melewati waktu ini.</p>
                   </div>
                 )}
               </AccordionContent>
@@ -468,9 +468,9 @@ function CreateEventDialog({ open, onOpenChange, onSuccess }: { open: boolean, o
           </Accordion>
         </form>
 
-        <DialogFooter className="mt-6 border-t border-slate-100 pt-6">
-          <Button variant="ghost" onClick={() => handleOpenChange(false)} className="rounded-xl font-bold">Batal</Button>
-          <Button type="submit" form="create-event-form" disabled={createMutation.isPending} className="rounded-xl font-bold bg-indigo-600 hover:bg-indigo-700">
+        <DialogFooter className="mt-6 border-t border-border pt-6">
+          <Button variant="ghost" onClick={() => handleOpenChange(false)} className="rounded-xl font-bold cursor-pointer">Batal</Button>
+          <Button type="submit" form="create-event-form" disabled={createMutation.isPending} className="rounded-xl font-bold bg-accent hover:bg-accent/90 text-white cursor-pointer disabled:cursor-not-allowed disabled:opacity-50">
             {createMutation.isPending ? "Menyimpan..." : "Simpan Event"}
           </Button>
         </DialogFooter>

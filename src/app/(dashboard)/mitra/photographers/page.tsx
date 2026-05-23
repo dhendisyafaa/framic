@@ -63,14 +63,14 @@ export default function MitraPhotographersPage() {
       <div className="flex bg-slate-100/50 p-1.5 rounded-2xl w-fit mb-8 border border-slate-200/50">
         <button
           onClick={() => setActiveTab("anggota")}
-          className={`px-6 py-2.5 rounded-xl font-bold text-sm transition-all ${activeTab === "anggota" ? "bg-white text-indigo-700 shadow-sm" : "text-slate-500 hover:text-slate-700"
+          className={`px-6 py-2.5 rounded-xl font-bold text-sm transition-all cursor-pointer ${activeTab === "anggota" ? "bg-white text-indigo-700 shadow-sm" : "text-slate-500 hover:text-slate-700"
             }`}
         >
           Daftar Anggota Tetap
         </button>
         <button
           onClick={() => setActiveTab("undang")}
-          className={`px-6 py-2.5 rounded-xl font-bold text-sm transition-all flex items-center gap-2 ${activeTab === "undang" ? "bg-white text-indigo-700 shadow-sm" : "text-slate-500 hover:text-slate-700"
+          className={`px-6 py-2.5 rounded-xl font-bold text-sm transition-all flex items-center gap-2 cursor-pointer ${activeTab === "undang" ? "bg-white text-indigo-700 shadow-sm" : "text-slate-500 hover:text-slate-700"
             }`}
         >
           <UserPlusIcon className="w-4 h-4" /> Undang Fotografer
@@ -182,14 +182,14 @@ function AnggotaTetapTab() {
 
             <div className="flex gap-2">
               <Link href={`/contracts/${pg.contractId}?type=mitra`} className="flex-1">
-                <Button className="w-full rounded-xl bg-indigo-50 text-indigo-600 hover:bg-indigo-100 font-bold shadow-none">
+                <Button className="w-full rounded-xl bg-indigo-50 text-indigo-600 hover:bg-indigo-100 font-bold shadow-none cursor-pointer">
                   <FileTextIcon className="w-4 h-4 mr-2" /> Lihat Kontrak
                 </Button>
               </Link>
               {pg.contractStatus === "active" || pg.contractStatus === "pending_expiry" ? (
                 <Button
                   variant="outline"
-                  className="rounded-xl border-rose-200 text-rose-600 hover:bg-rose-50"
+                  className="rounded-xl border-rose-200 text-rose-600 hover:bg-rose-50 cursor-pointer"
                   onClick={() => setTerminateContractId(pg.contractId)}
                 >
                   <ShieldBanIcon className="w-4 h-4" />
@@ -222,9 +222,9 @@ function AnggotaTetapTab() {
             />
           </div>
           <DialogFooter>
-            <Button variant="ghost" onClick={() => setTerminateContractId(null)} className="rounded-xl font-bold">Batal</Button>
+            <Button variant="ghost" onClick={() => setTerminateContractId(null)} className="rounded-xl font-bold cursor-pointer">Batal</Button>
             <Button
-              className="bg-rose-600 hover:bg-rose-700 rounded-xl font-bold"
+              className="bg-rose-600 hover:bg-rose-700 rounded-xl font-bold cursor-pointer disabled:cursor-not-allowed disabled:opacity-50"
               disabled={!terminationReason.trim() || terminateMutation.isPending}
               onClick={() => {
                 if (terminateContractId && terminationReason.trim()) {
@@ -380,13 +380,13 @@ function UndangFotograferTab() {
             </div>
 
             {foundPg ? (
-              <div className="flex items-center gap-4 p-4 bg-emerald-50 border border-emerald-100 rounded-2xl animate-in zoom-in duration-300">
+              <div className="flex items-center gap-4 p-4 bg-blue-50 border border-blue-100 rounded-2xl animate-in zoom-in duration-300">
                 <img src={foundPg.avatarUrl} alt={foundPg.nama} className="w-12 h-12 rounded-full object-cover border-2 border-white shadow-sm" />
                 <div className="flex-1 min-w-0">
-                  <div className="text-sm font-black text-emerald-900 truncate">{foundPg.nama}</div>
-                  <div className="text-[10px] font-black text-emerald-700">Min Fee: Rp{foundPg.baseMinimumFee?.toLocaleString('id-ID')}</div>
+                  <div className="text-sm font-black text-blue-900 truncate">{foundPg.nama}</div>
+                  <div className="text-[10px] font-black text-blue-700">Min Fee: Rp{foundPg.baseMinimumFee?.toLocaleString('id-ID')}</div>
                 </div>
-                <CheckCircle2Icon className="w-5 h-5 text-emerald-500 shrink-0" />
+                <CheckCircle2Icon className="w-5 h-5 text-blue-500 shrink-0" />
               </div>
             ) : formData.username.length >= 3 && !isSearching ? (
               <div className="flex items-center gap-3 p-4 bg-rose-50 border border-rose-100 rounded-2xl text-rose-600 animate-in fade-in duration-300">
@@ -489,7 +489,7 @@ function UndangFotograferTab() {
 
           <Button
             type="submit"
-            className="w-full rounded-2xl bg-indigo-600 hover:bg-indigo-700 font-bold py-6 text-base"
+            className="w-full rounded-2xl bg-primary hover:bg-primary/90 text-primary-foreground font-bold py-6 text-base cursor-pointer disabled:cursor-not-allowed disabled:opacity-50"
             disabled={isPercentError || inviteMutation.isPending}
           >
             {inviteMutation.isPending ? "Mengirim Undangan..." : "Kirim Undangan MoU"}
@@ -502,7 +502,7 @@ function UndangFotograferTab() {
 
 function getContractStatusColor(status: string | null) {
   switch (status) {
-    case "active": return "text-emerald-600 border-emerald-200 bg-emerald-50"
+    case "active": return "text-blue-600 border-blue-200 bg-blue-50"
     case "pending_expiry": return "text-amber-600 border-amber-200 bg-amber-50"
     case "terminated": return "text-rose-600 border-rose-200 bg-rose-50"
     case "expired": return "text-slate-500 border-slate-200 bg-slate-50"

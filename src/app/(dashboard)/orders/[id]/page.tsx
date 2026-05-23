@@ -123,79 +123,79 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
     <>
       <div className="container mx-auto p-4 md:p-8 animate-in fade-in slide-in-from-bottom-2 duration-700 max-w-6xl">
         {/* Back Button */}
-        <Link href="/orders" className="inline-flex items-center gap-2 text-slate-500 hover:text-primary font-bold text-sm mb-8 group bg-white px-4 py-2 rounded-full border border-slate-100 shadow-sm transition-all">
-          <ArrowLeftIcon className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
+        <Link href="/orders" className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground font-bold text-xs mb-8 group bg-card px-4 py-2 rounded-full border border-muted shadow-sm transition-all">
+          <ArrowLeftIcon className="w-3.5 h-3.5 group-hover:-translate-x-1 transition-transform" />
           Daftar Order
         </Link>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Kolom Kiri: Detil Order */}
           <div className="lg:col-span-2 space-y-8">
-            <Card className="border-none shadow-2xl shadow-indigo-500/5 overflow-hidden rounded-[2.5rem] bg-white">
-              <CardHeader className="bg-slate-900 p-10 text-white relative">
-                <div className="absolute top-0 right-0 p-10 opacity-10 -rotate-12 translate-x-10 -translate-y-5">
+            <Card className="border-muted bg-card shadow-sm rounded-[32px] overflow-hidden">
+              <CardHeader className="bg-[#141413] p-8 text-[#FCFBFA] relative">
+                <div className="absolute top-0 right-0 p-8 opacity-5 -rotate-12 translate-x-10 -translate-y-5">
                   <CameraIcon size={180} />
                 </div>
                 <div className="relative z-10">
                   <div className="flex flex-wrap items-center gap-3 mb-4">
-                    <Badge className={`rounded-full px-5 border-none font-black text-[10px] tracking-widest ${getStatusStyles(status)}`}>
+                    <Badge className={`rounded-full px-5 border-none font-bold text-[9px] tracking-wider ${getStatusStyles(status)}`}>
                       {status.toUpperCase()}
                     </Badge>
-                    <span className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] bg-white/5 px-3 py-1 rounded-full">ID: #{order.id.slice(0, 8)}</span>
+                    <span className="text-[9px] font-bold text-[#D1CDC7] uppercase tracking-[0.2em] bg-white/5 px-3 py-1 rounded-full">ID: #{order.id.slice(0, 8)}</span>
                   </div>
-                  <CardTitle className="text-4xl md:text-5xl font-black tracking-tighter">
+                  <CardTitle className="text-3xl md:text-4xl font-medium tracking-[-0.02em]">
                     {order.package?.namaPaket || "Sesi Fotografi Privat"}
                   </CardTitle>
                 </div>
               </CardHeader>
-              <CardContent className="p-10">
+              <CardContent className="p-8">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
                   {/* Rincian Sesi */}
-                  <div className="space-y-8">
-                    <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
-                      <CalendarIcon className="w-4 h-4 text-indigo-500" /> Detail Sesi
+                  <div className="space-y-6">
+                    <h3 className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest flex items-center gap-2 border-b border-muted/50 pb-2">
+                      <CalendarIcon className="w-3.5 h-3.5 text-accent" /> Detail Sesi
                     </h3>
-                    <div className="space-y-6">
-                      <div className="flex items-start gap-5">
-                        <div className="w-10 h-10 rounded-2xl bg-indigo-50 flex items-center justify-center text-indigo-600 flex-shrink-0">
-                          <CalendarIcon className="w-5 h-5" />
+                    <div className="space-y-4">
+                      <div className="flex items-start gap-4">
+                        <div className="w-9 h-9 rounded-full bg-muted flex items-center justify-center text-accent flex-shrink-0 border border-muted/50">
+                          <CalendarIcon className="w-4 h-4" />
                         </div>
                         <div>
-                          <div className="text-[10px] font-black text-slate-400 uppercase mb-1">Tanggal</div>
-                          <div className="font-black text-slate-900 text-lg leading-tight uppercase">{format(new Date(order.tanggalPotret), "eeee, d MMM yyyy", { locale: localeId })}</div>
+                          <div className="text-[9px] font-bold text-muted-foreground uppercase mb-0.5">Tanggal</div>
+                          <div className="font-bold text-foreground text-sm uppercase">{format(new Date(order.tanggalPotret), "eeee, d MMM yyyy", { locale: localeId })}</div>
                         </div>
                       </div>
-                      <div className="flex items-start gap-5">
-                        <div className="w-10 h-10 rounded-2xl bg-emerald-50 flex items-center justify-center text-emerald-600 flex-shrink-0">
-                          <MapPinIcon className="w-5 h-5" />
+                      <div className="flex items-start gap-4">
+                        <div className="w-9 h-9 rounded-full bg-muted flex items-center justify-center text-accent flex-shrink-0 border border-muted/50">
+                          <MapPinIcon className="w-4 h-4" />
                         </div>
                         <div>
-                          <div className="text-[10px] font-black text-slate-400 uppercase mb-1">Lokasi</div>
-                          <div className="font-black text-slate-900 font-medium">{order.lokasi}</div>
+                          <div className="text-[9px] font-bold text-muted-foreground uppercase mb-0.5">Lokasi</div>
+                          <div className="font-bold text-foreground text-sm">{order.lokasi}</div>
                         </div>
                       </div>
                     </div>
                   </div>
 
                   {/* Partner Terlibat */}
-                  <div className="space-y-8">
-                    <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
-                      <MessageSquare className="w-4 h-4 text-primary" /> {isCustomer ? "Fotografer" : "Kustomer"}
+                  <div className="space-y-6">
+                    <h3 className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest flex items-center gap-2 border-b border-muted/50 pb-2">
+                      <MessageSquare className="w-3.5 h-3.5 text-accent" /> {isCustomer ? "Fotografer" : "Kustomer"}
                     </h3>
-                    <div className="flex items-center gap-5 p-6 rounded-[2rem] border-2 border-dashed border-slate-100 bg-slate-50/50">
-                      <Avatar className="w-14 h-14 bg-white shadow-md rounded-full text-slate-300 font-black text-xl uppercase">
+                    <div className="flex items-center gap-4 p-4 rounded-[24px] border border-muted bg-background">
+                      <Avatar className="w-12 h-12 bg-muted border border-muted/50 rounded-full text-foreground font-bold text-base uppercase">
                         <AvatarImage src={isCustomer ? order.photographer?.avatarUrl : order.customerAvatarUrl} />
                         <AvatarFallback>
                           {isCustomer ? (order.photographer?.nama || "P").slice(0, 1) : (order.customerName || "C").slice(0, 1)}
                         </AvatarFallback>
                       </Avatar>
                       <div className="flex-1 min-w-0">
-                        <div className="font-black text-slate-900 text-lg uppercase tracking-tight truncate">
+                        <div className="font-bold text-foreground text-sm uppercase tracking-tight truncate">
                           {isCustomer ? order.photographer?.nama : order.customerName}
                         </div>
                         <Button
                           variant="link"
-                          className="p-0 h-auto text-[10px] font-black uppercase text-primary tracking-widest hover:no-underline flex items-center gap-1 cursor-pointer"
+                          className="p-0 h-auto text-[9px] font-bold uppercase text-accent tracking-wider hover:no-underline flex items-center gap-1 cursor-pointer mt-0.5"
                           onClick={() => setIsChatOpen(true)}
                         >
                           Chat ke {isCustomer ? "Fotografer" : "Kustomer"} <ChevronRight className="w-3 h-3" />
@@ -207,10 +207,10 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
 
                 {/* Catatan Khusus */}
                 {order.catatan && (
-                  <div className="mt-10 pt-10 border-t border-slate-100">
-                    <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4">Instruksi Khusus</h3>
-                    <div className="p-6 bg-amber-50/50 border border-amber-100 rounded-3xl text-slate-700 font-medium leading-relaxed relative overflow-hidden">
-                      <AlertCircleIcon className="absolute -bottom-2 -right-2 w-12 h-12 text-amber-200/50" />
+                  <div className="mt-8 pt-8 border-t border-muted">
+                    <h3 className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest mb-3">Instruksi Khusus</h3>
+                    <div className="p-4 bg-background border border-muted rounded-[24px] text-xs text-muted-foreground leading-relaxed relative overflow-hidden">
+                      <AlertCircleIcon className="absolute -bottom-2 -right-2 w-12 h-12 text-[#FF5F00]/5" />
                       "{order.catatan}"
                     </div>
                   </div>
@@ -221,12 +221,12 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
             {/* Galeri Foto & Ulasan (Jika Sudah Ongoing ke atas) */}
             {(status === "ongoing" || status === "delivered" || status === "completed") && (
               <div className="space-y-8">
-                <Card className="border-none shadow-xl shadow-slate-200/20 rounded-[2.5rem] overflow-hidden bg-white">
-                  <CardHeader className="p-10 pb-0">
+                <Card className="border-muted bg-card shadow-sm rounded-[32px] overflow-hidden">
+                  <CardHeader className="p-8 pb-0">
                     <div className="flex items-center justify-between gap-4">
                       <div>
-                        <CardTitle className="text-2xl font-black tracking-tight">Hasil Pemotretan</CardTitle>
-                        <CardDescription className="font-medium text-slate-400">Total {order.photos?.length || 0} foto telah diunggah.</CardDescription>
+                        <CardTitle className="text-xl font-medium tracking-tight">Hasil Pemotretan</CardTitle>
+                        <CardDescription className="text-xs font-medium text-muted-foreground">Total {order.photos?.length || 0} foto telah diunggah.</CardDescription>
                       </div>
                       {isPG && status === "ongoing" && (
                         <div className="relative">
@@ -239,7 +239,7 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
                             onChange={(e) => e.target.files && uploadPhotos(e.target.files)}
                             disabled={isUploading}
                           />
-                          <Button asChild disabled={isUploading} className="rounded-2xl font-bold bg-slate-900">
+                          <Button asChild disabled={isUploading} className="rounded-full font-bold bg-primary hover:bg-primary/90 text-primary-foreground text-xs h-10 px-6 cursor-pointer">
                             <label htmlFor="photo-upload" className="cursor-pointer flex items-center gap-2">
                               {isUploading ? "Uploading..." : <><UploadIcon className="w-4 h-4" /> Tambah Foto</>}
                             </label>
@@ -248,11 +248,11 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
                       )}
                     </div>
                   </CardHeader>
-                  <CardContent className="p-10">
+                  <CardContent className="p-8">
                     {order.photos && order.photos.length > 0 ? (
                       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                         {order.photos.map((photo) => (
-                          <div key={photo.id} className="aspect-square rounded-2xl overflow-hidden border border-slate-100 relative group bg-slate-100">
+                          <div key={photo.id} className="aspect-square rounded-[16px] overflow-hidden border border-muted relative group bg-muted">
                             <img
                               src={getDisplayUrl(photo.fotoUrl)}
                               alt="Hasil Foto"
@@ -264,7 +264,7 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
                                   <EyeIcon className="w-4 h-4" />
                                 </a>
                               </Button>
-                              <Button asChild size="icon" className="rounded-full w-8 h-8 bg-white text-slate-900 hover:bg-slate-200">
+                              <Button asChild size="icon" className="rounded-full w-8 h-8 bg-card text-foreground hover:bg-muted">
                                 <a href={getDisplayUrl(photo.fotoUrl)} download={`photo-${photo.id}`}>
                                   <UploadIcon className="w-4 h-4 rotate-180" />
                                 </a>
@@ -274,9 +274,9 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
                         ))}
                       </div>
                     ) : (
-                      <div className="py-20 bg-slate-50 border-2 border-dashed border-slate-100 rounded-[2rem] text-center">
-                        <CameraIcon className="w-12 h-12 text-slate-200 mx-auto mb-4" />
-                        <p className="text-slate-400 font-black uppercase tracking-widest text-[10px]">Belum ada foto yang masuk</p>
+                      <div className="py-16 bg-background border border-dashed border-muted rounded-[24px] text-center">
+                        <CameraIcon className="w-8 h-8 text-muted-foreground/30 mx-auto mb-4" />
+                        <p className="text-muted-foreground font-bold uppercase tracking-widest text-[9px]">Belum ada foto yang masuk</p>
                       </div>
                     )}
                   </CardContent>
@@ -284,16 +284,16 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
 
                 {/* Status Section for Completed with Review */}
                 {status === "completed" && order.review && (
-                  <Card className="border-none shadow-xl shadow-emerald-500/5 rounded-[2.5rem] bg-emerald-50/20 p-10">
+                  <Card className="border-muted bg-card shadow-sm rounded-[32px] p-8">
                     <div className="flex items-center gap-3 mb-6">
                       <div className="flex gap-1">
                         {[1, 2, 3, 4, 5].map(i => (
-                          <StarIcon key={i} className={`w-6 h-6 ${i <= (order.review?.rating || 0) ? "fill-primary text-primary" : "text-slate-200"}`} />
+                          <StarIcon key={i} className={`w-5 h-5 ${i <= (order.review?.rating || 0) ? "fill-accent text-accent" : "text-muted"}`} />
                         ))}
                       </div>
-                      <Badge className="bg-emerald-600 font-bold uppercase text-[9px] tracking-widest">Customer Review</Badge>
+                      <Badge className="bg-accent text-white font-bold uppercase text-[9px] tracking-wider">Customer Review</Badge>
                     </div>
-                    <p className="text-slate-700 font-black text-xl leading-relaxed">"{order.review.komentar}"</p>
+                    <p className="text-foreground font-bold text-lg leading-relaxed">"{order.review.komentar}"</p>
                   </Card>
                 )}
               </div>
@@ -302,34 +302,34 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
 
           {/* Kolom Kanan: Actions & Payment Summary */}
           <div className="space-y-8">
-            <Card className="border-none shadow-2xl shadow-indigo-500/5 rounded-[3rem] overflow-hidden sticky top-24 bg-white">
-              <CardHeader className="p-10 bg-slate-100/50 border-b border-white">
-                <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-2">Rincian Pembayaran</h3>
-                <div className="text-4xl font-black text-primary tracking-tighter">Rp {order.totalHarga.toLocaleString("id-ID")}</div>
+            <Card className="border-muted bg-card shadow-sm rounded-[32px] overflow-hidden sticky top-24">
+              <CardHeader className="p-8 bg-[#141413] text-[#FCFBFA] border-b border-muted">
+                <h3 className="text-[9px] font-bold text-[#D1CDC7] uppercase tracking-[0.2em] mb-1">Rincian Pembayaran</h3>
+                <div className="text-3xl font-medium tracking-tight text-white">Rp {order.totalHarga.toLocaleString("id-ID")}</div>
               </CardHeader>
-              <CardContent className="p-10 space-y-10">
-                <div className="space-y-6">
+              <CardContent className="p-8 space-y-8">
+                <div className="space-y-5">
                   <div className="flex justify-between items-start">
                     <div>
-                      <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Uang Muka (50%)</span>
-                      <div className="font-black text-slate-800 text-lg">Rp {order.payment?.jumlahDp.toLocaleString("id-ID")}</div>
+                      <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest">Uang Muka (50%)</span>
+                      <div className="font-bold text-foreground text-base">Rp {order.payment?.jumlahDp.toLocaleString("id-ID")}</div>
                     </div>
-                    <Badge variant="outline" className={`rounded-full px-3 text-[9px] font-black ${order.payment?.statusDp === "paid" ? "bg-emerald-50 text-emerald-600 border-emerald-100" : "bg-amber-50 text-amber-600 border-amber-100"}`}>
+                    <Badge variant="outline" className={`rounded-full px-3 text-[9px] font-bold tracking-wider ${order.payment?.statusDp === "paid" ? "bg-accent/20 text-accent border border-accent/30" : "bg-accent/10 text-accent border border-accent/20"}`}>
                       {order.payment?.statusDp.toUpperCase() || "UNPAID"}
                     </Badge>
                   </div>
-                  <div className="flex justify-between items-start">
+                  <div className="flex justify-between items-start border-t border-muted/50 pt-4">
                     <div>
-                      <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Pelunasan (50%)</span>
-                      <div className="font-black text-slate-800 text-lg">Rp {order.payment?.jumlahPelunasan.toLocaleString("id-ID")}</div>
+                      <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest">Pelunasan (50%)</span>
+                      <div className="font-bold text-foreground text-base">Rp {order.payment?.jumlahPelunasan.toLocaleString("id-ID")}</div>
                     </div>
-                    <Badge variant="outline" className={`rounded-full px-3 text-[9px] font-black ${order.payment?.statusPelunasan === "paid" ? "bg-emerald-50 text-emerald-600 border-emerald-100" : "bg-slate-50 text-slate-300 border-slate-100"}`}>
+                    <Badge variant="outline" className={`rounded-full px-3 text-[9px] font-bold tracking-wider ${order.payment?.statusPelunasan === "paid" ? "bg-[#141413] text-[#FCFBFA] border-none" : "bg-muted text-muted-foreground border-muted"}`}>
                       {order.payment?.statusPelunasan?.toUpperCase() || "UNPAID"}
                     </Badge>
                   </div>
                 </div>
 
-                {/* ACTION BUTTONS (The Most Crucial Part) */}
+                {/* ACTION BUTTONS */}
                 <div className="space-y-4">
                   {/* Role: PHOTOGRAPHER */}
                   {isPG && (
@@ -337,15 +337,15 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
                       {status === "pending" && (
                         <>
                           <Button
-                            className="w-full rounded-2xl bg-emerald-600 hover:bg-emerald-700 font-bold py-7 text-lg shadow-xl shadow-emerald-500/20 group"
+                            className="w-full rounded-full bg-primary hover:bg-primary/90 text-primary-foreground font-bold py-6 text-base shadow-sm group cursor-pointer"
                             onClick={() => actionMutation.mutate({ path: `orders/${orderId}/confirm` })}
                             disabled={actionMutation.isPending}
                           >
-                            {actionMutation.isPending ? "Processing..." : <><CheckCircle2Icon className="mr-2 w-5 h-5 group-hover:scale-125 transition-transform" /> Konfirmasi Order</>}
+                            {actionMutation.isPending ? "Processing..." : <><CheckCircle2Icon className="mr-2 w-5 h-5 group-hover:scale-110 transition-transform" /> Konfirmasi Order</>}
                           </Button>
                           <Button
-                            variant="ghost"
-                            className="w-full text-rose-500 font-black uppercase text-xs tracking-widest hover:bg-rose-50"
+                            variant="outline"
+                            className="w-full text-destructive border-muted hover:bg-destructive/5 hover:border-destructive/10 font-bold uppercase text-xs tracking-wider rounded-full py-2.5 h-10 cursor-pointer"
                             onClick={() => actionMutation.mutate({ path: `orders/${orderId}/reject` })}
                             disabled={actionMutation.isPending}
                           >
@@ -355,7 +355,7 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
                       )}
                       {status === "dp_paid" && (
                         <Button
-                          className="w-full rounded-2xl bg-indigo-600 font-bold py-7 text-lg group"
+                          className="w-full rounded-full bg-primary hover:bg-primary/90 text-primary-foreground font-bold py-6 text-base group cursor-pointer"
                           onClick={() => actionMutation.mutate({ path: `orders/${orderId}/ongoing` })}
                           disabled={actionMutation.isPending}
                         >
@@ -369,28 +369,27 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
                             const minPhotos = order.package?.jumlahFotoMin || 0
                             const currentPhotos = order.photos?.length || 0
                             const isComplete = currentPhotos >= minPhotos
-                            // const isComplete = true
 
                             return (
                               <>
                                 {!isComplete && (
-                                  <div className="p-4 bg-amber-50 border border-amber-100 rounded-2xl flex items-start gap-3 animate-in fade-in slide-in-from-top-1">
-                                    <AlertCircleIcon className="w-4 h-4 text-amber-500 mt-0.5 shrink-0" />
+                                  <div className="p-4 bg-[#FF5F00]/5 border border-[#FF5F00]/15 rounded-[24px] flex items-start gap-3 animate-in fade-in slide-in-from-top-1">
+                                    <AlertCircleIcon className="w-4 h-4 text-accent mt-0.5 shrink-0" />
                                     <div className="flex flex-col gap-1">
-                                      <span className="text-[10px] font-black text-amber-800 uppercase tracking-widest leading-none">Minimal Foto Belum Tercapai</span>
-                                      <p className="text-xs text-amber-700 font-medium leading-tight">
-                                        Anda harus mengunggah minimal <span className="font-black underline">{minPhotos} foto</span> sesuai paket.
-                                        Saat ini: <span className="font-black">{currentPhotos} foto</span>.
+                                      <span className="text-[9px] font-bold text-accent uppercase tracking-widest leading-none">Minimal Foto Belum Tercapai</span>
+                                      <p className="text-xs text-muted-foreground font-medium leading-tight">
+                                        Anda harus mengunggah minimal <span className="font-bold underline">{minPhotos} foto</span> sesuai paket.
+                                        Saat ini: <span className="font-bold">{currentPhotos} foto</span>.
                                       </p>
                                     </div>
                                   </div>
                                 )}
                                 <Button
                                   className={cn(
-                                    "w-full rounded-2xl font-black py-7 text-lg transition-all duration-300",
+                                    "w-full rounded-full font-bold py-6 text-base transition-all duration-300",
                                     isComplete
-                                      ? "bg-slate-900 text-white hover:scale-[1.02] active:scale-95 shadow-xl shadow-slate-200"
-                                      : "bg-slate-100 text-slate-400 cursor-not-allowed"
+                                      ? "bg-primary hover:bg-primary/90 text-primary-foreground shadow-sm cursor-pointer"
+                                      : "bg-muted text-muted-foreground cursor-not-allowed border border-muted"
                                   )}
                                   onClick={() => actionMutation.mutate({ path: `orders/${orderId}/deliver` })}
                                   disabled={actionMutation.isPending || isUploading || !isComplete}
@@ -410,7 +409,7 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
                     <div className="grid gap-3">
                       {status === "confirmed" && (
                         <Button
-                          className="w-full rounded-2xl bg-indigo-600 hover:bg-indigo-700 font-bold py-7 text-lg shadow-2xl shadow-indigo-500/20"
+                          className="w-full rounded-full bg-primary hover:bg-primary/90 text-primary-foreground font-bold py-6 text-base shadow-sm cursor-pointer"
                           onClick={() => actionMutation.mutate({ path: `payments/${orderId}/dp`, method: "POST" })}
                           disabled={actionMutation.isPending}
                         >
@@ -419,7 +418,7 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
                       )}
                       {status === "delivered" && order.payment?.statusPelunasan !== "paid" && (
                         <Button
-                          className="w-full rounded-2xl bg-emerald-600 hover:bg-emerald-700 font-bold py-7 text-lg"
+                          className="w-full rounded-full bg-primary hover:bg-primary/90 text-primary-foreground font-bold py-6 text-base shadow-sm cursor-pointer"
                           onClick={() => actionMutation.mutate({ path: `payments/${orderId}/settle`, method: "POST" })}
                           disabled={actionMutation.isPending}
                         >
@@ -427,9 +426,9 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
                         </Button>
                       )}
                       {status === "completed" && !order.review && (
-                        <div className="p-6 bg-slate-50 rounded-3xl border border-slate-100 text-center">
-                          <h4 className="font-black text-slate-900 mb-2 uppercase">Satu Hal Lagi!</h4>
-                          <p className="text-xs text-slate-500 mb-4 font-medium">Bagikan pengalamanmu dengan fotografer ini.</p>
+                        <div className="p-6 bg-background rounded-[24px] border border-muted text-center">
+                          <h4 className="font-bold text-foreground text-sm mb-1 uppercase tracking-tight">Satu Hal Lagi!</h4>
+                          <p className="text-xs text-muted-foreground mb-4 font-medium">Bagikan pengalamanmu dengan fotografer ini.</p>
                           <ReviewDialog orderId={orderId} />
                         </div>
                       )}
@@ -438,18 +437,18 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
 
                   {/* All Roles: Status Info for Terminal states */}
                   {(status === "cancelled" || status === "disputed") && (
-                    <div className={cn("p-6 rounded-[2rem] flex items-center gap-4", status === "cancelled" ? "bg-rose-50 text-rose-700" : "bg-orange-50 text-orange-700")}>
-                      <AlertCircleIcon className="w-6 h-6 flex-shrink-0" />
-                      <div className="text-sm font-black uppercase tracking-tighter leading-tight">
+                    <div className="p-4 rounded-[24px] flex items-center gap-3 bg-[#FF5F00]/5 border border-[#FF5F00]/15 text-[#CF4500]">
+                      <AlertCircleIcon className="w-5 h-5 flex-shrink-0" />
+                      <div className="text-xs font-bold uppercase tracking-wider leading-tight">
                         Order ini berstatus {status.toUpperCase()}
                       </div>
                     </div>
                   )}
                 </div>
 
-                <div className="pt-6 border-t border-slate-100 flex items-center gap-3">
-                  <CheckCircle2Icon className="w-4 h-4 text-emerald-500" />
-                  <span className="text-[9px] font-black uppercase text-slate-400 tracking-widest">Transaksi Aman & Terlindungi</span>
+                <div className="pt-6 border-t border-muted flex items-center gap-3">
+                  <CheckCircle2Icon className="w-4 h-4 text-accent" />
+                  <span className="text-[9px] font-bold uppercase text-muted-foreground tracking-widest">Transaksi Aman & Terlindungi</span>
                 </div>
               </CardContent>
             </Card>
@@ -472,15 +471,15 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
 
 function getStatusStyles(status: string) {
   switch (status) {
-    case "pending": return "bg-slate-200 text-slate-900"
-    case "confirmed": return "bg-blue-600 text-white"
-    case "dp_paid": return "bg-indigo-600 text-white"
-    case "ongoing": return "bg-amber-500 text-white"
-    case "delivered": return "bg-purple-600 text-white"
-    case "completed": return "bg-emerald-600 text-white"
-    case "cancelled": return "bg-rose-600 text-white shadow-lg shadow-rose-200"
-    case "disputed": return "bg-orange-600 text-white shadow-lg shadow-orange-200"
-    default: return "bg-slate-400 text-white"
+    case "pending": return "bg-accent/10 text-accent border border-accent/20"
+    case "confirmed": return "bg-blue-500/10 text-blue-500 border border-blue-500/20"
+    case "dp_paid": return "bg-accent/10 text-accent border border-accent/20"
+    case "ongoing": return "bg-amber-500/10 text-amber-500 border border-amber-500/20"
+    case "delivered": return "bg-purple-500/10 text-purple-500 border border-purple-500/20"
+    case "completed": return "bg-emerald-500/10 text-emerald-500 border border-emerald-500/20"
+    case "cancelled": return "bg-destructive/10 text-destructive border border-destructive/20 shadow-sm"
+    case "disputed": return "bg-accent/15 text-accent border border-accent/25 shadow-sm"
+    default: return "bg-muted text-muted-foreground"
   }
 }
 
@@ -490,11 +489,11 @@ function OrderDetailsSkeleton() {
       <Skeleton className="h-10 w-48 mb-6 rounded-full" />
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <div className="lg:col-span-2 space-y-8">
-          <Skeleton className="h-[200px] w-full rounded-[3rem]" />
-          <Skeleton className="h-[400px] w-full rounded-[3rem]" />
+          <Skeleton className="h-[200px] w-full rounded-[32px]" />
+          <Skeleton className="h-[400px] w-full rounded-[32px]" />
         </div>
         <div>
-          <Skeleton className="h-[600px] w-full rounded-[3rem]" />
+          <Skeleton className="h-[600px] w-full rounded-[32px]" />
         </div>
       </div>
     </div>

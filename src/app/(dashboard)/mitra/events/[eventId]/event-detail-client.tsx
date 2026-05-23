@@ -103,7 +103,7 @@ export function EventDetailClient({ eventId, mitraId }: { eventId: string; mitra
                 <TentIcon className="w-12 h-12" />
               </div>
             )}
-            <Badge className={`absolute top-4 left-4 border-2 font-black ${event.isPublished ? "bg-emerald-50 text-emerald-600 border-emerald-200" : "bg-slate-100 text-slate-500 border-slate-200"
+            <Badge className={`absolute top-4 left-4 border-2 font-black ${event.isPublished ? "bg-blue-50 text-blue-600 border-blue-200" : "bg-slate-100 text-slate-500 border-slate-200"
               }`}>
               {event.isPublished ? "PUBLISHED" : "DRAFT"}
             </Badge>
@@ -126,7 +126,7 @@ export function EventDetailClient({ eventId, mitraId }: { eventId: string; mitra
               <div>
                 <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">PG Per-event</p>
                 <div className="font-bold text-slate-800 text-sm">
-                  Fee: <span className="font-black text-emerald-600">Rp {(event.feePgPerEvent ?? 0).toLocaleString("id-ID")}</span>
+                  Fee: <span className="font-black text-blue-600">Rp {(event.feePgPerEvent ?? 0).toLocaleString("id-ID")}</span>
                   <span className="text-xs text-slate-400 ml-2">(Kuota {event.kuotaPgPerEvent})</span>
                 </div>
               </div>
@@ -258,7 +258,7 @@ function PgTetapTab({ event }: { event: EventDetail }) {
               assignedList.map(pg => (
                 <div key={pg.id} className="flex justify-between items-center bg-slate-50 p-3 rounded-2xl border border-slate-100">
                   <div className="font-bold text-slate-900 text-sm">{pg.nama}</div>
-                  <Badge variant="outline" className={`font-black uppercase text-[10px] px-2 py-0 border-2 ${pg.isAvailable ? 'text-emerald-600 border-emerald-200 bg-emerald-50' : 'text-rose-600 border-rose-200 bg-rose-50'}`}>
+                  <Badge variant="outline" className={`font-black uppercase text-[10px] px-2 py-0 border-2 ${pg.isAvailable ? 'text-blue-600 border-blue-200 bg-blue-50' : 'text-rose-600 border-rose-200 bg-rose-50'}`}>
                     {pg.isAvailable ? "Available" : "Not Available"}
                   </Badge>
                 </div>
@@ -300,7 +300,7 @@ function PgTetapTab({ event }: { event: EventDetail }) {
                 </div>
               )}
 
-              <Button type="submit" className="w-full bg-indigo-600 hover:bg-indigo-700 font-bold rounded-xl" disabled={!selectedPgId || selectedPgId === 'none' || assignMutation.isPending}>
+              <Button type="submit" className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-bold rounded-xl cursor-pointer disabled:cursor-not-allowed disabled:opacity-50" disabled={!selectedPgId || selectedPgId === 'none' || assignMutation.isPending}>
                 {assignMutation.isPending ? "Proses..." : "Tugaskan ke Event"}
               </Button>
             </form>
@@ -372,11 +372,11 @@ function PgPerEventTab({ event }: { event: EventDetail }) {
                   <div className="flex justify-between items-start gap-4">
                     <div>
                       <div className="font-bold text-slate-900 text-sm mb-1">{pg.nama}</div>
-                      <Badge variant="outline" className={`text-[9px] font-black uppercase tracking-widest px-1.5 py-0 border-2 ${pg.initiatedBy === 'mitra' ? 'text-indigo-600 bg-indigo-50 border-indigo-200' : 'text-emerald-600 bg-emerald-50 border-emerald-200'}`}>
+                      <Badge variant="outline" className={`text-[9px] font-black uppercase tracking-widest px-1.5 py-0 border-2 ${pg.initiatedBy === 'mitra' ? 'text-indigo-600 bg-indigo-50 border-indigo-200' : 'text-blue-600 bg-blue-50 border-blue-200'}`}>
                         {pg.initiatedBy === 'mitra' ? "Diundang Mitra" : "Request Masuk"}
                       </Badge>
                     </div>
-                    <Badge variant="outline" className={`font-black uppercase text-[10px] px-2 py-0 border-2 ${pg.invitationStatus === 'accepted' ? 'text-emerald-600 border-emerald-200 bg-emerald-50' :
+                    <Badge variant="outline" className={`font-black uppercase text-[10px] px-2 py-0 border-2 ${pg.invitationStatus === 'accepted' ? 'text-blue-600 border-blue-200 bg-blue-50' :
                       pg.invitationStatus === 'rejected' ? 'text-rose-600 border-rose-200 bg-rose-50' :
                         'text-amber-600 border-amber-200 bg-amber-50'
                       }`}>
@@ -387,15 +387,15 @@ function PgPerEventTab({ event }: { event: EventDetail }) {
                   {/* Actions */}
                   {pg.invitationStatus === "pending" && pg.initiatedBy === "photographer" && (
                     <div className="flex gap-2 pt-2 border-t border-slate-200">
-                      <Button size="sm" className="flex-1 bg-emerald-600 hover:bg-emerald-700 font-bold" onClick={() => respondMutation.mutate({ entryId: pg.id, status: "accepted" })}>Terima</Button>
-                      <Button size="sm" variant="outline" className="flex-1 text-rose-600 hover:bg-rose-50 border-rose-200 font-bold" onClick={() => respondMutation.mutate({ entryId: pg.id, status: "rejected" })}>Tolak</Button>
+                      <Button size="sm" className="flex-1 bg-primary hover:bg-primary/90 text-primary-foreground font-bold cursor-pointer disabled:cursor-not-allowed disabled:opacity-50" disabled={respondMutation.isPending} onClick={() => respondMutation.mutate({ entryId: pg.id, status: "accepted" })}>Terima</Button>
+                      <Button size="sm" variant="outline" className="flex-1 text-rose-600 hover:bg-rose-50 border-rose-200 font-bold cursor-pointer disabled:cursor-not-allowed disabled:opacity-50" disabled={respondMutation.isPending} onClick={() => respondMutation.mutate({ entryId: pg.id, status: "rejected" })}>Tolak</Button>
                     </div>
                   )}
 
                   {pg.invitationStatus === "accepted" && (
                     <div className="pt-2 border-t border-slate-200">
                       <Link href={`/dashboard/contracts/${pg.id}?type=event`}>
-                        <Button size="sm" variant="outline" className="w-full text-indigo-600 border-indigo-200 hover:bg-indigo-50 font-bold">Lihat Kontrak</Button>
+                        <Button size="sm" variant="outline" className="w-full text-indigo-600 border-indigo-200 hover:bg-indigo-50 font-bold cursor-pointer">Lihat Kontrak</Button>
                       </Link>
                     </div>
                   )}
@@ -422,7 +422,7 @@ function PgPerEventTab({ event }: { event: EventDetail }) {
               <Label className="font-bold">Pesan (Opsional)</Label>
               <Textarea placeholder="Pesan untuk PG..." className="bg-white rounded-xl" rows={3} value={inviteMessage} onChange={e => setInviteMessage(e.target.value)} />
             </div>
-            <Button type="submit" className="w-full bg-indigo-600 hover:bg-indigo-700 font-bold rounded-xl" disabled={!inviteUsername || inviteMutation.isPending}>
+            <Button type="submit" className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-bold rounded-xl cursor-pointer disabled:cursor-not-allowed disabled:opacity-50" disabled={!inviteUsername || inviteMutation.isPending}>
               {inviteMutation.isPending ? "Proses..." : "Kirim Undangan"}
             </Button>
           </form>
@@ -524,7 +524,7 @@ function OpenRecruitmentTab({ event }: { event: EventDetail }) {
                 </div>
               </div>
               {errorMsg && <p className="text-xs font-bold text-rose-500">{errorMsg}</p>}
-              <Button onClick={handleSave} className="w-full rounded-xl bg-indigo-600 hover:bg-indigo-700 font-bold" disabled={updateMutation.isPending}>
+              <Button onClick={handleSave} className="w-full rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground font-bold cursor-pointer disabled:cursor-not-allowed disabled:opacity-50" disabled={updateMutation.isPending}>
                 {updateMutation.isPending ? "Menyimpan..." : "Simpan Pengaturan"}
               </Button>
             </div>
@@ -532,21 +532,21 @@ function OpenRecruitmentTab({ event }: { event: EventDetail }) {
         </CardContent>
       </Card>
 
-      <Card className="border-emerald-100 shadow-md rounded-[2rem] bg-emerald-50/30">
+      <Card className="border-blue-100 shadow-md rounded-[2rem] bg-blue-50/30">
         <CardHeader>
-          <CardTitle className="text-lg font-black text-emerald-800">Statistik Request Masuk</CardTitle>
+          <CardTitle className="text-lg font-black text-blue-800">Statistik Request Masuk</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-3 gap-3">
-            <div className="bg-white p-4 rounded-2xl text-center border border-emerald-100">
+            <div className="bg-white p-4 rounded-2xl text-center border border-blue-100">
               <div className="text-[10px] font-black uppercase text-amber-500 mb-1">Pending</div>
               <div className="text-3xl font-black text-slate-900">{pendingCount}</div>
             </div>
-            <div className="bg-white p-4 rounded-2xl text-center border border-emerald-100">
-              <div className="text-[10px] font-black uppercase text-emerald-500 mb-1">Diterima</div>
+            <div className="bg-white p-4 rounded-2xl text-center border border-blue-100">
+              <div className="text-[10px] font-black uppercase text-blue-500 mb-1">Diterima</div>
               <div className="text-3xl font-black text-slate-900">{acceptedCount}</div>
             </div>
-            <div className="bg-white p-4 rounded-2xl text-center border border-emerald-100">
+            <div className="bg-white p-4 rounded-2xl text-center border border-blue-100">
               <div className="text-[10px] font-black uppercase text-rose-500 mb-1">Ditolak</div>
               <div className="text-3xl font-black text-slate-900">{rejectedCount}</div>
             </div>
@@ -654,8 +654,8 @@ function EditEventTab({ event }: { event: EventDetail }) {
                 <Input type="number" className="rounded-xl border-indigo-100 bg-indigo-50/10 h-11 font-black text-indigo-600" value={feeTetap} onChange={e => setFeeTetap(e.target.value)} />
               </div>
               <div className="space-y-2">
-                <Label className="font-black text-emerald-700 text-xs uppercase tracking-widest">Fee PG Per-Event (Rp)</Label>
-                <Input type="number" className="rounded-xl border-emerald-100 bg-emerald-50/10 h-11 font-black text-emerald-600" value={feeEvent} onChange={e => setFeeEvent(e.target.value)} />
+                <Label className="font-black text-blue-700 text-xs uppercase tracking-widest">Fee PG Per-Event (Rp)</Label>
+                <Input type="number" className="rounded-xl border-blue-100 bg-blue-50/10 h-11 font-black text-blue-600" value={feeEvent} onChange={e => setFeeEvent(e.target.value)} />
               </div>
             </div>
 
@@ -678,7 +678,7 @@ function EditEventTab({ event }: { event: EventDetail }) {
         <div className="flex justify-end pt-4 border-t">
           <Button
             onClick={handleSave}
-            className="rounded-2xl h-14 px-10 bg-rose-600 hover:bg-rose-700 shadow-lg shadow-rose-200 transition-all font-black text-base flex gap-3"
+            className="rounded-2xl h-14 px-10 bg-[#CF4500] hover:bg-[#CF4500]/90 text-white font-black text-base flex gap-3 cursor-pointer disabled:cursor-not-allowed disabled:opacity-50"
             disabled={updateMutation.isPending}
           >
             {updateMutation.isPending ? "Menyimpan..." : (

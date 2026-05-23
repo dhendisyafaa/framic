@@ -46,11 +46,11 @@ export default async function PhotographersPage({
 
           {/* Grid Catalogue */}
           <main className="flex-1 flex flex-col gap-8">
-            <div className="flex items-center justify-between bg-slate-50 border border-slate-200/60 p-4 rounded-xl">
-              <span className="text-sm font-medium text-slate-600">
-                Menampilkan <span className="font-bold text-slate-900">{photographers.length}</span> dari {meta.total} fotografer
+            <div className="flex items-center justify-between bg-card border border-muted p-4 rounded-[20px] shadow-sm">
+              <span className="text-sm font-medium text-foreground">
+                Menampilkan <span className="font-bold">{photographers.length}</span> dari {meta.total} fotografer
               </span>
-              <div className="hidden sm:block h-px flex-1 mx-4 bg-slate-200/60" />
+              <div className="hidden sm:block h-px flex-1 mx-4 bg-muted" />
             </div>
 
             {photographers.length > 0 ? (
@@ -60,12 +60,12 @@ export default async function PhotographersPage({
                 ))}
               </div>
             ) : (
-              <div className="flex flex-col items-center justify-center py-24 text-center gap-4 bg-slate-50/50 border-2 border-dashed rounded-[2rem]">
-                <div className="w-16 h-16 bg-white rounded-2xl shadow-sm flex items-center justify-center">
-                  <Camera className="w-8 h-8 text-slate-300" />
+              <div className="flex flex-col items-center justify-center py-24 text-center gap-4 bg-card border border-dashed border-muted rounded-[24px]">
+                <div className="w-16 h-16 bg-card rounded-full border border-muted shadow-sm flex items-center justify-center">
+                  <Camera className="w-8 h-8 text-muted-foreground" />
                 </div>
                 <div className="flex flex-col gap-1 max-w-xs">
-                  <h3 className="font-bold text-lg">Tidak ada hasil</h3>
+                  <h3 className="font-medium text-lg">Tidak ada hasil</h3>
                   <p className="text-sm text-muted-foreground">
                     Maaf, tidak ada fotografer yang sesuai dengan kriteria filter Anda saat ini. Coba ubah filter atau reset.
                   </p>

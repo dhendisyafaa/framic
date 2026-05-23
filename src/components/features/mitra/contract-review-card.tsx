@@ -80,7 +80,7 @@ function formatDate(dateStr: string | null): string {
 function getInvitationBadgeStyle(status: string): string {
   switch (status) {
     case "pending": return "text-amber-600 border-amber-300 bg-amber-50"
-    case "accepted": return "text-emerald-600 border-emerald-300 bg-emerald-50"
+    case "accepted": return "text-blue-600 border-blue-200 bg-blue-50"
     case "rejected": return "text-rose-600 border-rose-300 bg-rose-50"
     default: return "text-slate-500 border-slate-200 bg-slate-50"
   }
@@ -88,7 +88,7 @@ function getInvitationBadgeStyle(status: string): string {
 
 function getContractStatusBadgeStyle(status: string | null): string {
   switch (status) {
-    case "active": return "text-emerald-600 border-emerald-300 bg-emerald-50"
+    case "active": return "text-blue-600 border-blue-200 bg-blue-50"
     case "pending_expiry": return "text-amber-600 border-amber-300 bg-amber-50"
     case "expired": return "text-slate-500 border-slate-200 bg-slate-50"
     case "terminated": return "text-rose-600 border-rose-300 bg-rose-50"

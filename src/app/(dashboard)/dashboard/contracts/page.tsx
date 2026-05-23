@@ -55,7 +55,7 @@ export default function ContractsListPage() {
               <CardContent className="p-0 flex flex-col md:flex-row items-stretch">
                 {/* Status Indicator Sidebar */}
                 <div className={`w-2 shrink-0 ${
-                  contract.contractStatus === 'active' ? 'bg-emerald-500' : 'bg-amber-500'
+                  contract.contractStatus === 'active' ? 'bg-blue-500' : 'bg-amber-500'
                 }`} />
                 
                 <div className="p-8 flex-1 flex flex-col md:flex-row md:items-center justify-between gap-6">
@@ -70,7 +70,7 @@ export default function ContractsListPage() {
                           {contract.type === 'mitra' ? 'Mitra Tetap' : 'Event Only'}
                         </Badge>
                         {contract.contractStatus === 'active' ? (
-                          <Badge className="bg-emerald-100 text-emerald-700 hover:bg-emerald-100 font-black text-[10px] uppercase h-5 gap-1">
+                          <Badge className="bg-blue-100 text-blue-700 hover:bg-blue-100 font-black text-[10px] uppercase h-5 gap-1">
                             <ShieldCheckIcon className="w-3 h-3" /> Active
                           </Badge>
                         ) : (
@@ -92,7 +92,7 @@ export default function ContractsListPage() {
 
                   <div className="flex items-center gap-3">
                     <Link href={`/dashboard/contracts/${contract.id}?type=${contract.type}`}>
-                      <Button variant={contract.contractStatus === 'active' ? "outline" : "default"} className="rounded-xl font-black px-6 gap-2">
+                      <Button variant={contract.contractStatus === 'active' ? "outline" : "default"} className="rounded-xl font-black px-6 gap-2 cursor-pointer">
                         {contract.contractStatus === 'active' ? 'Lihat MoU' : 'Tanda Tangani MoU'}
                         <ChevronRightIcon className="w-4 h-4" />
                       </Button>

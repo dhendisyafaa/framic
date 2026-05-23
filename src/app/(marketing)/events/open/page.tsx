@@ -31,11 +31,11 @@ export default async function OpenRecruitmentPage() {
         </p>
       </div>
 
-      <div className="bg-blue-50/50 border border-blue-100 p-6 rounded-2xl flex items-start gap-4 max-w-4xl mx-auto">
+      <div className="bg-blue-500/10 border border-blue-500/20 p-6 rounded-2xl flex items-start gap-4 max-w-4xl mx-auto text-foreground">
         <Info className="w-5 h-5 text-blue-500 mt-1 flex-shrink-0" />
         <div className="flex flex-col gap-1">
-          <h4 className="font-bold text-blue-900">Cara Melamar?</h4>
-          <p className="text-sm text-blue-800/80 leading-relaxed">
+          <h4 className="font-bold text-blue-500">Cara Melamar?</h4>
+          <p className="text-sm text-blue-500/80 leading-relaxed">
             Untuk saat ini, silakan hubungi mitra atau admin melalui kontak yang tersedia untuk pengajuan diri. Fitur <strong>"Lamar Langsung"</strong> dari dashboard sedang dalam proses pengembangan Phase 6.
           </p>
         </div>
@@ -48,10 +48,10 @@ export default async function OpenRecruitmentPage() {
             <EventCard key={ev.id} event={ev} showRecruitmentInfo={true} isPhotographer={isPhotographer} />
           ))
         ) : (
-          <div className="col-span-full py-24 flex flex-col items-center justify-center gap-4 bg-slate-50 border-2 border-dashed rounded-[2.5rem]">
-            <Users className="w-12 h-12 text-slate-300" />
+          <div className="col-span-full py-24 flex flex-col items-center justify-center gap-4 bg-muted/10 border-2 border-dashed border-muted rounded-[2.5rem]">
+            <Users className="w-12 h-12 text-muted-foreground/30" />
             <div className="text-center">
-              <p className="text-slate-500 font-bold text-lg">Belum ada lowongan aktif.</p>
+              <p className="text-muted-foreground font-bold text-lg">Belum ada lowongan aktif.</p>
               <p className="text-muted-foreground text-sm">Cek kembali nanti untuk melihat update dari mitra kami.</p>
             </div>
           </div>

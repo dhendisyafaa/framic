@@ -1,63 +1,113 @@
 import Link from "next/link"
+import { Globe, Instagram, Facebook, Linkedin, Youtube } from "lucide-react"
 
 export function Footer() {
   return (
-    <footer className="border-t bg-background">
-      <div className="container mx-auto px-4 md:px-8 py-10 md:py-16 flex flex-col md:flex-row justify-between items-center md:items-start gap-8">
+    <footer className="bg-[#141413] text-[#F3F0EE] border-t border-muted/10 pt-16 pb-20 px-6 md:px-12">
+      <div className="container mx-auto max-w-6xl flex flex-col gap-12">
         
-        {/* Brand & Tagline */}
-        <div className="flex flex-col gap-3 max-w-sm text-center md:text-left">
-          <span className="text-2xl font-bold tracking-tight">Framic</span>
-          <p className="text-sm text-muted-foreground leading-relaxed">
-            Platform booking jasa fotografer profesional terpercaya. Rekam dan abadikan setiap momen berharga Anda dengan mudah.
-          </p>
+        {/* Top: Brand & Conversational H2 */}
+        <div className="flex flex-col md:flex-row justify-between items-start gap-8 pb-12 border-b border-muted/10">
+          <div className="flex flex-col gap-4 max-w-md">
+            <div className="flex items-center space-x-2.5">
+              <div className="relative w-8 h-5 flex items-center">
+                <div className="w-4 h-4 rounded-full bg-white" />
+                <div className="w-4 h-4 rounded-full bg-[#FF5F00] -ml-2.5 mix-blend-screen opacity-90" />
+              </div>
+              <span className="text-2xl font-bold tracking-tight text-white">Framic</span>
+            </div>
+            <p className="text-sm text-[#D1CDC7] leading-relaxed">
+              Platform booking jasa fotografer profesional terpercaya. Rekam dan abadikan setiap momen berharga Anda dengan mudah.
+            </p>
+          </div>
+          <div className="flex-1 md:text-right">
+            <h2 className="text-3xl md:text-4xl font-normal leading-tight tracking-tight text-white max-w-md md:ml-auto">
+              Framic selalu ada saat Anda membutuhkan visual terbaik.
+            </h2>
+          </div>
         </div>
         
-        {/* Tautan Navigasi (Sitemap) MVP */}
-        <div className="flex flex-col md:flex-row gap-8 md:gap-16 text-center md:text-left">
-          <div className="flex flex-col gap-3">
-            <h4 className="font-semibold text-foreground">Layanan</h4>
-            <Link href="/photographers" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
-              Direktori Fotografer
-            </Link>
-            <Link href="/events" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
-              Galeri Kolaborasi
-            </Link>
-            <Link href="/events/open" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
-              Open Recruitment
-            </Link>
+        {/* Middle: Tautan Navigasi (Sitemap) */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
+          <div className="flex flex-col gap-4">
+            <h4 className="text-[11px] font-bold text-[#696969] uppercase tracking-[0.15em]">Layanan</h4>
+            <div className="flex flex-col gap-2.5">
+              <Link href="/photographers" className="text-sm text-[#D1CDC7] hover:text-white transition-colors">
+                Direktori Fotografer
+              </Link>
+              <Link href="/events" className="text-sm text-[#D1CDC7] hover:text-white transition-colors">
+                Galeri Kolaborasi
+              </Link>
+              <Link href="/events/open" className="text-sm text-[#D1CDC7] hover:text-white transition-colors">
+                Open Recruitment
+              </Link>
+            </div>
           </div>
-          <div className="flex flex-col gap-3">
-            <h4 className="font-semibold text-foreground">Kemitraan</h4>
-            <Link href="/onboarding" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
-              Gabung sebagai Fotografer
-            </Link>
-            <Link href="/onboarding" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
-              Daftar sebagai Mitra
-            </Link>
+          
+          <div className="flex flex-col gap-4">
+            <h4 className="text-[11px] font-bold text-[#696969] uppercase tracking-[0.15em]">Kemitraan</h4>
+            <div className="flex flex-col gap-2.5">
+              <Link href="/onboarding" className="text-sm text-[#D1CDC7] hover:text-white transition-colors">
+                Gabung sebagai Fotografer
+              </Link>
+              <Link href="/onboarding" className="text-sm text-[#D1CDC7] hover:text-white transition-colors">
+                Daftar sebagai Mitra
+              </Link>
+            </div>
           </div>
-          <div className="flex flex-col gap-3">
-            <h4 className="font-semibold text-foreground">Perusahaan</h4>
-            <Link href="/about" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
-              Tentang Kami
+          
+          <div className="flex flex-col gap-4">
+            <h4 className="text-[11px] font-bold text-[#696969] uppercase tracking-[0.15em]">Perusahaan</h4>
+            <div className="flex flex-col gap-2.5">
+              <Link href="/about" className="text-sm text-[#D1CDC7] hover:text-white transition-colors">
+                Tentang Kami
+              </Link>
+              <Link href="#" className="text-sm text-[#D1CDC7] hover:text-white transition-colors">
+                Hubungi Kami
+              </Link>
+              <Link href="#" className="text-sm text-[#D1CDC7] hover:text-white transition-colors">
+                FAQ
+              </Link>
+            </div>
+          </div>
+
+          <div className="flex flex-col gap-4">
+            <h4 className="text-[11px] font-bold text-[#696969] uppercase tracking-[0.15em]">Lokasi / Bahasa</h4>
+            <div className="flex">
+              <button className="flex items-center gap-2 px-4 py-2 border border-white/20 rounded-full text-xs font-bold text-white bg-[#141413] hover:bg-[#20201F] transition-all">
+                <Globe className="w-3.5 h-3.5" />
+                Indonesia (ID)
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* Bottom: Divider & Copyright & Socials */}
+        <div className="border-t border-white/5 pt-8 flex flex-col md:flex-row justify-between items-center gap-6 text-xs text-[#696969]">
+          <div className="flex flex-col md:flex-row items-center gap-2 md:gap-6">
+            <span>&copy; {new Date().getFullYear()} Framic Platform. All rights reserved.</span>
+            <span className="hidden md:inline text-white/10">|</span>
+            <span className="text-[#D1CDC7]/40">Mastercard-Inspired Redesign</span>
+          </div>
+
+          <div className="flex items-center gap-4">
+            <Link href="#" className="text-[#D1CDC7] hover:text-white transition-colors">
+              <Instagram className="w-4 h-4" />
             </Link>
-            <Link href="#" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
-              Hubungi Kami
+            <Link href="#" className="text-[#D1CDC7] hover:text-white transition-colors">
+              <Facebook className="w-4 h-4" />
             </Link>
-            <Link href="#" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
-              FAQ
+            <Link href="#" className="text-[#D1CDC7] hover:text-white transition-colors">
+              <Linkedin className="w-4 h-4" />
+            </Link>
+            <Link href="#" className="text-[#D1CDC7] hover:text-white transition-colors">
+              <Youtube className="w-4 h-4" />
             </Link>
           </div>
         </div>
-      </div>
-      
-      {/* Copyright */}
-      <div className="border-t">
-        <div className="container mx-auto px-4 md:px-8 py-6 flex justify-between items-center text-xs text-muted-foreground">
-          <span>&copy; {new Date().getFullYear()} Framic Platform. All rights reserved.</span>
-          <span className="hidden md:inline">Phase 3 MVP Version</span>
-        </div>
+
       </div>
     </footer>
   )
 }
+
