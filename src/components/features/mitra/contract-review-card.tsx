@@ -82,7 +82,7 @@ function getInvitationBadgeStyle(status: string): string {
     case "pending": return "text-amber-600 border-amber-300 bg-amber-50"
     case "accepted": return "text-blue-600 border-blue-200 bg-blue-50"
     case "rejected": return "text-rose-600 border-rose-300 bg-rose-50"
-    default: return "text-slate-500 border-slate-200 bg-slate-50"
+    default: return "text-muted-foreground border-border bg-muted"
   }
 }
 
@@ -90,9 +90,9 @@ function getContractStatusBadgeStyle(status: string | null): string {
   switch (status) {
     case "active": return "text-blue-600 border-blue-200 bg-blue-50"
     case "pending_expiry": return "text-amber-600 border-amber-300 bg-amber-50"
-    case "expired": return "text-slate-500 border-slate-200 bg-slate-50"
+    case "expired": return "text-muted-foreground border-border bg-muted"
     case "terminated": return "text-rose-600 border-rose-300 bg-rose-50"
-    default: return "text-slate-400 border-slate-200 bg-slate-50"
+    default: return "text-muted-foreground border-border bg-muted"
   }
 }
 
@@ -123,16 +123,16 @@ export function ContractReviewCard({ type, data }: ContractReviewCardProps) {
 
         <Badge
           variant="outline"
-          className="rounded-full px-4 py-1 font-bold text-xs uppercase tracking-widest border-2 text-slate-500 border-slate-200 bg-slate-50"
+          className="rounded-full px-4 py-1 font-bold text-xs uppercase tracking-widest border-2 text-muted-foreground border-border bg-muted"
         >
           Inisiator: {data.initiatedBy}
         </Badge>
       </div>
 
       {/* Section: Pihak-pihak */}
-      <Card className="border-slate-100 rounded-3xl shadow-sm">
+      <Card className="border-border/60 bg-card rounded-3xl shadow-sm">
         <CardHeader className="p-6 pb-0">
-          <CardTitle className="text-sm font-black text-slate-400 uppercase tracking-widest">
+          <CardTitle className="text-sm font-black text-muted-foreground uppercase tracking-widest">
             Pihak yang Terlibat
           </CardTitle>
         </CardHeader>
@@ -141,15 +141,15 @@ export function ContractReviewCard({ type, data }: ContractReviewCardProps) {
             <div className="flex items-start gap-3 p-4 rounded-2xl bg-indigo-50/60 border border-indigo-100">
               <BuildingIcon className="w-5 h-5 text-indigo-500 mt-0.5 shrink-0" />
               <div>
-                <div className="text-xs font-bold text-slate-400 uppercase mb-1">Mitra / Organisasi</div>
-                <div className="font-black text-slate-900">{data.mitra.namaOrganisasi}</div>
+                <div className="text-xs font-bold text-muted-foreground uppercase mb-1">Mitra / Organisasi</div>
+                <div className="font-black text-foreground">{data.mitra.namaOrganisasi}</div>
               </div>
             </div>
             <div className="flex items-start gap-3 p-4 rounded-2xl bg-violet-50/60 border border-violet-100">
               <CameraIcon className="w-5 h-5 text-violet-500 mt-0.5 shrink-0" />
               <div>
-                <div className="text-xs font-bold text-slate-400 uppercase mb-1">Fotografer</div>
-                <div className="font-black text-slate-900">{data.photographer.nama}</div>
+                <div className="text-xs font-bold text-muted-foreground uppercase mb-1">Fotografer</div>
+                <div className="font-black text-foreground">{data.photographer.nama}</div>
               </div>
             </div>
           </div>
@@ -158,25 +158,25 @@ export function ContractReviewCard({ type, data }: ContractReviewCardProps) {
 
       {/* Section: Detail Event (hanya untuk type=event) */}
       {type === "event" && (
-        <Card className="border-slate-100 rounded-3xl shadow-sm">
+        <Card className="border-border/60 bg-card rounded-3xl shadow-sm">
           <CardHeader className="p-6 pb-0">
-            <CardTitle className="text-sm font-black text-slate-400 uppercase tracking-widest">
+            <CardTitle className="text-sm font-black text-muted-foreground uppercase tracking-widest">
               Detail Event
             </CardTitle>
           </CardHeader>
           <CardContent className="p-6 pt-4 space-y-3">
-            <div className="font-black text-slate-900 text-xl">
+            <div className="font-black text-foreground text-xl">
               {(data as EventContractData).event.namaEvent}
             </div>
-            <div className="flex items-center gap-2 text-slate-600">
-              <CalendarIcon className="w-4 h-4 text-slate-400 shrink-0" />
+            <div className="flex items-center gap-2 text-muted-foreground">
+              <CalendarIcon className="w-4 h-4 text-muted-foreground shrink-0" />
               <span className="font-medium text-sm">
                 {formatDate((data as EventContractData).event.tanggalMulai)} —{" "}
                 {formatDate((data as EventContractData).event.tanggalSelesai)}
               </span>
             </div>
-            <div className="flex items-center gap-2 text-slate-600">
-              <MapPinIcon className="w-4 h-4 text-slate-400 shrink-0" />
+            <div className="flex items-center gap-2 text-muted-foreground">
+              <MapPinIcon className="w-4 h-4 text-muted-foreground shrink-0" />
               <span className="font-medium text-sm">{(data as EventContractData).event.lokasi}</span>
             </div>
           </CardContent>
@@ -184,9 +184,9 @@ export function ContractReviewCard({ type, data }: ContractReviewCardProps) {
       )}
 
       {/* Section: Terms / Ketentuan */}
-      <Card className="border-slate-100 rounded-3xl shadow-sm">
+      <Card className="border-border/60 bg-card rounded-3xl shadow-sm">
         <CardHeader className="p-6 pb-0">
-          <CardTitle className="text-sm font-black text-slate-400 uppercase tracking-widest">
+          <CardTitle className="text-sm font-black text-muted-foreground uppercase tracking-widest">
             Ketentuan Kontrak (Read-Only)
           </CardTitle>
         </CardHeader>
@@ -194,22 +194,22 @@ export function ContractReviewCard({ type, data }: ContractReviewCardProps) {
           <div className="space-y-4">
             {/* Bagi hasil */}
             {(data.mitraPercent !== null || data.photographerPercent !== null) && (
-              <div className="flex items-start gap-3 p-4 rounded-2xl bg-slate-50 border border-slate-100">
-                <PercentIcon className="w-5 h-5 text-slate-400 mt-0.5 shrink-0" />
+              <div className="flex items-start gap-3 p-4 rounded-2xl bg-muted border border-border/60 bg-card">
+                <PercentIcon className="w-5 h-5 text-muted-foreground mt-0.5 shrink-0" />
                 <div className="w-full">
-                  <div className="text-xs font-bold text-slate-400 uppercase mb-3">Bagi Hasil</div>
+                  <div className="text-xs font-bold text-muted-foreground uppercase mb-3">Bagi Hasil</div>
                   <div className="flex gap-4">
                     <div className="flex-1 text-center py-3 bg-white rounded-xl border border-indigo-100">
                       <div className="text-2xl font-black text-indigo-600">
                         {data.mitraPercent ?? "—"}%
                       </div>
-                      <div className="text-xs font-bold text-slate-400 uppercase mt-1">Mitra</div>
+                      <div className="text-xs font-bold text-muted-foreground uppercase mt-1">Mitra</div>
                     </div>
                     <div className="flex-1 text-center py-3 bg-white rounded-xl border border-violet-100">
                       <div className="text-2xl font-black text-violet-600">
                         {data.photographerPercent ?? "—"}%
                       </div>
-                      <div className="text-xs font-bold text-slate-400 uppercase mt-1">Fotografer</div>
+                      <div className="text-xs font-bold text-muted-foreground uppercase mt-1">Fotografer</div>
                     </div>
                   </div>
                 </div>
@@ -218,11 +218,11 @@ export function ContractReviewCard({ type, data }: ContractReviewCardProps) {
 
             {/* Minimum fee (hanya mitra) */}
             {type === "mitra" && (data as MitraContractData).minimumFeePerEvent !== null && (
-              <div className="flex items-start gap-3 p-4 rounded-2xl bg-slate-50 border border-slate-100">
-                <WalletIcon className="w-5 h-5 text-slate-400 mt-0.5 shrink-0" />
+              <div className="flex items-start gap-3 p-4 rounded-2xl bg-muted border border-border/60 bg-card">
+                <WalletIcon className="w-5 h-5 text-muted-foreground mt-0.5 shrink-0" />
                 <div>
-                  <div className="text-xs font-bold text-slate-400 uppercase mb-1">Minimum Fee per Event</div>
-                  <div className="font-black text-slate-900 text-lg">
+                  <div className="text-xs font-bold text-muted-foreground uppercase mb-1">Minimum Fee per Event</div>
+                  <div className="font-black text-foreground text-lg">
                     Rp {((data as MitraContractData).minimumFeePerEvent ?? 0).toLocaleString("id-ID")}
                   </div>
                 </div>
@@ -231,11 +231,11 @@ export function ContractReviewCard({ type, data }: ContractReviewCardProps) {
 
             {/* Fee Amount (hanya event) */}
             {type === "event" && (data as EventContractData).feeAmount !== null && (
-              <div className="flex items-start gap-3 p-4 rounded-2xl bg-slate-50 border border-slate-100">
-                <WalletIcon className="w-5 h-5 text-slate-400 mt-0.5 shrink-0" />
+              <div className="flex items-start gap-3 p-4 rounded-2xl bg-muted border border-border/60 bg-card">
+                <WalletIcon className="w-5 h-5 text-muted-foreground mt-0.5 shrink-0" />
                 <div>
-                  <div className="text-xs font-bold text-slate-400 uppercase mb-1">Fee per Event</div>
-                  <div className="font-black text-slate-900 text-lg">
+                  <div className="text-xs font-bold text-muted-foreground uppercase mb-1">Fee per Event</div>
+                  <div className="font-black text-foreground text-lg">
                     Rp {((data as EventContractData).feeAmount ?? 0).toLocaleString("id-ID")}
                   </div>
                 </div>
@@ -244,10 +244,10 @@ export function ContractReviewCard({ type, data }: ContractReviewCardProps) {
 
             {/* Durasi kontrak (hanya mitra) */}
             {type === "mitra" && (
-              <div className="flex items-start gap-3 p-4 rounded-2xl bg-slate-50 border border-slate-100">
-                <CalendarIcon className="w-5 h-5 text-slate-400 mt-0.5 shrink-0" />
+              <div className="flex items-start gap-3 p-4 rounded-2xl bg-muted border border-border/60 bg-card">
+                <CalendarIcon className="w-5 h-5 text-muted-foreground mt-0.5 shrink-0" />
                 <div>
-                  <div className="text-xs font-bold text-slate-400 uppercase mb-1">Durasi Kontrak</div>
+                  <div className="text-xs font-bold text-muted-foreground uppercase mb-1">Durasi Kontrak</div>
                   <div className="font-bold text-slate-900">
                     {formatDate((data as MitraContractData).tanggalMulai)} —{" "}
                     {formatDate((data as MitraContractData).tanggalSelesai)}

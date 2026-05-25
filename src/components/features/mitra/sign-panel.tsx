@@ -90,9 +90,9 @@ export function SignPanel({
     !bothSigned
 
   return (
-    <Card className="border-slate-100 rounded-3xl shadow-sm">
+    <Card className="border-border/60 bg-card rounded-3xl shadow-sm">
       <CardHeader className="p-6 pb-0">
-        <CardTitle className="text-sm font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
+        <CardTitle className="text-sm font-black text-muted-foreground uppercase tracking-widest flex items-center gap-2">
           <PenLineIcon className="w-4 h-4" />
           Status Tanda Tangan
         </CardTitle>
@@ -101,10 +101,10 @@ export function SignPanel({
         {/* Status sign kedua pihak */}
         <div className="space-y-3">
           {/* Fotografer */}
-          <div className="flex items-center justify-between p-4 rounded-2xl bg-slate-50 border border-slate-100">
+          <div className="flex items-center justify-between p-4 rounded-2xl bg-muted border border-border/60 bg-card">
             <div>
-              <div className="text-xs font-bold text-slate-400 uppercase">Fotografer</div>
-              <div className="font-black text-slate-900">{photographerNama}</div>
+              <div className="text-xs font-bold text-muted-foreground uppercase">Fotografer</div>
+              <div className="font-black text-foreground">{photographerNama}</div>
               {photographerSignedAt && (
                 <div className="text-xs text-blue-600 font-medium mt-1">
                   ✓ {formatSignDate(photographerSignedAt)}
@@ -114,15 +114,15 @@ export function SignPanel({
             {photographerSignedAt ? (
               <CheckCircle2Icon className="w-7 h-7 text-blue-500 shrink-0" />
             ) : (
-              <ClockIcon className="w-7 h-7 text-slate-300 shrink-0" />
+              <ClockIcon className="w-7 h-7 text-muted-foreground/30 shrink-0" />
             )}
           </div>
 
           {/* Mitra */}
-          <div className="flex items-center justify-between p-4 rounded-2xl bg-slate-50 border border-slate-100">
+          <div className="flex items-center justify-between p-4 rounded-2xl bg-muted border border-border/60 bg-card">
             <div>
-              <div className="text-xs font-bold text-slate-400 uppercase">Mitra</div>
-              <div className="font-black text-slate-900">{mitraName}</div>
+              <div className="text-xs font-bold text-muted-foreground uppercase">Mitra</div>
+              <div className="font-black text-foreground">{mitraName}</div>
               {mitraSignedAt && (
                 <div className="text-xs text-blue-600 font-medium mt-1">
                   ✓ {formatSignDate(mitraSignedAt)}
@@ -132,7 +132,7 @@ export function SignPanel({
             {mitraSignedAt ? (
               <CheckCircle2Icon className="w-7 h-7 text-blue-500 shrink-0" />
             ) : (
-              <ClockIcon className="w-7 h-7 text-slate-300 shrink-0" />
+              <ClockIcon className="w-7 h-7 text-muted-foreground/30 shrink-0" />
             )}
           </div>
         </div>
@@ -174,11 +174,11 @@ export function SignPanel({
             <label className="flex items-start gap-3 cursor-pointer group">
               <input
                 type="checkbox"
-                className="mt-0.5 h-5 w-5 rounded border-slate-300 accent-primary shrink-0"
+                className="mt-0.5 h-5 w-5 rounded border-border accent-primary shrink-0"
                 checked={isChecked}
                 onChange={(e) => setIsChecked(e.target.checked)}
               />
-              <span className="text-sm font-medium text-slate-700 group-hover:text-slate-900 transition-colors leading-relaxed">
+              <span className="text-sm font-medium text-muted-foreground group-hover:text-foreground transition-colors leading-relaxed">
                 Saya telah membaca dan menyetujui semua ketentuan dalam kontrak ini
               </span>
             </label>

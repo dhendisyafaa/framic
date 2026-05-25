@@ -1,6 +1,7 @@
 "use client"
 
-import { useState, useRef } from "react"
+import { useState, useRef, useEffect } from "react"
+import { useSearchParams } from "next/navigation"
 import Link from "next/link"
 import Image from "next/image"
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
@@ -71,7 +72,17 @@ interface EventsClientProps {
 
 export function MitraEventsClient({ mitraId }: EventsClientProps) {
   const queryClient = useQueryClient()
+  const searchParams = useSearchParams()
   const [isDialogOpen, setIsDialogOpen] = useState(false)
+
+  useEffect(() => {
+    if (searchParams.get("create") === "true") {
+      setIsDialogOpen(true)
+      // Clean query parameter after opening to prevent reopen on reload
+      const newUrl = window.location.pathname
+      window.history.replaceState(null, "", newUrl)
+    }
+  }, [searchParams])
 
   // -- Queries --
   const { data: response, isLoading } = useQuery({
@@ -175,7 +186,7 @@ export function MitraEventsClient({ mitraId }: EventsClientProps) {
                     </div>
 
                     <div className="mt-6 flex items-center justify-end gap-3 border-t border-border pt-5">
-                      <Link href={`/mitra/events/${event.id}`}>
+                      <Link href={`/dashboard/mitra/events/${event.id}`}>
                         <Button className="rounded-xl font-bold bg-primary hover:bg-primary/90 text-primary-foreground cursor-pointer">
                           Kelola <ChevronRightIcon className="w-4 h-4 ml-1" />
                         </Button>

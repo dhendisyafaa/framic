@@ -18,13 +18,13 @@ export const siteConfig = {
   navLinks: [
     { label: "Fotografer", href: "/photographers" },
     { label: "Event", href: "/events" },
-    { label: "Open Recruitment", href: "/events/open" },
+    { label: "Open Recruitment", href: "/events?openOnly=true" },
   ],
 
   // Kontak & sosial (isi saat go-live)
   links: {
-    instagram: "https://instagram.com/framic.id",
-    email: "halo@framic.id",
+    instagram: process.env.NEXT_PUBLIC_INSTAGRAM_URL || "#",
+    email: process.env.NEXT_PUBLIC_CONTACT_EMAIL || "#",
   },
 } as const
 

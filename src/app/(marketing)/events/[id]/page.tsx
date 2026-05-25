@@ -180,7 +180,7 @@ export default async function EventDetailPage({
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               {event.photographers && event.photographers.length > 0 ? (
                 event.photographers.map((pg: any) => (
-                  <Link href={`/photographers/${pg.photographerId}`} key={pg.id}>
+                  <Link href={`/photographers/${pg.username || pg.photographerId}`} key={pg.id}>
                     <div className="flex items-center gap-4 bg-card border border-muted hover:border-accent transition-colors p-4 rounded-2xl shadow-sm group">
                       <div className="w-12 h-12 rounded-full bg-muted overflow-hidden flex items-center justify-center flex-shrink-0">
                         <Users className="w-5 h-5 text-muted-foreground group-hover:text-accent transition-colors" />

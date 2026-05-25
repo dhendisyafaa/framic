@@ -69,7 +69,7 @@ export default function OrdersPage() {
           </div>
         ) : orders.length > 0 ? (
           orders.map((order) => (
-            <Link key={order.id} href={`/orders/${order.id}`}>
+            <Link key={order.id} href={`/dashboard/orders/${order.id}`}>
               <Card className="border-muted shadow-xs hover:shadow-xl hover:border-muted/80 hover:-translate-y-1 transition-all group overflow-hidden bg-card text-foreground">
                 <CardContent className="p-0">
                   <div className="flex flex-col md:flex-row md:items-center justify-between p-5 gap-6">

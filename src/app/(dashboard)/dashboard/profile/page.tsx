@@ -279,64 +279,64 @@ export default function ManageProfilePage() {
 
       {/* Header Profile Summary */}
       {/* --- PREMIUM PROFILE HEADER --- */}
-      <div className="relative mb-12 p-8 md:p-14 rounded-[4rem] bg-indigo-950 text-white overflow-hidden shadow-[0_32px_64px_-16px_rgba(20,20,50,0.4)] border border-white/5">
+      <div className="relative mb-12 p-8 md:p-14 rounded-[4rem] bg-card text-card-foreground overflow-hidden shadow-[0_32px_64px_-16px_rgba(0,0,0,0.1)] border border-border">
         {/* Background Accents (Blobs) */}
-        <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-primary/20 rounded-full blur-[120px] -translate-y-1/2 translate-x-1/2 animate-pulse transition-all duration-1000" />
-        <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-blue-500/10 rounded-full blur-[100px] translate-y-1/2 -translate-x-1/2" />
-        <div className="absolute top-1/2 left-1/3 w-[300px] h-[300px] bg-blue-600/10 rounded-full blur-[130px] -translate-y-1/2" />
+        <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-primary/10 rounded-full blur-[120px] -translate-y-1/2 translate-x-1/2 animate-pulse transition-all duration-1000" />
+        <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-accent/5 rounded-full blur-[100px] translate-y-1/2 -translate-x-1/2" />
+        <div className="absolute top-1/2 left-1/3 w-[300px] h-[300px] bg-primary/5 rounded-full blur-[130px] -translate-y-1/2" />
 
         {/* Decorative Grid Pattern */}
-        <div className="absolute inset-0 opacity-[0.03] mask-[radial-gradient(ellipse_at_center,black,transparent)] pointer-events-none"
-          style={{ backgroundImage: 'radial-gradient(circle at 1px 1px, white 1px, transparent 0)', backgroundSize: '32px 32px' }}
+        <div className="absolute inset-0 opacity-[0.06] mask-[radial-gradient(ellipse_at_center,black,transparent)] pointer-events-none"
+          style={{ backgroundImage: 'radial-gradient(circle at 1px 1px, currentColor 1px, transparent 0)', backgroundSize: '32px 32px' }}
         />
 
         <div className="relative z-20 flex flex-col md:flex-row items-center gap-10">
           {/* Avatar Container */}
           <div className="relative group z-20">
-            <div className="block relative w-36 h-36 md:w-48 md:h-48 rounded-[3rem] border-[6px] border-white/10 overflow-hidden bg-white/5 shadow-2xl transition-all duration-700 ring-4 ring-black/20 [transform:translateZ(0)]">
+            <div className="block relative w-36 h-36 md:w-48 md:h-48 rounded-[3rem] border-[6px] border-border overflow-hidden bg-muted shadow-2xl transition-all duration-700 ring-4 ring-black/5 [transform:translateZ(0)]">
               {clerkUser?.avatarUrl ? (
                 <img src={clerkUser.avatarUrl} alt={clerkUser.name} className="w-full h-full object-cover" />
               ) : (
-                <div className="w-full h-full flex items-center justify-center text-white/10">
+                <div className="w-full h-full flex items-center justify-center text-muted-foreground/20">
                   <User size={80} />
                 </div>
               )}
             </div>
 
             {/* Status Floating Badge */}
-            <div className="absolute -bottom-3 -right-3 bg-accent text-white p-4 rounded-[1.5rem] border-4 border-indigo-950 shadow-lg shadow-accent/20 font-black text-xs">
+            <div className="absolute -bottom-3 -right-3 bg-accent text-accent-foreground p-4 rounded-[1.5rem] border-4 border-card shadow-lg shadow-accent/20 font-bold text-xs">
               <CheckCircle2 size={24} />
             </div>
           </div>
 
           <div className="flex flex-col gap-5 text-center md:text-left flex-1">
             <div className="space-y-2">
-              <span className="text-xs font-black text-primary tracking-[0.4em] mb-1 block">Fotografer</span>
-              <h1 className="text-5xl md:text-7xl font-black tracking-tighter leading-tight ">{clerkUser?.name}</h1>
+              <span className="text-xs font-bold text-primary tracking-normal mb-1 block">Fotografer</span>
+              <h1 className="text-5xl md:text-7xl font-black tracking-tighter leading-tight text-foreground">{clerkUser?.name}</h1>
             </div>
 
             <div className="flex flex-wrap items-center justify-center md:justify-start gap-4 mt-2">
               {/* Glassmorphism Badges */}
-              <div className="flex items-center gap-2 px-5 py-2.5 bg-white/5 hover:bg-white/10 border border-white/10 rounded-2xl text-[13px] font-black tracking-widest backdrop-blur-xl transition-colors shadow-sm">
+              <div className="flex items-center gap-2 px-5 py-2.5 bg-muted hover:bg-muted/80 border border-border rounded-2xl text-[13px] font-bold transition-colors shadow-sm text-foreground">
                 <MapPin size={16} className="text-primary" />
                 {photographer.kotaDomisili}
               </div>
 
-              <div className="flex items-center gap-2 px-5 py-2.5 bg-white/5 hover:bg-white/10 border border-white/10 rounded-2xl text-[13px] font-black tracking-widest backdrop-blur-xl transition-colors shadow-sm">
+              <div className="flex items-center gap-2 px-5 py-2.5 bg-muted hover:bg-muted/80 border border-border rounded-2xl text-[13px] font-bold transition-colors shadow-sm text-foreground">
                 <Star size={16} className="text-yellow-400" />
-                {photographer.ratingAverage || '0.0'} ({photographer.ratingCount} reviews)
+                {photographer.ratingAverage || '0.0'} ({photographer.ratingCount} ulasan)
               </div>
 
-              <div className={`flex items-center gap-3 px-5 py-2.5 ${photographer.isAcceptingOrders ? 'bg-primary/10 border-primary/20 text-primary' : 'bg-rose-500/10 border-rose-500/20 text-rose-400'} border rounded-2xl text-[13px] font-black tracking-widest backdrop-blur-xl transition-all`}>
+              <div className={`flex items-center gap-3 px-5 py-2.5 ${photographer.isAcceptingOrders ? 'bg-primary/10 border-primary/20 text-primary' : 'bg-rose-500/10 border-rose-500/20 text-rose-500'} border rounded-2xl text-[13px] font-bold transition-all`}>
                 <div className={`w-2.5 h-2.5 rounded-full ${photographer.isAcceptingOrders ? 'bg-primary animate-pulse' : 'bg-rose-500'}`} />
-                {photographer.isAcceptingOrders ? 'Open order' : 'Closed order'}
+                {photographer.isAcceptingOrders ? 'Menerima pesanan' : 'Tutup pesanan'}
               </div>
             </div>
           </div>
         </div>
 
         {/* Floating Accent Icons (Decoration) */}
-        <div className="absolute bottom-5 right-5 text-white/5 hidden lg:block rotate-12">
+        <div className="absolute bottom-5 right-5 text-foreground/5 hidden lg:block rotate-12">
           <Camera size={240} />
         </div>
       </div>
@@ -344,24 +344,24 @@ export default function ManageProfilePage() {
       <Tabs defaultValue="profile" className="flex flex-col gap-8" onValueChange={setActiveTab}>
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
           <TabsList className="bg-muted p-1.5 rounded-2xl border border-border w-full md:w-auto justify-start overflow-x-auto flex-nowrap scrollbar-hide">
-            <TabsTrigger value="profile" className="rounded-2xl px-8 py-3 font-black text-sm tracking-widest data-[state=active]:bg-card data-[state=active]:text-foreground data-[state=active]:shadow-md transition-all gap-2 whitespace-nowrap">
+            <TabsTrigger value="profile" className="rounded-2xl px-8 py-3 font-bold text-sm data-[state=active]:bg-card data-[state=active]:text-foreground data-[state=active]:shadow-md transition-all gap-2 whitespace-nowrap">
               <User size={18} />
               Biodata
             </TabsTrigger>
-            <TabsTrigger value="portfolio" className="rounded-2xl px-8 py-3 font-black text-sm tracking-widest data-[state=active]:bg-card data-[state=active]:text-foreground data-[state=active]:shadow-md transition-all gap-2 whitespace-nowrap">
+            <TabsTrigger value="portfolio" className="rounded-2xl px-8 py-3 font-bold text-sm data-[state=active]:bg-card data-[state=active]:text-foreground data-[state=active]:shadow-md transition-all gap-2 whitespace-nowrap">
               <ImageIcon size={18} />
-              Portfolio
+              Portofolio
             </TabsTrigger>
-            <TabsTrigger value="packages" className="rounded-2xl px-8 py-3 font-black text-sm tracking-widest data-[state=active]:bg-card data-[state=active]:text-foreground data-[state=active]:shadow-md transition-all gap-2 whitespace-nowrap">
+            <TabsTrigger value="packages" className="rounded-2xl px-8 py-3 font-bold text-sm data-[state=active]:bg-card data-[state=active]:text-foreground data-[state=active]:shadow-md transition-all gap-2 whitespace-nowrap">
               <Package size={18} />
               Paket Layanan
             </TabsTrigger>
           </TabsList>
 
           <div className="hidden md:flex flex-col items-end">
-            <span className="text-xs font-black text-muted-foreground tracking-widest mb-1">Status Profil</span>
+            <span className="text-xs font-bold text-muted-foreground mb-1">Status Profil</span>
             <div className="flex items-center gap-2">
-              <span className="font-bold text-foreground">Verified Professional</span>
+              <span className="font-bold text-foreground">Profesional Terverifikasi</span>
               <CheckCircle2 className="text-accent w-5 h-5" />
             </div>
           </div>
@@ -375,10 +375,10 @@ export default function ManageProfilePage() {
             <TabsContent value="profile" className="mt-0 space-y-8 animate-in fade-in slide-in-from-left-4 duration-500">
               <Card className="rounded-[2.5rem] border-border shadow-md shadow-black/5 overflow-hidden">
                 <CardHeader className="bg-muted/30 p-8 border-b border-border">
-                  <CardTitle className="text-2xl font-black flex items-center gap-3">
+                  <CardTitle className="text-2xl font-black flex items-center gap-3 text-foreground">
                     <User className="text-accent" /> Informasi Pribadi
                   </CardTitle>
-                  <CardDescription className="text-muted-foreground font-medium tracking-tight">Ceritakan keahlian dan kepribadian Anda kepada kustomer.</CardDescription>
+                  <CardDescription className="text-muted-foreground font-medium">Ceritakan keahlian dan kepribadian Anda kepada pelanggan.</CardDescription>
                 </CardHeader>
                 <CardContent className="py-3">
                   {/* Clerk Account Data Info (Read Only) */}
@@ -389,7 +389,7 @@ export default function ManageProfilePage() {
                       </div>
                       <div>
                         <h4 className="font-black text-foreground text-lg leading-tight">{clerkFrontUser?.fullName}</h4>
-                        <p className="text-sm text-muted-foreground font-bold tracking-widest mt-1">@{clerkFrontUser?.username}</p>
+                        <p className="text-sm text-muted-foreground font-bold mt-1">@{clerkFrontUser?.username}</p>
                         <p className="text-xs text-muted-foreground font-medium">{clerkFrontUser?.primaryEmailAddress?.emailAddress}</p>
                       </div>
                     </div>
@@ -399,7 +399,7 @@ export default function ManageProfilePage() {
                       className="rounded-xl border-accent/30 text-accent font-bold hover:bg-accent/10 px-6 cursor-pointer"
                       onClick={() => openUserProfile()}
                     >
-                      Edit Profil
+                      Ubah Profil
                     </Button>
                   </div>
 
@@ -414,12 +414,12 @@ export default function ManageProfilePage() {
                             <FormLabel className="text-foreground font-bold">Bio Profesional</FormLabel>
                             <FormControl>
                               <Textarea
-                                placeholder="Contoh: Fotografer spesialis wedding dengan gaya sinematik..."
+                                placeholder="Contoh: Fotografer spesialis pernikahan dengan gaya sinematik..."
                                 className="min-h-[150px] rounded-2xl border-border focus:ring-primary/20"
                                 {...field}
                               />
                             </FormControl>
-                            <FormDescription className="text-muted-foreground">Bio yang menarik meningkatkan kemungkinan booking hingga 40%.</FormDescription>
+                            <FormDescription className="text-muted-foreground">Bio yang menarik meningkatkan kemungkinan pemesanan hingga 40%.</FormDescription>
                             <FormMessage />
                           </FormItem>
                         )}
@@ -461,8 +461,8 @@ export default function ManageProfilePage() {
                                         : [...current, kat]
                                       field.onChange(next)
                                     }}
-                                    className={`rounded-xl border px-5 py-2.5 text-xs font-black tracking-widest transition-all shadow-sm cursor-pointer ${field.value.includes(kat)
-                                      ? "bg-accent text-white border-accent shadow-lg shadow-accent/25 scale-105"
+                                    className={`rounded-xl border px-5 py-2.5 text-xs font-bold transition-all shadow-sm cursor-pointer ${field.value.includes(kat)
+                                      ? "bg-accent text-accent-foreground border-accent shadow-lg shadow-accent/25 scale-105"
                                       : "bg-card hover:bg-muted/50 border-border text-muted-foreground"
                                       }`}
                                   >
@@ -482,11 +482,11 @@ export default function ManageProfilePage() {
                               <FormLabel className="text-foreground font-bold">Status Reservasi</FormLabel>
                               <div className={`flex items-center justify-between p-4 rounded-2xl border transition-all duration-300 ${field.value ? 'bg-primary/10 border-primary/20' : 'bg-rose-500/10 border-rose-500/20'}`}>
                                 <div className="flex flex-col gap-0.5">
-                                  <span className={`font-black text-sm tracking-tight ${field.value ? "text-primary" : "text-rose-500"}`}>
-                                    {field.value ? "Open Order" : "Closed Order"}
-                                  </span>
-                                  <span className={`text-[10px] font-bold tracking-widest ${field.value ? "text-primary/70" : "text-rose-500/70"}`}>
+                                  <span className={`font-bold text-sm tracking-tight ${field.value ? "text-primary" : "text-rose-500"}`}>
                                     {field.value ? "Menerima Pesanan" : "Tutup Pesanan"}
+                                  </span>
+                                  <span className={`text-[10px] font-medium ${field.value ? "text-primary/70" : "text-rose-500/70"}`}>
+                                    {field.value ? "Profil Aktif & Dapat Dipesan" : "Profil Tidak Dapat Dipesan"}
                                   </span>
                                 </div>
                                 <Switch
@@ -501,8 +501,8 @@ export default function ManageProfilePage() {
                               </div>
                               <p className="text-xs text-muted-foreground mt-4 font-medium leading-relaxed bg-muted/20 p-4 rounded-2xl border border-border shadow-sm">
                                 {field.value
-                                  ? "Profil Anda aktif dan kustomer bisa melakukan booking."
-                                  : "Profil Anda tetap tampil, namun kustomer tidak dapat melakukan booking baru (Close Order)."}
+                                  ? "Profil Anda aktif dan pelanggan bisa melakukan pemesanan."
+                                  : "Profil Anda tetap tampil, namun pelanggan tidak dapat melakukan pemesanan baru (Tutup Pesanan)."}
                               </p>
                               <FormMessage />
                             </FormItem>
@@ -513,14 +513,14 @@ export default function ManageProfilePage() {
                           name="baseMinimumFee"
                           render={({ field }) => (
                             <FormItem>
-                              <FormLabel className="text-foreground font-bold">Standard Minimum Fee (Rp)</FormLabel>
+                              <FormLabel className="text-foreground font-bold">Tarif Minimum Standar (Rp)</FormLabel>
                               <FormControl>
                                 <div className="relative">
-                                  <div className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground/60 font-black text-sm">Rp</div>
+                                  <div className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground/60 font-bold text-sm">Rp</div>
                                   <Input
                                     type="number"
                                     placeholder="Contoh: 500000"
-                                    className="pl-12 rounded-2xl border-border h-14 font-black text-lg"
+                                    className="pl-12 rounded-2xl border-border h-14 font-bold text-lg"
                                     {...field}
                                     value={field.value as string | number}
                                   />
@@ -537,7 +537,7 @@ export default function ManageProfilePage() {
                         <Button
                           type="submit"
                           disabled={updateProfileMutation.isPending}
-                          className="h-12 px-8 rounded-2xl font-black text-base gap-2 bg-accent hover:bg-accent/90 text-white shadow-xl shadow-accent/25 cursor-pointer disabled:cursor-not-allowed disabled:opacity-50"
+                          className="h-12 px-8 rounded-2xl font-bold text-base gap-2 bg-accent hover:bg-accent/90 text-accent-foreground shadow-xl shadow-accent/25 cursor-pointer disabled:cursor-not-allowed disabled:opacity-50"
                         >
                           {updateProfileMutation.isPending ? <Loader2 className="w-5 h-5 animate-spin" /> : <CheckCircle2 size={24} />}
                           Simpan Perubahan
@@ -553,13 +553,13 @@ export default function ManageProfilePage() {
               <Card className="rounded-[2.5rem] border-border shadow-md shadow-black/5 overflow-hidden">
                 <CardHeader className="bg-muted/30 p-8 border-b border-border flex flex-col md:flex-row justify-between items-center gap-4">
                   <div>
-                    <CardTitle className="text-2xl font-black flex items-center gap-3">
-                      <ImageIcon size={28} className="text-accent" /> Portfolio Galeri
+                    <CardTitle className="text-2xl font-black flex items-center gap-3 text-foreground">
+                      <ImageIcon size={28} className="text-accent" /> Galeri Portofolio
                     </CardTitle>
-                    <CardDescription className="text-muted-foreground font-medium">Foto portfolio asli adalah penentu utama kustomer mengklik tombol booking.</CardDescription>
+                    <CardDescription className="text-muted-foreground font-medium">Foto portofolio asli adalah penentu utama pelanggan melakukan pemesanan.</CardDescription>
                     {externalPortfolioUrls.length > 0 && (
                       <div className="mt-2 text-xs font-bold text-muted-foreground flex items-center gap-1.5">
-                        <span>Link Portofolio Registrasi:</span>
+                        <span>Link Portofolio Pendaftaran:</span>
                         <a href={externalPortfolioUrls[0]} target="_blank" rel="noopener noreferrer" className="text-accent hover:text-accent/80 underline truncate max-w-[250px]">
                           {externalPortfolioUrls[0]}
                         </a>
@@ -581,7 +581,7 @@ export default function ManageProfilePage() {
                         <Button
                           asChild
                           disabled={isUploading}
-                          className="rounded-full gap-2 font-black bg-accent hover:bg-accent/90 text-white px-8 h-12 shadow-lg shadow-accent/20"
+                          className="rounded-full gap-2 font-bold bg-accent hover:bg-accent/90 text-accent-foreground px-8 h-12 shadow-lg shadow-accent/20"
                         >
                           <label htmlFor="portfolio-upload" className={`${isUploading ? "cursor-not-allowed" : "cursor-pointer"}`}>
                             {isUploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus size={18} />}
@@ -590,8 +590,8 @@ export default function ManageProfilePage() {
                         </Button>
                       </>
                     ) : (
-                      <div className="px-6 py-2.5 rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-500 text-sm font-black tracking-widest flex items-center gap-2">
-                        <Clock size={16} /> Limit: 5 Foto
+                      <div className="px-6 py-2.5 rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-500 text-sm font-bold flex items-center gap-2">
+                        <Clock size={16} /> Batas: 5 Foto
                       </div>
                     )}
                   </div>
@@ -614,7 +614,7 @@ export default function ManageProfilePage() {
                         <div className="w-16 h-16 bg-card rounded-2xl flex items-center justify-center text-muted-foreground/30 shadow-inner">
                           <ImageIcon size={32} />
                         </div>
-                        <p className="text-muted-foreground font-black tracking-widest text-xs ">Galeri portfolio masih kosong</p>
+                        <p className="text-muted-foreground font-bold text-sm">Galeri portofolio masih kosong</p>
                       </div>
                     )}
                   </div>
@@ -627,7 +627,7 @@ export default function ManageProfilePage() {
                 <CardHeader className="bg-muted/30 p-8 border-b border-border">
                   <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                     <div>
-                      <CardTitle className="text-2xl font-black flex items-center gap-3">
+                      <CardTitle className="text-2xl font-black flex items-center gap-3 text-foreground">
                         <Package size={28} className="text-accent" /> Daftar Paket Saya
                       </CardTitle>
                       <CardDescription className="text-muted-foreground font-medium">Tambah atau kelola paket harga jasa pemotretan Anda.</CardDescription>
@@ -646,16 +646,16 @@ export default function ManageProfilePage() {
                             <Package size={32} />
                           </div>
                           <div className="flex-1 text-center md:text-left">
-                            <h3 className="text-xl font-black text-foreground tracking-tight mb-1">{pkg.namaPaket}</h3>
+                            <h3 className="text-xl font-bold text-foreground tracking-tight mb-1">{pkg.namaPaket}</h3>
                             <p className="text-sm text-muted-foreground font-medium  line-clamp-1 mb-4">{pkg.deskripsi}</p>
-                            <div className="flex flex-wrap items-center justify-center md:justify-start gap-4 text-xs font-bold text-muted-foreground tracking-widest">
+                            <div className="flex flex-wrap items-center justify-center md:justify-start gap-4 text-xs font-bold text-muted-foreground">
                               <div className="flex items-center gap-1.5"><Clock size={14} /> {pkg.durasiJam} Jam</div>
                               <div className="flex items-center gap-1.5"><ImageIcon size={14} /> {pkg.jumlahFotoMin}+ Foto</div>
-                              {pkg.includesEditing && <div className="text-accent flex items-center gap-1"><CheckCircle2 size={12} /> Editing</div>}
+                              {pkg.includesEditing && <div className="text-accent flex items-center gap-1"><CheckCircle2 size={12} /> Edit Foto</div>}
                             </div>
                           </div>
                           <div className="flex flex-col items-center md:items-end gap-3 flex-shrink-0">
-                            <span className="text-2xl font-black text-foreground tracking-tighter">Rp {pkg.harga.toLocaleString('id-ID')}</span>
+                            <span className="text-2xl font-bold text-foreground tracking-tighter">Rp {pkg.harga.toLocaleString('id-ID')}</span>
                             <Button
                               variant="ghost"
                               size="sm"
@@ -673,7 +673,7 @@ export default function ManageProfilePage() {
                     ) : (
                       <div className="py-20 text-center flex flex-col items-center gap-4 bg-muted/10 border-2 border-dashed border-border rounded-[2.5rem]">
                         <Package size={48} className="text-muted-foreground/30" />
-                        <p className="text-muted-foreground font-black tracking-widest text-xs ">Belum ada paket terdaftar</p>
+                        <p className="text-muted-foreground font-bold text-sm">Belum ada paket terdaftar</p>
                       </div>
                     )}
                   </div>
@@ -683,8 +683,8 @@ export default function ManageProfilePage() {
               {/* FORM TAMBAH PAKET */}
               <Card id="add-package-form" className="rounded-[2.5rem] border-border shadow-md shadow-black/5 overflow-hidden border-2 border-accent/20">
                 <CardHeader className="p-8 pb-4">
-                  <CardTitle className="text-2xl font-black text-accent">Tambah Paket Baru</CardTitle>
-                  <CardDescription className="text-muted-foreground font-medium">Buat tawaran menarik yang sulit ditolak kustomer.</CardDescription>
+                  <CardTitle className="text-2xl font-bold text-accent">Tambah Paket Baru</CardTitle>
+                  <CardDescription className="text-muted-foreground font-medium">Buat penawaran menarik yang sulit ditolak pelanggan.</CardDescription>
                 </CardHeader>
                 <CardContent className="p-8 pt-4">
                   <Form {...packageForm}>
@@ -710,7 +710,7 @@ export default function ManageProfilePage() {
                           <FormItem>
                             <FormLabel className="text-foreground font-bold">Deskripsi Paket</FormLabel>
                             <FormControl>
-                              <Textarea placeholder="Beritahukan detail apa saja yang kustomer dapatkan..." className="min-h-[100px] rounded-xl" {...field} />
+                              <Textarea placeholder="Beritahukan detail apa saja yang pelanggan dapatkan..." className="min-h-[100px] rounded-xl" {...field} />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -725,7 +725,7 @@ export default function ManageProfilePage() {
                             <FormItem>
                               <FormLabel className="text-foreground font-bold">Harga (Rp)</FormLabel>
                               <FormControl>
-                                <Input type="number" className="rounded-xl h-14 font-black" {...field} value={field.value as string | number} />
+                                <Input type="number" className="rounded-xl h-14 font-bold" {...field} value={field.value as string | number} />
                               </FormControl>
                               <FormMessage />
                             </FormItem>
@@ -765,7 +765,7 @@ export default function ManageProfilePage() {
                         render={({ field }) => (
                           <FormItem className="flex flex-row items-center justify-between rounded-2xl border border-border p-6 bg-muted/20">
                             <div className="space-y-0.5">
-                              <FormLabel className="text-base font-bold text-foreground">Termasuk Foto Editing?</FormLabel>
+                              <FormLabel className="text-base font-bold text-foreground">Termasuk Edit Foto?</FormLabel>
                               <FormDescription className="text-xs">Aktifkan jika harga paket ini sudah mencakup biaya edit foto.</FormDescription>
                             </div>
                             <FormControl>
@@ -776,7 +776,7 @@ export default function ManageProfilePage() {
                                   }`}
                               >
                                 <span
-                                  className={`inline-block h-6 w-6 transform rounded-full bg-white transition-transform duration-300 ${field.value ? "translate-x-7" : "translate-x-1"
+                                  className={`inline-block h-6 w-6 transform rounded-full bg-background transition-transform duration-300 ${field.value ? "translate-x-7" : "translate-x-1"
                                     }`}
                                 />
                               </button>
@@ -788,7 +788,7 @@ export default function ManageProfilePage() {
                       <Button
                         type="submit"
                         disabled={addPackageMutation.isPending}
-                        className="w-full h-16 rounded-[1.5rem] font-black text-xl gap-2 shadow-xl shadow-accent/20 bg-accent hover:bg-accent/90 text-white cursor-pointer disabled:cursor-not-allowed disabled:opacity-50"
+                        className="w-full h-16 rounded-[1.5rem] font-bold text-lg gap-2 shadow-xl shadow-accent/20 bg-accent hover:bg-accent/90 text-accent-foreground cursor-pointer disabled:cursor-not-allowed disabled:opacity-50"
                       >
                         {addPackageMutation.isPending ? <Loader2 className="w-6 h-6 animate-spin" /> : <PlusCircle size={24} />}
                         Tambahkan Paket
@@ -804,25 +804,25 @@ export default function ManageProfilePage() {
           <div className="space-y-6">
             <Card className="rounded-[2.5rem] border-border bg-card shadow-md shadow-black/5">
               <CardHeader className="p-6 pb-2 border-b border-border/50">
-                <CardTitle className="text-xs font-black text-muted-foreground tracking-[0.2em]">Status Profil Fotografer</CardTitle>
+                <CardTitle className="text-sm font-bold text-muted-foreground">Status Profil Fotografer</CardTitle>
               </CardHeader>
               <CardContent className="p-6 space-y-6">
                 <div className="space-y-4">
-                  <h4 className="font-black text-foreground tracking-tighter">Checklist Kelengkapan:</h4>
+                  <h4 className="font-bold text-foreground">Daftar Kelengkapan:</h4>
                   <div className="space-y-3">
                     <CheckItem label="Username (contoh: @framic_id)" checked={!!(photographer.username || clerkFrontUser?.username)} />
                     <CheckItem label="Lengkapi Bio" checked={!!photographer.bio} />
-                    <CheckItem label="Unggah Portfolio" checked={photographer.portfolioUrls.length > 0} />
+                    <CheckItem label="Unggah Portofolio" checked={photographer.portfolioUrls.length > 0} />
                     <CheckItem label="Buat Minimal 1 Paket" checked={pgPackages.length > 0} />
                   </div>
                 </div>
 
                 <div className="p-5 rounded-[1.5rem] bg-accent/5 border border-accent/10 space-y-3">
-                  <div className="flex items-center gap-2 text-accent font-black tracking-tight text-sm">
+                  <div className="flex items-center gap-2 text-accent font-bold text-sm">
                     <Globe size={18} className="text-accent" /> Syarat Tampil Publik
                   </div>
                   <p className="text-xs text-accent/80 font-medium leading-relaxed">
-                    Pastikan seluruh checklist di atas terpenuhi. Profil fotografer yang belum lengkap tidak akan muncul di pencarian kustomer.
+                    Pastikan seluruh kelengkapan di atas terpenuhi. Profil fotografer yang belum lengkap tidak akan muncul di pencarian pelanggan.
                   </p>
                 </div>
               </CardContent>

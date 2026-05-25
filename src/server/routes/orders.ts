@@ -235,21 +235,61 @@ ordersRouter.get("/", async (c) => {
       order: orders,
       package: packages,
       photographer: photographerProfiles,
+      payment: payments,
+      review: reviews,
     })
     .from(orders)
     .leftJoin(packages, eq(orders.paketId, packages.id))
     .leftJoin(photographerProfiles, eq(orders.photographerId, photographerProfiles.id))
+    .leftJoin(payments, eq(orders.id, payments.orderId))
+    .leftJoin(reviews, eq(orders.id, reviews.orderId))
     .where(and(...conditions))
     .limit(limit)
     .offset(offset)
     .orderBy(desc(orders.createdAt))
 
+  // Fetch clerk details for photographers in parallel
+  const pgClerkIds = Array.from(new Set(
+    userOrders
+      .map(row => row.photographer?.clerkId)
+      .filter((id): id is string => !!id)
+  ))
+
+  let clerkUserMap: Record<string, { nama: string; avatarUrl: string }> = {}
+  try {
+    const clerk = await clerkClient()
+    const clerkUsers = pgClerkIds.length > 0
+      ? await clerk.users.getUserList({ userId: pgClerkIds })
+      : { data: [] }
+    
+    clerkUserMap = Object.fromEntries(
+      clerkUsers.data.map(u => [
+        u.id,
+        {
+          nama: `${u.firstName ?? ""} ${u.lastName ?? ""}`.trim() || "Fotografer",
+          avatarUrl: u.imageUrl,
+        }
+      ])
+    )
+  } catch (err) {
+    // Silent fail if clerk error
+  }
+
   // Map to structured data
-  const result = userOrders.map(row => ({
-    ...row.order,
-    package: row.package,
-    photographer: row.photographer
-  }))
+  const result = userOrders.map(row => {
+    const pg = row.photographer
+    return {
+      ...row.order,
+      package: row.package,
+      photographer: pg ? {
+        ...pg,
+        nama: clerkUserMap[pg.clerkId]?.nama || "Fotografer",
+        avatarUrl: clerkUserMap[pg.clerkId]?.avatarUrl,
+      } : null,
+      payment: row.payment,
+      review: row.review,
+    }
+  })
 
   return c.json({ success: true, data: result })
 })

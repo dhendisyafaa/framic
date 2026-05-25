@@ -215,7 +215,7 @@ export default function OnboardingPage() {
                 }`}
             >
               <div className="absolute top-0 right-0 w-32 h-32 bg-accent/5 rounded-bl-[100px] group-hover:bg-accent/10 transition-colors" />
-              <div className="mb-8 flex items-center justify-between">
+              <div className="mb-8 flex flex-col items-start sm:flex-row sm:items-center justify-between gap-4">
                 <div className="inline-flex h-14 w-14 items-center justify-center rounded-full bg-primary/5 text-primary group-hover:scale-105 transition-transform border border-muted">
                   <Camera size={24} />
                 </div>
@@ -267,7 +267,7 @@ export default function OnboardingPage() {
                 }`}
             >
               <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-bl-[100px] group-hover:bg-primary/10 transition-colors" />
-              <div className="mb-8 flex items-center justify-between">
+              <div className="mb-8 flex flex-col items-start sm:flex-row sm:items-center justify-between gap-4">
                 <div className="inline-flex h-14 w-14 items-center justify-center rounded-full bg-primary/5 text-primary group-hover:scale-105 transition-transform border border-muted">
                   <Building2 size={24} />
                 </div>

@@ -45,7 +45,12 @@ interface RealtimePayload {
 // Hook
 // ---------------------------------------------------------------------------
 
-export function useChat(orderId: string, currentUserClerkId: string | null | undefined) {
+export function useChat(
+  orderId: string,
+  currentUserClerkId: string | null | undefined,
+  isEnabled: boolean = true,
+  isReadOnly: boolean = false,
+) {
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [isSending, setIsSending] = useState(false)
@@ -217,7 +222,18 @@ export function useChat(orderId: string, currentUserClerkId: string | null | und
   //            unmount → cleanup semua
   // -------------------------------------------------------------------------
   useEffect(() => {
+    if (!isEnabled) {
+      return
+    }
+
     void fetchFromApi(true)
+
+    // Jika order sudah selesai/dibatalkan, tidak ada pesan baru yang mungkin datang.
+    // Cukup fetch sekali saat dibuka, skip realtime dan polling.
+    if (isReadOnly) {
+      return
+    }
+
     subscribeRealtime()
     startPolling()
 
@@ -231,7 +247,7 @@ export function useChat(orderId: string, currentUserClerkId: string | null | und
         pollingRef.current = null
       }
     }
-  }, [fetchFromApi, subscribeRealtime, startPolling])
+  }, [isEnabled, isReadOnly, fetchFromApi, subscribeRealtime, startPolling])
 
   return {
     chatMessages,

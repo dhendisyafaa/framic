@@ -52,17 +52,17 @@ export default function ContractDetailPage({
   return (
     <div className="container mx-auto p-8 max-w-5xl space-y-8 pb-20">
       <div className="flex items-center gap-4 mb-2">
-        <Link href="/dashboard/contracts" className="p-2 hover:bg-slate-100 rounded-full transition-colors">
-          <ArrowLeftIcon className="w-6 h-6 text-slate-400" />
+        <Link href="/dashboard/contracts" className="p-2 hover:bg-muted rounded-full transition-colors">
+          <ArrowLeftIcon className="w-6 h-6 text-muted-foreground" />
         </Link>
         <div>
           <div className="flex items-center gap-2 mb-1">
-            <FileTextIcon className="w-5 h-5 text-indigo-600" />
-            <span className="text-xs font-black text-indigo-600 uppercase tracking-widest">
+            <FileTextIcon className="w-5 h-5 text-primary" />
+            <span className="text-xs font-black text-primary uppercase tracking-widest">
               MoU Digital Kerjasama {type === "mitra" ? "Tetap" : "Event"}
             </span>
           </div>
-          <h1 className="text-3xl font-black text-slate-900 tracking-tight">
+          <h1 className="text-3xl font-black text-foreground tracking-tight">
             Tinjau Ketentuan Kerjasama
           </h1>
         </div>

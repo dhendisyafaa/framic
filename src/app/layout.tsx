@@ -34,7 +34,7 @@ export default function RootLayout({
           colorBackground: 'var(--card)',
           colorInputBackground: 'var(--input)',
           colorInputText: 'var(--foreground)',
-          borderRadius: '20px', // Mastercard standard button/card radius
+          borderRadius: '20px',
         },
         elements: {
           card: 'shadow-xl rounded-[24px] border border-muted bg-card text-foreground',

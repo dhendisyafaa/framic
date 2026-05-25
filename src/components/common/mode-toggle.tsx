@@ -44,12 +44,6 @@ export function ModeToggle() {
     }
   }
 
-  const getThemeLabel = (t: string) => {
-    if (t === "light") return "Terang"
-    if (t === "dark") return "Gelap"
-    return "Sistem"
-  }
-
   return (
     <div className="relative" ref={dropdownRef}>
       <button
@@ -57,24 +51,20 @@ export function ModeToggle() {
         className="flex items-center gap-1.5 px-3 py-2 rounded-full border border-muted/60 bg-white/90 dark:bg-[#20201F]/90 hover:bg-muted/20 text-foreground transition-all cursor-pointer shadow-xs font-bold text-xs h-9"
       >
         {getActiveIcon()}
-        <span className="capitalize hidden sm:inline-block">
-          {getThemeLabel(theme || "system")}
-        </span>
         <ChevronDown className={`w-3 h-3 text-muted-foreground transition-transform duration-200 ${isOpen ? "rotate-180" : ""}`} />
       </button>
 
       {isOpen && (
-        <div className="absolute right-0 mt-2 w-32 rounded-2xl border border-muted/60 bg-white dark:bg-[#20201F] p-1.5 shadow-xl z-50 animate-in fade-in slide-in-from-top-2 duration-150">
+        <div className="absolute right-0 mt-2 w-32 rounded-lg border border-muted/60 bg-white dark:bg-[#20201F] p-1.5 shadow-xl z-50 animate-in fade-in slide-in-from-top-2 duration-150">
           <button
             onClick={() => {
               setTheme("light")
               setIsOpen(false)
             }}
-            className={`w-full flex items-center gap-2 px-2.5 py-1.5 rounded-xl text-left text-xs font-bold transition-all cursor-pointer ${
-              theme === "light"
-                ? "bg-muted/60 text-[#FF5F00]"
-                : "text-muted-foreground hover:bg-muted/30 hover:text-foreground"
-            }`}
+            className={`w-full flex items-center gap-2 px-2.5 py-1.5 rounded-xl text-left text-xs font-bold transition-all cursor-pointer ${theme === "light"
+              ? "bg-muted/60 text-[#FF5F00]"
+              : "text-muted-foreground hover:bg-muted/30 hover:text-foreground"
+              }`}
           >
             <Sun className="w-3.5 h-3.5" />
             Terang
@@ -84,11 +74,10 @@ export function ModeToggle() {
               setTheme("dark")
               setIsOpen(false)
             }}
-            className={`w-full flex items-center gap-2 px-2.5 py-1.5 rounded-xl text-left text-xs font-bold transition-all cursor-pointer ${
-              theme === "dark"
-                ? "bg-muted/60 text-[#FF5F00]"
-                : "text-muted-foreground hover:bg-muted/30 hover:text-foreground"
-            }`}
+            className={`w-full flex items-center gap-2 px-2.5 py-1.5 rounded-xl text-left text-xs font-bold transition-all cursor-pointer ${theme === "dark"
+              ? "bg-muted/60 text-[#FF5F00]"
+              : "text-muted-foreground hover:bg-muted/30 hover:text-foreground"
+              }`}
           >
             <Moon className="w-3.5 h-3.5" />
             Gelap
@@ -98,11 +87,10 @@ export function ModeToggle() {
               setTheme("system")
               setIsOpen(false)
             }}
-            className={`w-full flex items-center gap-2 px-2.5 py-1.5 rounded-xl text-left text-xs font-bold transition-all cursor-pointer ${
-              theme === "system"
-                ? "bg-muted/60 text-[#FF5F00]"
-                : "text-muted-foreground hover:bg-muted/30 hover:text-foreground"
-            }`}
+            className={`w-full flex items-center gap-2 px-2.5 py-1.5 rounded-xl text-left text-xs font-bold transition-all cursor-pointer ${theme === "system"
+              ? "bg-muted/60 text-[#FF5F00]"
+              : "text-muted-foreground hover:bg-muted/30 hover:text-foreground"
+              }`}
           >
             <Monitor className="w-3.5 h-3.5" />
             Sistem
