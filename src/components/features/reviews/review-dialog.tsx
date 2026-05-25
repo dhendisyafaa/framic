@@ -66,7 +66,7 @@ export function ReviewDialog({ orderId }: ReviewDialogProps) {
       setOpen(false)
       form.reset()
     },
-    onError: (err: any) => {
+    onError: (err: Error) => {
       toast.error(err.message)
     }
   })
@@ -78,12 +78,12 @@ export function ReviewDialog({ orderId }: ReviewDialogProps) {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button className="w-full rounded-2xl bg-primary text-white font-bold py-7">
+        <Button className="w-full rounded-2xl bg-primary hover:bg-primary/90 text-primary-foreground font-bold py-7">
           Beri Rating & Review
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[450px] rounded-[2rem] p-0 overflow-hidden border-none">
-        <div className="bg-slate-900 p-8 text-white">
+      <DialogContent className="sm:max-w-[450px] rounded-[2rem] p-0 overflow-hidden border border-border/60 bg-card">
+        <div className="bg-muted/40 p-8 border-b border-border/60 text-foreground">
           <DialogHeader>
             <DialogTitle className="text-2xl font-black tracking-tight flex items-center gap-2">
               Bagikan Pengalamanmu
@@ -98,7 +98,7 @@ export function ReviewDialog({ orderId }: ReviewDialogProps) {
               name="rating"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Rating Anda</FormLabel>
+                  <FormLabel className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Rating Anda</FormLabel>
                   <FormControl>
                     <div className="flex gap-2">
                       {[1, 2, 3, 4, 5].map((s) => (
@@ -108,7 +108,7 @@ export function ReviewDialog({ orderId }: ReviewDialogProps) {
                           onClick={() => field.onChange(s)}
                           className="focus:outline-none transition-transform hover:scale-125"
                         >
-                          <StarIcon className={cn("w-8 h-8", s <= field.value ? "fill-primary text-primary" : "text-slate-200")} />
+                          <StarIcon className={cn("w-8 h-8", s <= field.value ? "fill-primary text-primary" : "text-muted-foreground/30")} />
                         </button>
                       ))}
                     </div>
@@ -123,13 +123,13 @@ export function ReviewDialog({ orderId }: ReviewDialogProps) {
               name="komentar"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
+                  <FormLabel className="text-[10px] font-black text-muted-foreground uppercase tracking-widest flex items-center gap-2">
                     <MessageSquare className="w-3 h-3" /> Ulasan Singkat
                   </FormLabel>
                   <FormControl>
                     <Textarea
                       placeholder="Bagikan apa yang Anda suka dari hasil pemotretan ini..."
-                      className="min-h-[120px] rounded-2xl border-slate-100 bg-slate-50 font-medium"
+                      className="min-h-[120px] rounded-2xl border-border/60 bg-muted/40 font-medium"
                       {...field}
                     />
                   </FormControl>
@@ -140,10 +140,10 @@ export function ReviewDialog({ orderId }: ReviewDialogProps) {
 
             <Button
               type="submit"
-              className="w-full rounded-2xl font-black py-6"
+              className="w-full rounded-2xl font-black py-6 bg-primary hover:bg-primary/90 text-primary-foreground"
               disabled={mutation.isPending}
             >
-              {mutation.isPending ? "Mengirim..." : "Kirim Ulasan Sekarang"}
+              {mutation.isPending ? "Mengirim..." : "Kirim Ulasan"}
             </Button>
           </form>
         </Form>

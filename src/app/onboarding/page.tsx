@@ -186,16 +186,20 @@ export default function OnboardingPage() {
 
   if (selectedRole === "none") {
     return (
-      <div className="flex min-h-screen flex-col items-center justify-center bg-slate-50 relative overflow-hidden p-6">
-        <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-primary/5 rounded-full blur-[100px] -translate-y-1/2 translate-x-1/2" />
-        <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-blue-500/5 rounded-full blur-[80px] translate-y-1/2 -translate-x-1/2" />
+      <div className="flex min-h-screen flex-col items-center justify-center bg-background relative overflow-hidden p-6">
+        <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-accent/5 rounded-full blur-[100px] -translate-y-1/2 translate-x-1/2" />
+        <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-primary/5 rounded-full blur-[80px] translate-y-1/2 -translate-x-1/2" />
 
         <div className="relative z-10 mx-auto w-full max-w-4xl flex flex-col items-center gap-12 text-center animate-in fade-in zoom-in duration-700">
           <div className="flex flex-col gap-4 max-w-2xl">
-            <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight text-slate-900 leading-tight">
-              Selamat datang di <span className="text-primary">Framic</span>
+            <div className="inline-flex items-center gap-2 self-center">
+              <span className="w-1.5 h-1.5 rounded-full bg-accent" />
+              <span className="text-[11px] font-bold uppercase tracking-[0.2em] text-muted-foreground">LANGKAH PERTAMA</span>
+            </div>
+            <h1 className="text-4xl md:text-5xl font-medium tracking-[-0.02em] text-foreground leading-tight">
+              Selamat datang di <span className="underline decoration-accent decoration-2 underline-offset-4">Framic</span>
             </h1>
-            <p className="text-lg text-slate-500 leading-relaxed">
+            <p className="text-sm text-muted-foreground leading-relaxed max-w-md mx-auto">
               Langkah awal untuk memulai perjalanan visual Anda. Pilih bagaimana Anda ingin berkontribusi di platform kami.
             </p>
           </div>
@@ -205,48 +209,48 @@ export default function OnboardingPage() {
             <button
               onClick={() => (!isPgRegistered || pgStatus === 'rejected') && setSelectedRole("photographer")}
               disabled={isPgRegistered && pgStatus !== 'rejected'}
-              className={`group flex flex-col text-left bg-white p-8 rounded-[2.5rem] border border-slate-200 shadow-sm transition-all duration-500 relative overflow-hidden ${isPgRegistered && pgStatus !== 'rejected'
-                ? 'grayscale-[0.5] cursor-not-allowed border-emerald-100 bg-emerald-50/10'
-                : 'hover:shadow-2xl hover:border-primary/30'
+              className={`group flex flex-col text-left bg-card p-8 rounded-[32px] border border-muted shadow-sm transition-all duration-500 relative overflow-hidden ${isPgRegistered && pgStatus !== 'rejected'
+                ? ' cursor-not-allowed border-muted/80'
+                : 'hover:shadow-xl hover:border-primary/20'
                 }`}
             >
-              <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-bl-[100px] group-hover:bg-primary/10 transition-colors" />
-              <div className="mb-8 flex items-center justify-between">
-                <div className="inline-flex h-16 w-16 items-center justify-center rounded-2xl bg-primary/10 text-primary group-hover:scale-110 transition-transform">
-                  <Camera size={28} />
+              <div className="absolute top-0 right-0 w-32 h-32 bg-accent/5 rounded-bl-[100px] group-hover:bg-accent/10 transition-colors" />
+              <div className="mb-8 flex flex-col items-start sm:flex-row sm:items-center justify-between gap-4">
+                <div className="inline-flex h-14 w-14 items-center justify-center rounded-full bg-primary/5 text-primary group-hover:scale-105 transition-transform border border-muted">
+                  <Camera size={24} />
                 </div>
                 {isPgRegistered && (
-                  <Badge variant="outline" className={`rounded-full px-4 border-2 font-black ${pgStatus === 'verified' ? 'text-emerald-600 border-emerald-200 bg-white' :
-                    pgStatus === 'pending' ? 'text-amber-600 border-amber-200 bg-white' :
-                      'text-rose-600 border-rose-200 bg-white'
+                  <span className={`text-[10px] font-bold uppercase tracking-widest px-3 py-1 rounded-full border ${pgStatus === 'verified' ? 'text-emerald-500 border-emerald-500/20 bg-emerald-500/10' :
+                    pgStatus === 'pending' ? 'text-amber-500 border-amber-500/20 bg-amber-500/10' :
+                      'text-rose-500 border-rose-500/20 bg-rose-500/10'
                     }`}>
-                    {pgStatus?.toUpperCase()}
-                  </Badge>
+                    {pgStatus}
+                  </span>
                 )}
               </div>
-              <h3 className="text-2xl font-bold text-slate-900 mb-3">Sebagai Fotografer</h3>
-              <p className="text-slate-500 leading-relaxed mb-6">
+              <h3 className="text-2xl font-medium text-foreground mb-3 tracking-tight">Sebagai Fotografer</h3>
+              <p className="text-xs text-muted-foreground leading-relaxed mb-6">
                 Tunjukkan karya terbaik Anda, kelola paket jasa, dan temukan klien impian atau bergabung dengan event profesional.
               </p>
 
               {isPgRegistered && pgStatus !== 'rejected' ? (
-                <div className="flex items-center gap-4">
-                  <div className="flex items-center gap-2 font-bold text-emerald-600">
-                    <CheckCircle2 className="w-4 h-4" /> Akun Terdaftar
+                <div className="flex items-center gap-4 mt-auto">
+                  <div className="flex items-center gap-2 font-bold text-xs text-emerald-500">
+                    <CheckCircle2 className="w-4 h-4 text-emerald-500" /> Akun Terdaftar
                   </div>
-                  <Link href={"/dashboard"} className="flex items-center gap-2 bg-primary text-white px-4 py-2 rounded-full shadow-lg shadow-primary/20">
-                    <LayoutDashboard className="w-4 h-4" /> Dashboard
+                  <Link href={"/dashboard"} className="flex items-center gap-2 bg-accent text-white px-4 py-2 rounded-full shadow-sm text-xs font-bold hover:bg-accent/90 transition-all cursor-pointer">
+                    Dashboard
                   </Link>
                 </div>
               ) : (
-                <div className="mt-auto flex items-center gap-2 font-black text-primary transition-all">
+                <div className="mt-auto flex items-center gap-2 font-bold text-xs text-primary transition-all">
                   {pgStatus === 'rejected' ? (
-                    <span className="flex items-center gap-2 text-rose-600 bg-rose-50 px-4 py-2 rounded-full">
+                    <span className="flex items-center gap-2 text-destructive bg-destructive/5 border border-destructive/10 px-4 py-2 rounded-full">
                       Ajukan Ulang <ArrowRight className="w-4 h-4" />
                     </span>
                   ) : (
                     <span className="flex items-center gap-2">
-                      Mulai Berkarir <ArrowRight className="w-4 h-4" />
+                      Mulai Berkarir <ArrowRight className="w-4 h-4 text-accent" />
                     </span>
                   )}
                 </div>
@@ -257,48 +261,48 @@ export default function OnboardingPage() {
             <button
               onClick={() => (!isMitraRegistered || mitraStatus === 'rejected') && setSelectedRole("mitra")}
               disabled={isMitraRegistered && mitraStatus !== 'rejected'}
-              className={`group flex flex-col text-left bg-white p-8 rounded-[2.5rem] border border-slate-200 shadow-sm transition-all duration-500 relative overflow-hidden ${isMitraRegistered && mitraStatus !== 'rejected'
-                ? 'grayscale-[0.5] cursor-not-allowed border-blue-100 bg-blue-50/10'
-                : 'hover:shadow-2xl hover:border-blue-500/30'
+              className={`group flex flex-col text-left bg-card p-8 rounded-[32px] border border-muted shadow-sm transition-all duration-500 relative overflow-hidden ${isMitraRegistered && mitraStatus !== 'rejected'
+                ? 'opacity-60 cursor-not-allowed border-muted/80'
+                : 'hover:shadow-xl hover:border-primary/20'
                 }`}
             >
-              <div className="absolute top-0 right-0 w-32 h-32 bg-blue-500/5 rounded-bl-[100px] group-hover:bg-blue-500/10 transition-colors" />
-              <div className="mb-8 flex items-center justify-between">
-                <div className="inline-flex h-16 w-16 items-center justify-center rounded-2xl bg-blue-500/10 text-blue-500 group-hover:scale-110 transition-transform">
-                  <Building2 size={28} />
+              <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-bl-[100px] group-hover:bg-primary/10 transition-colors" />
+              <div className="mb-8 flex flex-col items-start sm:flex-row sm:items-center justify-between gap-4">
+                <div className="inline-flex h-14 w-14 items-center justify-center rounded-full bg-primary/5 text-primary group-hover:scale-105 transition-transform border border-muted">
+                  <Building2 size={24} />
                 </div>
                 {isMitraRegistered && (
-                  <Badge variant="outline" className={`rounded-full px-4 border-2 font-black ${mitraStatus === 'verified' ? 'text-emerald-600 border-emerald-200 bg-white' :
-                    mitraStatus === 'pending' ? 'text-amber-600 border-amber-200 bg-white' :
-                      'text-rose-600 border-rose-200 bg-white'
+                  <span className={`text-[10px] font-bold uppercase tracking-widest px-3 py-1 rounded-full border ${mitraStatus === 'verified' ? 'text-emerald-500 border-emerald-500/20 bg-emerald-500/10' :
+                    mitraStatus === 'pending' ? 'text-amber-500 border-amber-500/20 bg-amber-500/10' :
+                      'text-rose-500 border-rose-500/20 bg-rose-500/10'
                     }`}>
-                    {mitraStatus?.toUpperCase()}
-                  </Badge>
+                    {mitraStatus}
+                  </span>
                 )}
               </div>
-              <h3 className="text-2xl font-bold text-slate-900 mb-3">Sebagai Mitra</h3>
-              <p className="text-slate-500 leading-relaxed mb-6">
+              <h3 className="text-2xl font-medium text-foreground mb-3 tracking-tight">Sebagai Mitra</h3>
+              <p className="text-xs text-muted-foreground leading-relaxed mb-6">
                 Butuh tim dokumentasi untuk event Anda? Kelola jadwal, rekrut fotografer, dan bangun kepercayaan dengan klien Anda.
               </p>
 
               {isMitraRegistered && mitraStatus !== 'rejected' ? (
-                <div className="flex items-center gap-4">
-                  <div className="mt-auto flex items-center gap-2 font-bold text-blue-600">
-                    <CheckCircle2 className="w-4 h-4" /> Mitra Terdaftar
+                <div className="flex items-center gap-4 mt-auto">
+                  <div className="flex items-center gap-2 font-bold text-xs text-emerald-500">
+                    <CheckCircle2 className="w-4 h-4 text-emerald-500" /> Mitra Terdaftar
                   </div>
-                  <Link href={"/dashboard"} className="flex items-center gap-2 bg-primary text-white px-4 py-2 rounded-full shadow-lg shadow-primary/20">
-                    <LayoutDashboard className="w-4 h-4" /> Dashboard
+                  <Link href={"/dashboard"} className="flex items-center gap-2 bg-accent text-white px-4 py-2 rounded-full shadow-sm text-xs font-bold hover:bg-accent/90 transition-all cursor-pointer">
+                    Dashboard
                   </Link>
                 </div>
               ) : (
-                <div className="mt-auto flex items-center gap-2 font-black text-blue-500 transition-all">
+                <div className="mt-auto flex items-center gap-2 font-bold text-xs text-primary transition-all">
                   {mitraStatus === 'rejected' ? (
-                    <span className="flex items-center gap-2 text-rose-600 bg-rose-50 px-4 py-2 rounded-full cursor-pointer">
+                    <span className="flex items-center gap-2 text-destructive bg-destructive/5 border border-destructive/10 px-4 py-2 rounded-full cursor-pointer">
                       Ajukan Ulang <ArrowRight className="w-4 h-4" />
                     </span>
                   ) : (
                     <span className="flex items-center gap-2 cursor-pointer">
-                      Bangun Ekosistem <ArrowRight className="w-4 h-4" />
+                      Bangun Ekosistem <ArrowRight className="w-4 h-4 text-accent" />
                     </span>
                   )}
                 </div>
@@ -306,7 +310,7 @@ export default function OnboardingPage() {
             </button>
           </div>
 
-          <Button variant="ghost" onClick={handleSkip} className="text-slate-400 hover:text-slate-900 h-12 px-8 rounded-full">
+          <Button variant="ghost" onClick={handleSkip} className="text-muted-foreground hover:text-foreground h-11 px-8 rounded-full text-xs font-bold hover:bg-muted/40">
             Daftar nanti, saya hanya ingin mencari fotografer dulu
           </Button>
         </div>
@@ -315,19 +319,19 @@ export default function OnboardingPage() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-slate-50 relative overflow-hidden p-6 py-12">
+    <div className="flex min-h-screen items-center justify-center bg-background relative overflow-hidden p-6 py-12">
       <div className="absolute top-0 left-0 w-[500px] h-[500px] bg-primary/5 rounded-full blur-[100px] -translate-y-1/2 -translate-x-1/2" />
 
-      <Card className="w-full max-w-2xl shadow-2xl border-white/40 bg-white/80 backdrop-blur-xl rounded-[2.5rem] overflow-hidden animate-in fade-in slide-in-from-bottom-8 duration-700">
-        <CardHeader className="p-10 pb-6">
-          <CardTitle className="text-3xl font-extrabold tracking-tight text-slate-900">
+      <Card className="w-full max-w-2xl shadow-xl border-muted bg-card rounded-[32px] overflow-hidden animate-in fade-in slide-in-from-bottom-8 duration-700">
+        <CardHeader className="p-5 sm:p-8 pb-6">
+          <CardTitle className="text-2xl sm:text-3xl font-medium tracking-tight text-foreground">
             Lengkapi Profil {selectedRole === "photographer" ? "Fotografer" : "Mitra"}
           </CardTitle>
-          <CardDescription className="text-base text-slate-500 mt-2">
+          <CardDescription className="text-sm text-muted-foreground mt-2">
             Pintu gerbang menuju peluang baru. Pastikan data yang Anda masukkan akurat untuk mempercepat proses verifikasi.
           </CardDescription>
         </CardHeader>
-        <CardContent className="p-10 pt-0">
+        <CardContent className="p-5 sm:p-8 pt-0">
 
           {selectedRole === "photographer" && (
             <Form {...pgForm}>
@@ -337,10 +341,11 @@ export default function OnboardingPage() {
                   name="bio"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Bio Singkat</FormLabel>
+                      <FormLabel className="text-xs font-bold text-foreground">Bio Singkat</FormLabel>
                       <FormControl>
                         <Textarea
                           placeholder="Ceritakan sedikit tentang karya dan diri Anda (min. 10 karakter)"
+                          className="rounded-[16px] border-muted resize-none focus-visible:ring-1 focus-visible:ring-primary focus-visible:border-primary"
                           {...field}
                         />
                       </FormControl>
@@ -354,9 +359,13 @@ export default function OnboardingPage() {
                   name="kotaDomisili"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Kota Domisili</FormLabel>
+                      <FormLabel className="text-xs font-bold text-foreground">Kota Domisili</FormLabel>
                       <FormControl>
-                        <Input placeholder="Contoh: Bandung" {...field} />
+                        <Input
+                          placeholder="Contoh: Bandung"
+                          className="rounded-full h-10 border-muted focus-visible:ring-1 focus-visible:ring-primary focus-visible:border-primary"
+                          {...field}
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -368,11 +377,15 @@ export default function OnboardingPage() {
                   name="portfolioUrl"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Link Portofolio (Instagram / Google Drive / Website)</FormLabel>
+                      <FormLabel className="text-xs font-bold text-foreground">Link Portofolio (Instagram / Google Drive / Website)</FormLabel>
                       <FormControl>
-                        <Input placeholder="" {...field} />
+                        <Input
+                          placeholder="https://..."
+                          className="rounded-full h-10 border-muted focus-visible:ring-1 focus-visible:ring-primary focus-visible:border-primary"
+                          {...field}
+                        />
                       </FormControl>
-                      <FormDescription>
+                      <FormDescription className="text-[11px] text-muted-foreground">
                         Tautan eksternal yang menunjukkan hasil karya fotografi Anda agar dapat ditinjau oleh Admin.
                       </FormDescription>
                       <FormMessage />
@@ -385,7 +398,7 @@ export default function OnboardingPage() {
                   name="kategori"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Kategori Keahlian</FormLabel>
+                      <FormLabel className="text-xs font-bold text-foreground">Kategori Keahlian</FormLabel>
                       <div className="flex flex-wrap gap-2">
                         {KATEGORI_OPTIONS.map((kat) => (
                           <button
@@ -398,9 +411,9 @@ export default function OnboardingPage() {
                                 : [...current, kat]
                               field.onChange(next)
                             }}
-                            className={`rounded-full border px-4 py-1.5 text-sm font-bold transition-all shadow-sm ${field.value.includes(kat)
-                              ? "bg-primary text-white border-primary"
-                              : "bg-white hover:bg-slate-50 border-slate-200 text-slate-600"
+                            className={`rounded-full border px-4 py-1.5 text-xs font-bold transition-all shadow-sm ${field.value.includes(kat)
+                              ? "bg-primary text-primary-foreground border-primary"
+                              : "bg-white dark:bg-[#141413] hover:bg-muted/40 border-muted text-muted-foreground"
                               }`}
                           >
                             {kat}
@@ -412,11 +425,11 @@ export default function OnboardingPage() {
                   )}
                 />
 
-                <div className="pt-6 flex items-center justify-between border-t border-slate-100">
-                  <Button type="button" variant="ghost" className="rounded-xl font-bold px-8" onClick={() => setSelectedRole("none")} disabled={isLoading}>
+                <div className="pt-6 flex flex-col-reverse sm:flex-row items-center justify-between gap-3 border-t border-muted/50">
+                  <Button type="button" variant="ghost" className="w-full sm:w-auto rounded-full font-bold px-8" onClick={() => setSelectedRole("none")} disabled={isLoading}>
                     Kembali
                   </Button>
-                  <Button type="submit" disabled={isLoading} className="rounded-xl font-bold px-8 shadow-xl shadow-primary/20">
+                  <Button type="submit" disabled={isLoading} className="w-full sm:w-auto rounded-full font-bold px-8 bg-primary hover:bg-primary/90 text-primary-foreground">
                     {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
                     Ajukan Verifikasi
                   </Button>
@@ -433,9 +446,13 @@ export default function OnboardingPage() {
                   name="namaOrganisasi"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Nama Organisasi / WO / Event Organizer</FormLabel>
+                      <FormLabel className="text-xs font-bold text-foreground">Nama Organisasi / WO / Event Organizer</FormLabel>
                       <FormControl>
-                        <Input placeholder="Contoh: Budi Wedding" {...field} />
+                        <Input
+                          placeholder="Contoh: Budi Wedding"
+                          className="rounded-full h-10 border-muted focus-visible:ring-1 focus-visible:ring-primary focus-visible:border-primary"
+                          {...field}
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -447,10 +464,10 @@ export default function OnboardingPage() {
                   name="tipeMitra"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Tipe Organisasi</FormLabel>
+                      <FormLabel className="text-xs font-bold text-foreground">Tipe Organisasi</FormLabel>
                       <Select value={field.value} onValueChange={field.onChange}>
                         <FormControl>
-                          <SelectTrigger>
+                          <SelectTrigger className="rounded-full h-10 border-muted focus:ring-1 focus:ring-primary focus:border-primary">
                             <SelectValue placeholder="Pilih tipe organisasi" />
                           </SelectTrigger>
                         </FormControl>
@@ -473,9 +490,13 @@ export default function OnboardingPage() {
                   name="alamat"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Alamat Lengkap</FormLabel>
+                      <FormLabel className="text-xs font-bold text-foreground">Alamat Lengkap</FormLabel>
                       <FormControl>
-                        <Textarea placeholder="Alamat kantor / operasional" {...field} />
+                        <Textarea
+                          placeholder="Alamat kantor / operasional"
+                          className="rounded-[16px] border-muted resize-none focus-visible:ring-1 focus-visible:ring-primary focus-visible:border-primary"
+                          {...field}
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -487,9 +508,13 @@ export default function OnboardingPage() {
                   name="nomorTelepon"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Nomor Telepon / WhatsApp</FormLabel>
+                      <FormLabel className="text-xs font-bold text-foreground">Nomor Telepon / WhatsApp</FormLabel>
                       <FormControl>
-                        <Input placeholder="Contoh: 081234567890" {...field} />
+                        <Input
+                          placeholder="Contoh: 081234567890"
+                          className="rounded-full h-10 border-muted focus-visible:ring-1 focus-visible:ring-primary focus-visible:border-primary"
+                          {...field}
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -501,9 +526,14 @@ export default function OnboardingPage() {
                   name="websiteUrl"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Website / Link Portfolio (Opsional)</FormLabel>
+                      <FormLabel className="text-xs font-bold text-foreground">Website / Link Portfolio (Opsional)</FormLabel>
                       <FormControl>
-                        <Input type="url" placeholder="https://..." {...field} />
+                        <Input
+                          type="url"
+                          placeholder="https://..."
+                          className="rounded-full h-10 border-muted focus-visible:ring-1 focus-visible:ring-primary focus-visible:border-primary"
+                          {...field}
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -515,25 +545,25 @@ export default function OnboardingPage() {
                   name="dokumenLegalitas"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Dokumen Legalitas (PDF/Gambar)</FormLabel>
+                      <FormLabel className="text-xs font-bold text-foreground">Dokumen Legalitas (PDF/Gambar)</FormLabel>
                       <FormControl>
                         <Input
                           type="file"
                           onChange={(e) => field.onChange(e.target.files ? e.target.files[0] : null)}
-                          className="cursor-pointer file:font-bold file:text-primary file:bg-primary/10 file:rounded-lg file:border-none file:px-4 file:mr-4"
+                          className="cursor-pointer file:font-bold file:text-primary file:bg-primary/5 file:rounded-full file:border-none file:px-4 file:mr-4 border-muted focus-visible:ring-1 focus-visible:ring-primary focus-visible:border-primary rounded-full h-10"
                         />
                       </FormControl>
-                      <FormDescription>Upload KTP penanggung jawab atau NIB Perusahaan untuk verifikasi trust platform.</FormDescription>
+                      <FormDescription className="text-[11px] text-muted-foreground">Upload KTP penanggung jawab atau NIB Perusahaan untuk verifikasi trust platform.</FormDescription>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
 
-                <div className="pt-6 flex items-center justify-between border-t border-slate-100">
-                  <Button type="button" variant="ghost" className="rounded-xl font-bold px-8" onClick={() => setSelectedRole("none")} disabled={isLoading}>
+                <div className="pt-6 flex flex-col-reverse sm:flex-row items-center justify-between gap-3 border-t border-muted/50">
+                  <Button type="button" variant="ghost" className="w-full sm:w-auto rounded-full font-bold px-8" onClick={() => setSelectedRole("none")} disabled={isLoading}>
                     Kembali
                   </Button>
-                  <Button type="submit" disabled={isLoading} className="rounded-xl font-bold px-8 shadow-xl shadow-blue-500/20">
+                  <Button type="submit" disabled={isLoading} className="w-full sm:w-auto rounded-full font-bold px-8 bg-primary hover:bg-primary/90 text-primary-foreground shadow-sm">
                     {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
                     Ajukan Verifikasi Mitra
                   </Button>

@@ -55,7 +55,7 @@ eventsRouter.get("/", zValidator("query", listEventsSchema), async (c) => {
     try {
       const auth = await requireRole("photographer")
       const { clerkId } = auth
-      
+
       const [pg] = await db
         .select({ id: photographerProfiles.id })
         .from(photographerProfiles)
@@ -213,6 +213,7 @@ eventsRouter.get("/:id", async (c) => {
       photographerType: eventPhotographers.photographerType,
       photographerId: photographerProfiles.id,
       clerkId: photographerProfiles.clerkId,
+      username: photographerProfiles.username,
       bio: photographerProfiles.bio,
       ratingAverage: photographerProfiles.ratingAverage,
       invitationStatus: eventPhotographers.invitationStatus,
@@ -225,16 +226,16 @@ eventsRouter.get("/:id", async (c) => {
       isDashboard
         ? eq(eventPhotographers.eventId, eventId) // Dashboard: Semua anggota/request (termasuk pending/rejected)
         : and(
-            eq(eventPhotographers.eventId, eventId),
-            eq(eventPhotographers.isAvailable, true),
-            or(
-              eq(eventPhotographers.photographerType, "mitra_permanent"),
-              and(
-                eq(eventPhotographers.photographerType, "event_only"),
-                eq(eventPhotographers.invitationStatus, "accepted")
-              )
+          eq(eventPhotographers.eventId, eventId),
+          eq(eventPhotographers.isAvailable, true),
+          or(
+            eq(eventPhotographers.photographerType, "mitra_permanent"),
+            and(
+              eq(eventPhotographers.photographerType, "event_only"),
+              eq(eventPhotographers.invitationStatus, "accepted")
             )
           )
+        )
     )
 
   // Enrich nama dari Clerk
@@ -290,16 +291,16 @@ const createEventSchema = z.object({
 eventsRouter.post("/", async (c) => {
   try {
     const { clerkId } = await requireRole("mitra")
-    
+
     // Gunakan formData() sekali untuk semua (termasuk file) agar stream tidak terbaca dua kali
     const formData = await c.req.parseBody()
-    
+
     // Validasi manual via Zod terhadap hasil parseBody
     const validation = createEventSchema.safeParse(formData)
     if (!validation.success) {
-      return c.json({ 
-        success: false, 
-        error: `Validasi gagal: ${validation.error.issues.map(i => i.message).join(", ")}` 
+      return c.json({
+        success: false,
+        error: `Validasi gagal: ${validation.error.issues.map(i => i.message).join(", ")}`
       }, 400)
     }
     const body = validation.data
@@ -543,7 +544,7 @@ eventsRouter.post(
       const { clerkId } = await requireRole("mitra")
       const eventId = c.req.param("id")
       const { username, invitationMessage } = c.req.valid("json")
-      
+
       // Clean username (remove @ if present)
       const cleanUsername = username.startsWith("@") ? username.substring(1).toLowerCase() : username.toLowerCase()
 
@@ -608,7 +609,7 @@ eventsRouter.post(
           {
             success: false,
             error:
-              "PG ini sudah anggota tetap mitra Anda. Gunakan endpoint assign-photographer.",
+              "PG ini sudah anggota tetap mitra Anda",
           },
           409
         )
@@ -909,7 +910,7 @@ eventsRouter.patch(
             {
               success: false,
               error:
-                "Endpoint ini untuk merespons request yang datang dari fotografer. Gunakan endpoint yang sesuai.",
+                "Endpoint ini untuk merespons request yang datang dari fotografer.",
             },
             400
           )
@@ -938,7 +939,7 @@ eventsRouter.patch(
             {
               success: false,
               error:
-                "Endpoint ini untuk merespons undangan yang datang dari mitra. Gunakan endpoint yang sesuai.",
+                "Endpoint ini untuk merespons undangan yang datang dari mitra.",
             },
             400
           )
@@ -1047,13 +1048,13 @@ eventsRouter.patch(
       // Special handling for dates to ensure proper conversion
       if (body.tanggalMulai) updateData.tanggalMulai = new Date(body.tanggalMulai)
       if (body.tanggalSelesai !== undefined) updateData.tanggalSelesai = body.tanggalSelesai ? new Date(body.tanggalSelesai) : null
-      
+
       // Recruitment settings logic
       if (body.isOpenRecruitment !== undefined) {
         updateData.isOpenRecruitment = body.isOpenRecruitment
         if (body.deadlineRequest !== undefined) {
-          updateData.deadlineRequest = (body.isOpenRecruitment && body.deadlineRequest) 
-            ? new Date(body.deadlineRequest) 
+          updateData.deadlineRequest = (body.isOpenRecruitment && body.deadlineRequest)
+            ? new Date(body.deadlineRequest)
             : null
         }
       } else if (body.deadlineRequest !== undefined) {

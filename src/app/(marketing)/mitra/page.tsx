@@ -49,12 +49,12 @@ export default async function MitraListPage() {
   const mitraList = await getVerifiedMitra()
 
   return (
-    <div className="container mx-auto px-4 md:px-8 py-12 md:py-20">
+    <div className="container mx-auto px-4 md:px-8 py-12 md:py-20 text-foreground">
       <div className="max-w-3xl mb-16 space-y-4">
-        <h1 className="text-4xl md:text-5xl font-black tracking-tight text-slate-900">
+        <h1 className="text-4xl md:text-5xl font-black tracking-tight text-foreground">
           Partner Strategis Cerita Anda
         </h1>
-        <p className="text-lg text-slate-500 font-medium">
+        <p className="text-lg text-muted-foreground font-medium">
           Daftar Wedding Organizer, Event Planner, dan Agensi kreatif yang telah terverifikasi dan berkolaborasi resmi dengan Framic.
         </p>
       </div>
@@ -62,25 +62,25 @@ export default async function MitraListPage() {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
         {mitraList.map((mitra) => (
           <Link key={mitra.id} href={`/mitra/${mitra.id}`}>
-            <Card className="group border-slate-200 shadow-lg shadow-slate-200/40 rounded-[2.5rem] overflow-hidden hover:shadow-xl transition-all hover:-translate-y-1">
+            <Card className="group border-muted shadow-sm hover:shadow-xl hover:border-muted/80 transition-all hover:-translate-y-1 bg-card text-foreground rounded-[2.5rem] overflow-hidden">
               <CardContent className="p-0">
-                <div className="h-48 bg-slate-100 relative overflow-hidden">
-                  <div className="absolute inset-0 flex items-center justify-center text-slate-300">
+                <div className="h-48 bg-muted relative overflow-hidden">
+                  <div className="absolute inset-0 flex items-center justify-center text-muted-foreground/30">
                       <Building2Icon className="w-16 h-16" />
                     </div>
-                  <Badge className="absolute top-6 left-6 bg-white/90 backdrop-blur-sm text-slate-900 border-none px-4 py-1.5 rounded-full font-black text-[10px] uppercase tracking-widest shadow-sm">
+                  <Badge className="absolute top-6 left-6 bg-card/90 backdrop-blur-sm text-foreground border-none px-4 py-1.5 rounded-full font-black text-[10px] uppercase tracking-widest shadow-sm">
                     {mitra.tipeMitra?.replace("_", " ")}
                   </Badge>
                 </div>
                 <div className="p-8">
-                  <h3 className="text-2xl font-black text-slate-900 mb-2 truncate">
+                  <h3 className="text-2xl font-black text-foreground mb-2 truncate">
                     {mitra.namaOrganisasi}
                   </h3>
-                  <div className="flex items-center justify-between mt-6 pt-6 border-t border-slate-100">
-                    <div className="flex items-center gap-2 text-slate-400 font-bold text-sm">
-                      <span className="text-indigo-600">{mitra.totalEvent}</span> Event Aktif
+                  <div className="flex items-center justify-between mt-6 pt-6 border-t border-muted">
+                    <div className="flex items-center gap-2 text-muted-foreground font-bold text-sm">
+                      <span className="text-accent font-black">{mitra.totalEvent}</span> Event Aktif
                     </div>
-                    <div className="w-10 h-10 rounded-full bg-slate-900 text-white flex items-center justify-center group-hover:bg-indigo-600 transition-colors">
+                    <div className="w-10 h-10 rounded-full bg-muted text-muted-foreground flex items-center justify-center group-hover:bg-accent group-hover:text-white transition-colors cursor-pointer">
                       <ChevronRightIcon className="w-5 h-5" />
                     </div>
                   </div>
@@ -92,9 +92,9 @@ export default async function MitraListPage() {
       </div>
 
       {mitraList.length === 0 && (
-        <div className="py-32 text-center bg-slate-50 rounded-[3rem] border-2 border-dashed border-slate-200">
-          <Building2Icon className="w-16 h-16 text-slate-200 mx-auto mb-4" />
-          <p className="text-slate-400 font-medium">Belum ada mitra terverifikasi yang ditampilkan.</p>
+        <div className="py-32 text-center bg-muted/5 rounded-[3rem] border-2 border-dashed border-muted">
+          <Building2Icon className="w-16 h-16 text-muted-foreground/20 mx-auto mb-4" />
+          <p className="text-muted-foreground font-medium">Belum ada mitra terverifikasi yang ditampilkan.</p>
         </div>
       )}
     </div>

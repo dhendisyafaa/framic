@@ -1,19 +1,40 @@
 "use client"
 
+// 1. React / Next.js
 import Link from "next/link"
+
+// 2. Third-party libraries
 import { useQuery } from "@tanstack/react-query"
-import { OrderWithPackage } from "@/types"
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
-import { CalendarIcon, CameraIcon, PackageIcon, ArrowRightIcon } from "lucide-react"
+import { useUser } from "@clerk/nextjs"
 import { format } from "date-fns"
 import { id as localeId } from "date-fns/locale"
+
+// 3. Components
+import { Button } from "@/components/ui/button"
+import { Badge } from "@/components/ui/badge"
 import { DashboardSkeleton } from "./dashboard-skeleton"
+
+// 4. Icons
+import {
+  CalendarIcon,
+  CameraIcon,
+  PackageIcon,
+  ArrowRight,
+  MessageSquare,
+  User,
+  ClockIcon,
+} from "lucide-react"
+
+// 5. Types
+import { OrderDetail } from "@/types"
+
+// Helper utilities
+import { cn } from "@/lib/utils"
 
 /**
  * Dashboard untuk role Customer.
- * Fokus: Monitoring booking aktif dan kemudahan mencari fotografer.
+ * Fokus: Monitoring booking aktif, kemudahan mencari fotografer,
+ * bento-grid premium layout, and dynamic integrations.
  */
 export function CustomerDashboard({
   clerkId,
@@ -24,193 +45,354 @@ export function CustomerDashboard({
   isPhotographerSuspended?: boolean
   isMitraSuspended?: boolean
 }) {
-  // Fetch active orders (yang belum completed/cancelled)
-  const { data: response, isLoading } = useQuery({
+  const { user } = useUser()
+
+  // Fetch active & past orders (including photographer profiles linked to the orders)
+  const { data: response, isLoading: ordersLoading } = useQuery({
     queryKey: ["customer-active-orders", clerkId],
     queryFn: async () => {
-      const res = await fetch("/api/orders?limit=5")
+      const res = await fetch("/api/orders?limit=20")
       if (!res.ok) throw new Error("Gagal mengambil data order")
-      return res.json() as Promise<{ success: boolean; data: OrderWithPackage[] }>
+      return res.json() as Promise<{ success: boolean; data: OrderDetail[] }>
     },
   })
 
-  const ordersList = response?.data || []
-  const activeOrders = ordersList.filter(o => !["completed", "cancelled"].includes(o.status))
+  if (ordersLoading) return <DashboardSkeleton />
 
-  if (isLoading) return <DashboardSkeleton />
+  const ordersList = response?.data || []
+
+  // Determine closest upcoming shoot
+  const upcomingOrders = [...ordersList]
+    .filter(o => ["confirmed", "dp_paid", "ongoing", "delivered"].includes(o.status))
+    .sort((a, b) => new Date(a.tanggalPotret).getTime() - new Date(b.tanggalPotret).getTime())
+
+  const nextShoot = upcomingOrders[0]
+
+  const getGreeting = () => {
+    const hours = new Date().getHours()
+    if (hours < 11) return "Selamat pagi"
+    if (hours < 15) return "Selamat siang"
+    if (hours < 18) return "Selamat sore"
+    return "Selamat malam"
+  }
+
+  const getDisplayTime = (order: OrderDetail) => {
+    try {
+      const startDate = new Date(order.tanggalPotret)
+      const timeString = format(startDate, "HH:mm")
+      const duration = order.package?.durasiJam || 2
+      const endDate = new Date(startDate.getTime() + duration * 60 * 60 * 1000)
+      const endTimeString = format(endDate, "HH:mm")
+      return `${timeString} - ${endTimeString}`
+    } catch {
+      return "10:00 - 12:00"
+    }
+  }
 
   return (
-    <div className="container mx-auto p-4 md:p-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
+    <div className="container mx-auto px-4 py-8 max-w-6xl relative overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-700">
+      {/* Decorative background grid and circles matching mockup */}
+      <div className="absolute -top-20 -left-20 w-[600px] h-[600px] border border-accent/5 rounded-full pointer-events-none opacity-20 dark:opacity-5" />
+      <div className="absolute top-[40%] -right-40 w-[800px] h-[800px] border border-accent/5 rounded-full pointer-events-none opacity-10 dark:opacity-5" />
+      <div className="absolute top-1/4 left-1/2 -translate-x-1/2 text-muted-foreground/5 whitespace-nowrap opacity-10 dark:opacity-5 pointer-events-none select-none text-9xl font-bold tracking-tighter uppercase">
+        MOMENTS CAPTURED
+      </div>
+
       {/* Role Suspension Warning Banners */}
       {(isPhotographerSuspended || isMitraSuspended) && (
-        <div className="mb-8 space-y-4">
+        <div className="mb-8 space-y-4 relative z-10">
           {isPhotographerSuspended && (
-            <div className="bg-rose-50 border-2 border-rose-200 p-6 rounded-[2rem] flex flex-col md:flex-row items-center justify-between gap-4 shadow-lg shadow-rose-100/50">
+            <div className="bg-card border border-destructive/20 p-6 rounded-[24px] flex flex-col md:flex-row items-center justify-between gap-4 shadow-sm">
               <div className="flex items-center gap-4">
-                <div className="w-12 h-12 bg-rose-100 text-rose-600 rounded-2xl flex items-center justify-center shrink-0">
-                  <CameraIcon className="w-6 h-6" />
+                <div className="w-12 h-12 bg-destructive/5 text-destructive rounded-full flex items-center justify-center shrink-0 border border-destructive/10">
+                  <CameraIcon className="w-5 h-5" />
                 </div>
                 <div>
-                  <h4 className="font-black text-slate-800 uppercase tracking-tight">Akun Fotografer Ditangguhkan</h4>
-                  <p className="text-sm text-slate-500 font-medium">Profil Anda tidak akan muncul di publik untuk sementara waktu. Hubungi admin untuk detail.</p>
+                  <h4 className="font-bold text-foreground text-sm">Akun Fotografer Ditangguhkan</h4>
+                  <p className="text-xs text-muted-foreground">Profil Anda tidak akan muncul di publik untuk sementara waktu. Hubungi admin untuk detail.</p>
                 </div>
               </div>
-              <Button variant="outline" className="rounded-full border-rose-200 text-rose-600 font-bold hover:bg-rose-100">Cek Status</Button>
+              <Button variant="outline" className="rounded-full border-destructive/20 text-destructive font-bold hover:bg-destructive/5 text-xs h-9">Cek Status</Button>
             </div>
           )}
           {isMitraSuspended && (
-            <div className="bg-amber-50 border-2 border-amber-200 p-6 rounded-[2rem] flex flex-col md:flex-row items-center justify-between gap-4 shadow-lg shadow-amber-100/50">
+            <div className="bg-card border border-accent/20 p-6 rounded-[24px] flex flex-col md:flex-row items-center justify-between gap-4 shadow-sm">
               <div className="flex items-center gap-4">
-                <div className="w-12 h-12 bg-amber-100 text-amber-600 rounded-2xl flex items-center justify-center shrink-0">
-                  <PackageIcon className="w-6 h-6" />
+                <div className="w-12 h-12 bg-accent/5 text-accent rounded-full flex items-center justify-center shrink-0 border border-accent/10">
+                  <PackageIcon className="w-5 h-5" />
                 </div>
                 <div>
-                  <h4 className="font-black text-slate-800 uppercase tracking-tight">Akun Mitra Ditangguhkan</h4>
-                  <p className="text-sm text-slate-500 font-medium">Akses operasional Mitra Anda telah dibekukan sementara.</p>
+                  <h4 className="font-bold text-foreground text-sm">Akun Mitra Ditangguhkan</h4>
+                  <p className="text-xs text-muted-foreground">Akses operasional Mitra Anda telah dibekukan sementara.</p>
                 </div>
               </div>
-              <Button variant="outline" className="rounded-full border-amber-200 text-amber-600 font-bold hover:bg-amber-100">Hubungi Admin</Button>
+              <Button variant="outline" className="rounded-full border-accent/20 text-accent font-bold hover:bg-accent/5 text-xs h-9">Hubungi Admin</Button>
             </div>
           )}
         </div>
       )}
 
       {/* Header */}
-      <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 mb-10">
-        <div>
-          <h1 className="text-3xl font-black tracking-tight text-slate-900 mb-2">Customer Dashboard</h1>
-          <p className="text-slate-500 font-medium tracking-tight">Selamat datang kembali! Mari temukan fotografer terbaik untuk momen spesial Anda.</p>
-        </div>
-        <Link href="/photographers">
-          <Button className="rounded-full px-8 shadow-xl shadow-primary/25 bg-primary hover:bg-primary/90 font-bold h-12 transition-all hover:scale-105 active:scale-95">
-            Cari Fotografer
-          </Button>
-        </Link>
-      </div>
+      <header className="mb-12 relative z-10">
+        <p className="text-xs font-bold uppercase tracking-widest text-accent mb-2">Customer Dashboard</p>
+        <h1 className="text-3xl md:text-4xl font-bold tracking-tight text-foreground">
+          {getGreeting()}, {user?.firstName || "Pelanggan"}.
+        </h1>
+      </header>
 
-      {/* Stats Summary */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
-        <Card className="border-slate-200/60 shadow-sm bg-indigo-50/30">
-          <CardContent className="pt-6">
-            <div className="flex items-center gap-4">
-              <div className="p-3 bg-indigo-100/80 rounded-2xl text-indigo-600">
-                <CalendarIcon className="w-6 h-6" />
-              </div>
-              <div>
-                <CardTitle className="text-sm font-bold text-slate-500 uppercase tracking-widest">Order Aktif</CardTitle>
-                <div className="text-3xl font-black text-slate-900 leading-tight">{activeOrders.length}</div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+      {/* Bento Grid Layout */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 relative z-10">
 
-        <Card className="border-slate-200/60 shadow-sm bg-emerald-50/30">
-          <CardContent className="pt-6">
-            <div className="flex items-center gap-4">
-              <div className="p-3 bg-emerald-100/80 rounded-2xl text-emerald-600">
-                <CameraIcon className="w-6 h-6" />
+        {/* Left Side: Profile & Quick Actions */}
+        <div className="lg:col-span-4 flex flex-col gap-8">
+
+          {/* Profile Card */}
+          <div className="bg-card text-foreground rounded-[48px] p-8 border border-border/60 shadow-sm transition-all duration-300 hover:shadow-md">
+            <div className="flex flex-col items-center text-center">
+              <div className="w-24 h-24 rounded-full overflow-hidden mb-6 border-4 border-background shadow-sm bg-muted flex items-center justify-center relative group">
+                {user?.imageUrl ? (
+                  <img src={user.imageUrl} alt={user?.fullName || "Avatar"} className="w-full h-full object-cover" />
+                ) : (
+                  <User className="w-10 h-10 text-muted-foreground" />
+                )}
               </div>
-              <div>
-                <CardTitle className="text-sm font-bold text-slate-500 uppercase tracking-widest">Selesai</CardTitle>
-                <div className="text-3xl font-black text-slate-900 leading-tight">
-                  {ordersList.filter(o => o.status === "completed").length}
+              <h2 className="text-xl font-bold text-foreground mb-1">{user?.fullName || "Pelanggan"}</h2>
+              <p className="text-xs text-muted-foreground mb-6">
+                Member sejak {user?.createdAt ? new Date(user.createdAt).getFullYear() : 2026}
+              </p>
+              <div className="w-full h-[1px] bg-border/40 mb-6" />
+              <div className="flex gap-4 w-full">
+                <div className="flex-1 text-center">
+                  <p className="text-2xl font-bold text-foreground">{ordersList.length}</p>
+                  <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Total Booking</p>
+                </div>
+                <div className="flex-1 text-center">
+                  <p className="text-2xl font-bold text-foreground">
+                    {ordersList.filter(o => ["pending", "confirmed", "dp_paid", "ongoing"].includes(o.status)).length}
+                  </p>
+                  <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Menunggu</p>
                 </div>
               </div>
             </div>
-          </CardContent>
-        </Card>
+          </div>
 
-        <Card className="border-slate-200/60 shadow-sm bg-amber-50/30 underline decoration-amber-200 decoration-4 underline-offset-4">
-          <CardContent className="pt-6">
-            <div className="flex items-center gap-4">
-              <div className="p-3 bg-amber-100/80 rounded-2xl text-amber-600">
-                <PackageIcon className="w-6 h-6" />
-              </div>
-              <div>
-                <CardTitle className="text-sm font-bold text-slate-500 uppercase tracking-widest">Total Booking</CardTitle>
-                <div className="text-3xl font-black text-slate-900 leading-tight">{ordersList.length}</div>
-              </div>
+          {/* Quick Actions Card */}
+          <div className="bg-primary text-primary-foreground rounded-[48px] p-8 shadow-md">
+            <h3 className="text-lg font-bold mb-6">Tindakan Cepat</h3>
+            <div className="flex flex-col gap-4">
+              <Link href="/photographers" className="w-full">
+                <Button className="w-full py-6 bg-secondary hover:bg-accent text-secondary-foreground hover:text-white rounded-full font-bold transition-all duration-300 flex items-center justify-center gap-2 group cursor-pointer border-none">
+                  Pesan Sesi Baru
+                  <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                </Button>
+              </Link>
+              <Link href="/dashboard/orders" className="w-full">
+                <Button variant="outline" className="w-full py-6 border-2 border-primary-foreground/20 hover:border-primary-foreground text-primary-foreground bg-transparent hover:bg-transparent rounded-full font-bold transition-all duration-300 cursor-pointer">
+                  Lihat Semua Order
+                </Button>
+              </Link>
             </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Active Orders List */}
-      <div>
-        <div className="flex items-center justify-between mb-6">
-          <h2 className="text-xl font-black text-slate-900 tracking-tight">Booking Terbaru</h2>
-          <Link href="/orders" className="text-sm font-bold text-primary flex items-center gap-2 hover:gap-3 transition-all">
-            Lihat Semua <ArrowRightIcon className="w-4 h-4" />
-          </Link>
+          </div>
         </div>
 
-        {activeOrders.length > 0 ? (
-          <div className="grid gap-4">
-            {activeOrders.map((order) => (
-              <Card key={order.id} className="border-slate-100 shadow-none hover:border-slate-200 hover:shadow-md transition-all group overflow-hidden">
-                <CardContent className="p-4 md:p-6 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
-                  <div className="flex items-center gap-5">
-                    <div className="w-16 h-16 bg-slate-100 rounded-2xl flex items-center justify-center text-slate-400 group-hover:bg-primary/10 group-hover:text-primary transition-colors">
-                      <CameraIcon className="w-8 h-8" />
+        {/* Right Side: Upcoming Shoot & Booking History */}
+        <div className="lg:col-span-8 flex flex-col gap-12">
+
+          {/* Upcoming Shoot */}
+          <section>
+            <div className="flex justify-between items-end mb-6">
+              <h3 className="text-xl font-bold text-foreground">Sesi Foto Mendatang</h3>
+            </div>
+
+            {nextShoot ? (
+              <div className="bg-card rounded-[40px] md:rounded-[56px] overflow-hidden border border-border/60 shadow-sm flex flex-col md:flex-row min-h-[300px]">
+                <div className="md:w-1/2 relative h-64 md:h-auto bg-muted">
+                  {nextShoot.photographer?.avatarUrl ? (
+                    <img
+                      src={nextShoot.photographer.avatarUrl}
+                      alt={nextShoot.photographer?.nama || "Fotografer"}
+                      className="absolute inset-0 w-full h-full object-cover"
+                    />
+                  ) : (
+                    <div className="absolute inset-0 flex items-center justify-center text-muted-foreground/30">
+                      <CameraIcon className="w-12 h-12" />
                     </div>
-                    <div>
-                      <h3 className="font-bold text-slate-900 text-lg leading-tight mb-1">
-                        Sesi {order.orderType === "event" ? "Event" : "Privat"}
-                      </h3>
-                      <div className="flex items-center gap-2 text-sm text-slate-500 font-medium lowercase">
-                        <CalendarIcon className="w-4 h-4" />
-                        {format(new Date(order.tanggalPotret), "eeee, d MMMM yyyy", { locale: localeId })}
+                  )}
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+                  <div className="absolute bottom-8 left-8">
+                    <Badge variant="outline" className={cn("rounded-full px-4 py-1 border-none font-bold text-[10px] tracking-wider", getStatusStyles(nextShoot.status))}>
+                      {getStatusLabel(nextShoot.status)}
+                    </Badge>
+                  </div>
+                </div>
+                <div className="md:w-1/2 p-8 md:p-10 flex flex-col justify-between">
+                  <div>
+                    <h4 className="text-2xl font-bold text-foreground mb-2">
+                      {nextShoot.package?.namaPaket || (nextShoot.orderType === "event" ? "Event Sesi" : "Sesi Foto")}
+                    </h4>
+                    <div className="flex items-center gap-2.5 text-muted-foreground mb-6">
+                      <User className="w-4 h-4 text-accent" />
+                      <span className="text-sm font-medium">
+                        Sesi dengan {nextShoot.photographer?.username ? `@${nextShoot.photographer.username}` : "Fotografer"}
+                      </span>
+                    </div>
+
+                    <div className="flex flex-col gap-4">
+                      <div className="flex items-center gap-4">
+                        <div className="w-10 h-10 rounded-2xl bg-background border border-border/40 flex items-center justify-center">
+                          <CalendarIcon className="w-4 h-4 text-accent" />
+                        </div>
+                        <div>
+                          <p className="text-[9px] font-bold text-muted-foreground uppercase">Tanggal</p>
+                          <p className="text-sm font-bold text-foreground">
+                            {format(new Date(nextShoot.tanggalPotret), "d MMMM yyyy", { locale: localeId })}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-4">
+                        <div className="w-10 h-10 rounded-2xl bg-background border border-border/40 flex items-center justify-center">
+                          <ClockIcon className="w-4 h-4 text-accent" />
+                        </div>
+                        <div>
+                          <p className="text-[9px] font-bold text-muted-foreground uppercase">Waktu</p>
+                          <p className="text-sm font-bold text-foreground">{getDisplayTime(nextShoot)}</p>
+                        </div>
                       </div>
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-6 w-full md:w-auto justify-between md:justify-end">
-                    <div className="hidden md:block text-right mr-4">
-                      <div className="text-sm font-bold text-slate-400 uppercase tracking-widest mb-1">Status</div>
-                      <Badge variant="outline" className={`rounded-full px-4 border-2 font-black ${getStatusColor(order.status)}`}>
-                        {order.status.toUpperCase()}
-                      </Badge>
-                    </div>
-                    <Link href={`/orders/${order.id}`}>
-                      <Button variant="ghost" size="icon" className="rounded-xl hover:bg-slate-100 border border-slate-100">
-                        <ArrowRightIcon className="w-5 h-5" />
-                      </Button>
-                    </Link>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        ) : (
-          <Card className="border-dashed border-2 border-slate-200 bg-slate-50/50 py-16 text-center">
-            <CardContent className="flex flex-col items-center">
-              <div className="w-20 h-20 bg-slate-100 rounded-full flex items-center justify-center text-slate-400 mb-6">
-                <CameraIcon className="w-10 h-10" />
+                  <Link href={`/dashboard/orders/${nextShoot.id}`} className="mt-8">
+                    <Button className="bg-primary hover:bg-accent text-primary-foreground hover:text-white px-8 py-4 rounded-full font-bold transition-all duration-300 w-full md:w-auto cursor-pointer">
+                      Detail Sesi
+                    </Button>
+                  </Link>
+                </div>
               </div>
-              <CardTitle className="text-xl font-black text-slate-900 mb-2">Belum Ada Order Aktif</CardTitle>
-              <CardDescription className="text-slate-500 max-w-sm mb-8 font-medium">
-                Mulai booking fotografer profesional sekarang dan abadikan momen spesial Anda.
-              </CardDescription>
-              <Link href="/photographers">
-                <Button className="rounded-full px-8">Lihat Katalog</Button>
-              </Link>
-            </CardContent>
-          </Card>
-        )}
+            ) : (
+              <div className="bg-card rounded-[40px] p-10 border border-border/60 border-dashed text-center flex flex-col items-center justify-center min-h-[250px] shadow-sm">
+                <div className="w-12 h-12 rounded-full bg-accent/10 flex items-center justify-center text-accent mb-4">
+                  <CalendarIcon className="w-6 h-6" />
+                </div>
+                <h4 className="text-lg font-bold text-foreground mb-1">Belum ada sesi mendatang</h4>
+                <p className="text-xs text-muted-foreground max-w-sm mb-6">
+                  Ayo rencanakan sesi foto Anda berikutnya dan abadikan momen terbaik bersama fotografer profesional kami.
+                </p>
+                <Link href="/photographers">
+                  <Button className="rounded-full px-6 bg-primary hover:bg-accent text-primary-foreground hover:text-white font-bold h-10 text-xs cursor-pointer">
+                    Cari Fotografer
+                  </Button>
+                </Link>
+              </div>
+            )}
+          </section>
+
+          {/* Booking History */}
+          <section>
+            <h3 className="text-xl font-bold text-foreground mb-6">Riwayat Booking</h3>
+
+            <div className="bg-card rounded-[32px] md:rounded-[40px] border border-border/60 overflow-hidden shadow-sm">
+              {ordersList.length > 0 ? (
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left border-collapse">
+                    <thead>
+                      <tr className="border-b border-border/40 bg-muted/20">
+                        <th className="px-6 py-4 text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Tipe Sesi</th>
+                        <th className="px-6 py-4 text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Tanggal</th>
+                        <th className="px-6 py-4 text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Status</th>
+                        <th className="px-6 py-4 text-[10px] font-bold text-muted-foreground uppercase tracking-wider text-right">Aksi</th>
+                      </tr>
+                    </thead>
+                    <tbody className="text-sm text-foreground">
+                      {ordersList.map((order) => {
+                        const pgName = order.photographer?.username ? `@${order.photographer.username}` : "Fotografer"
+                        return (
+                          <tr key={order.id} className="border-b border-border/20 hover:bg-muted/10 transition-colors">
+                            <td className="px-6 py-4">
+                              <div className="flex items-center gap-3">
+                                <div className="w-8 h-8 rounded-full bg-accent/10 flex items-center justify-center text-accent flex-shrink-0">
+                                  <CameraIcon className="w-4 h-4" />
+                                </div>
+                                <div className="font-medium">
+                                  {order.package?.namaPaket || (order.orderType === "event" ? "Event Sesi" : "Sesi Foto")}
+                                  <span className="block text-[10px] text-muted-foreground font-normal">
+                                    dengan {pgName}
+                                  </span>
+                                </div>
+                              </div>
+                            </td>
+                            <td className="px-6 py-4 text-xs font-medium text-muted-foreground">
+                              {format(new Date(order.tanggalPotret), "d MMM yyyy", { locale: localeId })}
+                            </td>
+                            <td className="px-6 py-4">
+                              <Badge variant="outline" className={cn("rounded-full px-3 py-0.5 border text-[9px] font-bold tracking-wider", getStatusStyles(order.status))}>
+                                {getStatusLabel(order.status)}
+                              </Badge>
+                            </td>
+                            <td className="px-6 py-4 text-right">
+                              <Link href={`/dashboard/orders/${order.id}`}>
+                                <Button
+                                  size="sm"
+                                  className={cn(
+                                    "rounded-full px-4 text-xs font-bold h-8 cursor-pointer border border-border/50",
+                                    order.status === "delivered" && order.payment?.statusPelunasan !== "paid"
+                                      ? "bg-accent hover:bg-accent/90 text-white border-none"
+                                      : order.status === "completed" && !order.review
+                                        ? "bg-primary hover:bg-accent text-primary-foreground hover:text-white"
+                                        : "bg-secondary hover:bg-muted text-foreground"
+                                  )}
+                                >
+                                  {order.status === "delivered" && order.payment?.statusPelunasan !== "paid"
+                                    ? "Pelunasan"
+                                    : order.status === "completed" && !order.review
+                                      ? "Ulas Sesi"
+                                      : "Detail"}
+                                </Button>
+                              </Link>
+                            </td>
+                          </tr>
+                        )
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              ) : (
+                <div className="py-16 text-center">
+                  <CameraIcon className="w-8 h-8 text-muted-foreground/30 mx-auto mb-4" />
+                  <p className="text-xs text-muted-foreground font-medium">Belum ada riwayat booking.</p>
+                </div>
+              )}
+            </div>
+          </section>
+        </div>
       </div>
     </div>
   )
 }
 
-function getStatusColor(status: string) {
+function getStatusLabel(status: string) {
   switch (status) {
-    case "pending": return "text-amber-600 border-amber-200 bg-amber-50"
-    case "confirmed": return "text-blue-600 border-blue-200 bg-blue-50"
-    case "dp_paid": return "text-indigo-600 border-indigo-200 bg-indigo-50"
-    case "ongoing": return "text-emerald-600 border-emerald-200 bg-emerald-50"
-    case "delivered": return "text-purple-600 border-purple-200 bg-purple-50"
-    case "completed": return "text-slate-600 border-slate-200 bg-slate-100"
-    case "cancelled": return "text-rose-600 border-rose-200 bg-rose-50"
-    default: return "text-slate-600 border-slate-200"
+    case "pending": return "Menunggu"
+    case "confirmed": return "Dikonfirmasi"
+    case "dp_paid": return "DP Dibayar"
+    case "ongoing": return "Berlangsung"
+    case "delivered": return "Hasil Dikirim"
+    case "completed": return "Selesai"
+    case "cancelled": return "Dibatalkan"
+    case "disputed": return "Dispute"
+    default: return status
+  }
+}
+
+function getStatusStyles(status: string) {
+  switch (status) {
+    case "pending": return "bg-accent/10 text-accent border border-accent/20"
+    case "confirmed": return "bg-blue-500/10 text-blue-500 border border-blue-500/20"
+    case "dp_paid": return "bg-emerald-500/10 text-emerald-500 border border-emerald-500/20"
+    case "ongoing": return "bg-amber-500/10 text-amber-500 border border-amber-500/20"
+    case "delivered": return "bg-purple-500/10 text-purple-500 border border-purple-500/20"
+    case "completed": return "bg-slate-500/10 text-slate-500 border border-slate-500/20"
+    case "cancelled": return "bg-destructive/10 text-destructive border border-destructive/20 shadow-sm"
+    case "disputed": return "bg-accent/15 text-accent border border-accent/25 shadow-sm"
+    default: return "bg-muted text-muted-foreground border-muted"
   }
 }

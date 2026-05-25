@@ -27,7 +27,7 @@ export function ChatBubble({ message, isSelf }: ChatBubbleProps) {
     >
       {/* Nama pengirim — hanya tampil untuk pesan orang lain */}
       {!isSelf && (
-        <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">
+        <span className="text-[10px] font-black text-muted-foreground uppercase tracking-widest px-1">
           {message.senderNama}
         </span>
       )}
@@ -37,8 +37,8 @@ export function ChatBubble({ message, isSelf }: ChatBubbleProps) {
         className={cn(
           "relative px-4 py-2.5 rounded-2xl text-sm leading-relaxed shadow-sm",
           isSelf
-            ? "bg-gradient-to-br from-indigo-600 to-violet-600 text-white rounded-br-sm"
-            : "bg-white border border-slate-100 text-slate-800 rounded-bl-sm",
+            ? "bg-primary text-primary-foreground rounded-br-sm"
+            : "bg-card border border-border text-foreground rounded-bl-sm",
         )}
       >
         <p className="whitespace-pre-wrap break-words">{message.pesan}</p>
@@ -46,9 +46,9 @@ export function ChatBubble({ message, isSelf }: ChatBubbleProps) {
 
       {/* Timestamp + read indicator */}
       <div className="flex items-center gap-1 px-1">
-        <span className="text-[10px] text-slate-400">{formatTime(message.createdAt)}</span>
+        <span className="text-[10px] text-muted-foreground">{formatTime(message.createdAt)}</span>
         {isSelf && (
-          <span className={cn("text-[10px]", message.isRead ? "text-indigo-400" : "text-slate-300")}>
+          <span className={cn("text-[10px]", message.isRead ? "text-primary" : "text-muted-foreground/50")}>
             {message.isRead ? (
               <CheckCheck className="w-3 h-3" />
             ) : (

@@ -1,9 +1,12 @@
 import type { Metadata } from "next"
-import { Lora } from "next/font/google"
+import { Sofia_Sans } from "next/font/google"
 import "./globals.css"
 import { cn } from "@/lib/utils"
 
-const lora = Lora({ subsets: ["latin"], variable: "--font-serif" })
+const sofiaSans = Sofia_Sans({
+  subsets: ["latin"],
+  variable: "--font-sans",
+})
 
 export const metadata: Metadata = {
   title: "Framic",
@@ -15,6 +18,7 @@ import { idID } from '@clerk/localizations';
 import { QueryProvider } from "@/components/providers/query-provider"
 import { PostHogProvider } from "@/components/providers/posthog-provider"
 import { Toaster } from "sonner"
+import { ThemeProvider } from "@/components/theme-provider"
 
 export default function RootLayout({
   children,
@@ -25,24 +29,39 @@ export default function RootLayout({
     <ClerkProvider
       appearance={{
         variables: {
-          colorPrimary: '#059669',
-          colorText: '#0f172a',
-          colorInputBackground: '#ffffff',
-          colorInputText: '#0f172a',
-          borderRadius: '0.75rem',
+          colorPrimary: '#FF5F00', // Accent Orange matches framic brand
+          colorText: 'var(--foreground)',
+          colorBackground: 'var(--card)',
+          colorInputBackground: 'var(--input)',
+          colorInputText: 'var(--foreground)',
+          borderRadius: '20px',
         },
         elements: {
-          card: 'shadow-xl rounded-2xl border border-slate-100',
-          formButtonPrimary: 'bg-emerald-600 hover:bg-emerald-700 shadow-md',
-          userButtonAvatarBox: 'w-10 h-10 border-2 border-emerald-500/20 shadow-sm transition-transform hover:scale-105',
+          card: 'shadow-xl rounded-[24px] border border-muted bg-card text-foreground',
+          formButtonPrimary: 'bg-primary hover:bg-primary/90 text-primary-foreground shadow-md rounded-[20px]',
+          userButtonAvatarBox: 'w-10 h-10 border-2 border-primary/20 shadow-sm transition-transform hover:scale-105',
+          userButtonPopoverCard: 'bg-card text-foreground border border-muted/80 shadow-2xl rounded-[24px]',
+          userButtonPopoverActionButton: 'hover:bg-muted/50 text-foreground transition-all duration-150',
+          userButtonPopoverActionButtonText: 'text-foreground font-semibold',
+          userButtonPopoverActionButtonIcon: 'text-muted-foreground',
+          userButtonPopoverTitle: 'text-foreground font-bold',
+          userButtonPopoverSubtitle: 'text-muted-foreground',
+          userButtonPopoverFooter: 'border-t border-muted/50 bg-muted/10 text-muted-foreground',
         }
       }} localization={idID}>
-      <html lang="en" className={cn("font-serif", lora.variable)}>
-        <body className="antialiased">
+      <html lang="en" className={cn("font-sans", sofiaSans.variable)} suppressHydrationWarning>
+        <body className="antialiased bg-background text-foreground">
           <PostHogProvider>
             <QueryProvider>
-              {children}
-              <Toaster richColors position="top-center" />
+              <ThemeProvider
+                attribute="class"
+                defaultTheme="system"
+                enableSystem
+                disableTransitionOnChange
+              >
+                {children}
+                <Toaster richColors position="top-center" />
+              </ThemeProvider>
             </QueryProvider>
           </PostHogProvider>
         </body>
@@ -50,3 +69,4 @@ export default function RootLayout({
     </ClerkProvider>
   )
 }
+

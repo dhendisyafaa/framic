@@ -27,12 +27,10 @@ import { format } from "date-fns"
 import { id as idLocale } from "date-fns/locale"
 import { Camera, CheckCircle2, ChevronRight, MapPin, AlertCircle, Clock, ArrowLeft, CheckCircle } from "lucide-react"
 import { cn } from "@/lib/utils"
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
-import { ScrollArea } from "@/components/ui/scroll-area"
 import { toast } from "sonner"
 
 const bookingSchema = z.object({
@@ -58,7 +56,6 @@ export function BookingButton({ photographer }: BookingButtonProps) {
   useEffect(() => {
     setMounted(true)
   }, [])
-
 
   const form = useForm<BookingValues>({
     resolver: zodResolver(bookingSchema),
@@ -150,10 +147,10 @@ export function BookingButton({ photographer }: BookingButtonProps) {
       <Button
         disabled={!photographer.isAcceptingOrders}
         className={cn(
-          "flex-1 font-black shadow-2xl rounded-[1.25rem] py-6 text-base group transition-all duration-500",
+          "flex-1 font-black shadow-2xl rounded-[1.25rem] py-6 text-base group transition-all duration-500 cursor-pointer",
           photographer.isAcceptingOrders
-            ? "bg-primary hover:bg-primary/90 text-primary-foreground shadow-primary/20 hover:scale-[1.02]"
-            : "bg-slate-100 text-slate-400 border-slate-200 cursor-not-allowed shadow-none"
+            ? "bg-accent hover:bg-accent/90 text-white shadow-accent/20 hover:scale-[1.02]"
+            : "bg-muted/50 text-muted-foreground border-muted cursor-not-allowed shadow-none"
         )}
       >
         {photographer.isAcceptingOrders ? (
@@ -178,10 +175,10 @@ export function BookingButton({ photographer }: BookingButtonProps) {
           <Button
             disabled={!photographer.isAcceptingOrders}
             className={cn(
-              "flex-1 font-black shadow-2xl rounded-[1.25rem] py-6 text-base group transition-all duration-500",
+              "flex-1 font-black shadow-2xl rounded-[1.25rem] py-6 text-base group transition-all duration-500 cursor-pointer",
               photographer.isAcceptingOrders
-                ? "bg-primary hover:bg-primary/90 text-primary-foreground shadow-primary/20 hover:scale-[1.02]"
-                : "bg-slate-100 text-slate-400 border-slate-200 cursor-not-allowed shadow-none"
+                ? "bg-accent hover:bg-accent/90 text-white shadow-accent/20 hover:scale-[1.02]"
+                : "bg-muted/50 text-muted-foreground border-muted cursor-not-allowed shadow-none"
             )}
           >
             {photographer.isAcceptingOrders ? (
@@ -198,30 +195,30 @@ export function BookingButton({ photographer }: BookingButtonProps) {
           </Button>
         </DialogTrigger>
 
-        <DialogContent className="sm:max-w-[700px] h-[98vh] p-0 overflow-y-scroll rounded-[2.5rem] border-none shadow-3xl bg-white">
+        <DialogContent className="max-w-[95vw] sm:max-w-[700px] h-[92vh] sm:h-auto sm:max-h-[90vh] p-0 overflow-y-auto rounded-[2.5rem] border-none shadow-3xl bg-card text-foreground">
           {/* Header Section with Image and Gradient Overlay */}
-          <div className="relative h-48 flex flex-col justify-end p-8 overflow-hidden">
+          <div className="relative h-36 sm:h-48 flex flex-col justify-end p-6 sm:p-8 overflow-hidden shrink-0">
             <div
-              className="absolute inset-0 bg-primary bg-center transition-transform duration-[2000ms] hover:scale-110"
+              className="absolute inset-0 bg-[#FF5F00] bg-center transition-transform duration-[2000ms] hover:scale-110"
             />
-            <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-slate-900/60 to-transparent" />
+            <div className="absolute inset-0 bg-gradient-to-t from-[#141413] via-[#141413]/60 to-transparent" />
 
             <div className="relative z-10 space-y-2">
               <div className="flex items-center gap-2">
-                {steps.map((s, idx) => (
+                {steps.map((s) => (
                   <div key={s.id} className="flex items-center gap-2">
                     <div className={cn(
                       "h-1.5 rounded-full transition-all duration-500",
-                      step >= s.id ? "w-8 bg-emerald-400" : "w-4 bg-white/20"
+                      step >= s.id ? "w-8 bg-accent" : "w-4 bg-white/20"
                     )} />
                   </div>
                 ))}
               </div>
               <DialogHeader>
-                <div className="flex items-center gap-2 text-emerald-400 text-[10px] font-black uppercase tracking-[0.3em]">
+                <div className="flex items-center gap-2 text-accent text-[10px] font-black uppercase tracking-[0.3em]">
                   Step {step} of 3 — {steps[step - 1].title}
                 </div>
-                <DialogTitle className="text-4xl font-black tracking-tighter text-white">
+                <DialogTitle className="text-3xl sm:text-4xl font-black tracking-tighter text-white">
                   {step === 1 ? "Pilih Layanan" : step === 2 ? "Tentukan Tanggal" : "Finalisasi Booking"}
                 </DialogTitle>
               </DialogHeader>
@@ -229,8 +226,8 @@ export function BookingButton({ photographer }: BookingButtonProps) {
           </div>
 
           <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col h-full">
-              <div className="flex-1 overflow-y-auto p-8 custom-scrollbar">
+            <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col h-full bg-card overflow-hidden">
+              <div className="flex-1 overflow-y-auto p-4 sm:p-8 custom-scrollbar">
                 {step === 1 && (
                   <FormField
                     control={form.control}
@@ -242,37 +239,37 @@ export function BookingButton({ photographer }: BookingButtonProps) {
                             <div
                               key={pkg.id}
                               className={cn(
-                                "group relative flex items-start gap-5 p-6 rounded-[2rem] border-2 transition-all duration-300 cursor-pointer overflow-hidden",
+                                "group relative flex items-start gap-3 sm:gap-5 p-4 sm:p-6 rounded-[2rem] border-2 transition-all duration-300 cursor-pointer overflow-hidden",
                                 field.value === pkg.id
-                                  ? "border-primary bg-primary/5 shadow-xl"
-                                  : "border-slate-100 bg-white hover:border-slate-200 hover:shadow-lg"
+                                  ? "border-accent bg-accent/5 shadow-xl"
+                                  : "border-muted bg-card hover:border-muted/80 hover:shadow-lg"
                               )}
                               onClick={() => field.onChange(pkg.id)}
                             >
                               <div className={cn(
-                                "w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all duration-300 mt-1",
-                                field.value === pkg.id ? "border-primary bg-primary" : "border-slate-200"
+                                "w-5 h-5 sm:w-6 sm:h-6 rounded-full border-2 flex items-center justify-center transition-all duration-300 mt-1 shrink-0",
+                                field.value === pkg.id ? "border-accent bg-accent" : "border-muted"
                               )}>
-                                {field.value === pkg.id && <div className="w-2 h-2 rounded-full bg-white" />}
+                                {field.value === pkg.id && <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-white" />}
                               </div>
-                              <div className="flex-1 space-y-1">
-                                <div className="flex justify-between items-center mb-1">
-                                  <h4 className="font-black text-xl text-slate-900 tracking-tight">{pkg.namaPaket}</h4>
-                                  <span className="font-black text-2xl text-primary tracking-tighter">Rp {pkg.harga.toLocaleString("id-ID")}</span>
+                              <div className="flex-1 space-y-1 min-w-0">
+                                <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-1 mb-1">
+                                  <h4 className="font-black text-lg sm:text-xl text-foreground tracking-tight truncate">{pkg.namaPaket}</h4>
+                                  <span className="font-black text-xl sm:text-2xl text-accent tracking-tighter shrink-0">Rp {pkg.harga.toLocaleString("id-ID")}</span>
                                 </div>
-                                <p className="text-sm text-slate-500 font-medium leading-relaxed pr-12 line-clamp-2">"{pkg.deskripsi}"</p>
-                                <div className="flex gap-6 pt-3 text-[10px] font-black uppercase tracking-widest text-slate-400">
-                                  <span className="flex items-center gap-2 bg-white px-3 py-1 rounded-full border border-slate-100 shadow-sm"><Clock className="w-3.5 h-3.5 text-primary" /> {pkg.durasiJam} Jam Sesi</span>
-                                  <span className="flex items-center gap-2 bg-white px-3 py-1 rounded-full border border-slate-100 shadow-sm"><Camera className="w-3.5 h-3.5 text-primary" /> {pkg.jumlahFotoMin} Hasil Foto</span>
+                                <p className="text-sm text-muted-foreground font-medium leading-relaxed pr-12 line-clamp-2">"{pkg.deskripsi}"</p>
+                                <div className="flex flex-wrap gap-2 sm:gap-3 pt-3 text-[10px] font-black uppercase tracking-widest text-muted-foreground">
+                                  <span className="flex items-center gap-2 bg-muted/10 px-3 py-1 rounded-full border border-muted shadow-xs"><Clock className="w-3.5 h-3.5 text-accent" /> {pkg.durasiJam} Jam Sesi</span>
+                                  <span className="flex items-center gap-2 bg-muted/10 px-3 py-1 rounded-full border border-muted shadow-xs"><Camera className="w-3.5 h-3.5 text-accent" /> {pkg.jumlahFotoMin} Hasil Foto</span>
                                   {
                                     pkg.includesEditing && (
-                                      <span className="flex items-center gap-2 bg-white px-3 py-1 rounded-full border border-slate-100 shadow-sm"><CheckCircle className="w-3.5 h-3.5 text-primary" />Termasuk Edit</span>
+                                      <span className="flex items-center gap-2 bg-muted/10 px-3 py-1 rounded-full border border-muted shadow-xs"><CheckCircle className="w-3.5 h-3.5 text-accent" />Termasuk Edit</span>
                                     )
                                   }
                                 </div>
                               </div>
                               {field.value === pkg.id && (
-                                <div className="absolute -right-4 -top-4 w-12 h-12 bg-primary rotate-45 flex items-end justify-center pb-1 shadow-lg">
+                                <div className="absolute -right-4 -top-4 w-12 h-12 bg-accent rotate-45 flex items-end justify-center pb-1 shadow-lg">
                                   <CheckCircle2 className="w-4 h-4 text-white -rotate-45" />
                                 </div>
                               )}
@@ -290,8 +287,8 @@ export function BookingButton({ photographer }: BookingButtonProps) {
                     control={form.control}
                     name="tanggalPotret"
                     render={({ field }) => (
-                      <FormItem className="flex flex-col gap-8 items-center">
-                        <div className="w-full bg-slate-50 p-6 rounded-[2.5rem] border border-slate-100">
+                      <FormItem className="flex flex-col gap-4 sm:gap-8 items-center w-full">
+                        <div className="w-full bg-muted/5 p-2 sm:p-6 rounded-[1.5rem] sm:rounded-[2.5rem] border border-muted">
                           <CalendarView
                             photographerId={photographer.id}
                             selectedDate={field.value}
@@ -308,20 +305,20 @@ export function BookingButton({ photographer }: BookingButtonProps) {
                 )}
 
                 {step === 3 && (
-                  <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4">
+                  <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 text-foreground">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                       <FormField
                         control={form.control}
                         name="lokasi"
                         render={({ field }) => (
                           <FormItem className="space-y-3">
-                            <FormLabel className="text-xs font-black text-slate-400 uppercase tracking-[0.2em] flex items-center gap-2">
+                            <FormLabel className="text-xs font-black text-muted-foreground uppercase tracking-[0.2em] flex items-center gap-2">
                               <MapPin className="w-4 h-4 text-rose-500" /> Lokasi Acara
                             </FormLabel>
                             <FormControl>
                               <Input
                                 placeholder="Alamat lengkap lokasi..."
-                                className="rounded-2xl border-slate-200 p-7 font-bold text-slate-900 focus:ring-slate-900 transition-all shadow-sm"
+                                className="rounded-2xl border-muted bg-card p-5 sm:p-7 font-bold text-foreground focus:ring-accent focus-visible:ring-accent transition-all shadow-sm"
                                 {...field}
                               />
                             </FormControl>
@@ -331,18 +328,20 @@ export function BookingButton({ photographer }: BookingButtonProps) {
                       />
 
                       <div className="space-y-3">
-                        <Label className="text-xs font-black text-slate-400 uppercase tracking-[0.2em] flex items-center gap-2">
-                          <Clock className="w-4 h-4 text-emerald-500" /> Jadwal Terpilih
+                        <Label className="text-xs font-black text-muted-foreground uppercase tracking-[0.2em] flex items-center gap-2">
+                          <Clock className="w-4 h-4 text-accent" /> Jadwal Terpilih
                         </Label>
-                        <div className="p-4 bg-primary text-primary-foreground rounded-2xl flex items-center justify-between shadow-xl shadow-primary/10 transition-all duration-500">
+                        <div className="p-4 bg-accent text-white rounded-2xl flex items-center justify-between shadow-xl shadow-accent/10 transition-all duration-500">
                           <span className="font-black text-sm tracking-tight underline decoration-white/30">
                             {selectedDate && format(selectedDate, "eeee, d MMMM yyyy", { locale: idLocale })}
                           </span>
                           <Button
+                            type="button"
                             variant="ghost"
                             size="sm"
                             onClick={() => setStep(2)}
-                            className="h-8 rounded-full text-[10px] font-black hover:bg-white/20 text-white"
+                            disabled={mutation.isPending}
+                            className="h-8 rounded-full text-[10px] font-black hover:bg-white/20 text-white cursor-pointer disabled:cursor-not-allowed disabled:opacity-50"
                           >
                             UBAH
                           </Button>
@@ -355,13 +354,13 @@ export function BookingButton({ photographer }: BookingButtonProps) {
                       name="catatan"
                       render={({ field }) => (
                         <FormItem className="space-y-3">
-                          <FormLabel className="text-xs font-black text-slate-400 uppercase tracking-[0.2em] flex items-center gap-2">
+                          <FormLabel className="text-xs font-black text-muted-foreground uppercase tracking-[0.2em] flex items-center gap-2">
                             <AlertCircle className="w-4 h-4 text-amber-500" /> Instruksi Tambahan (Opsional)
                           </FormLabel>
                           <FormControl>
                             <Textarea
                               placeholder="Detail khusus untuk fotografer..."
-                              className="rounded-[2rem] border-slate-200 font-medium min-h-[120px] p-6 focus:ring-slate-900 transition-all shadow-sm"
+                              className="rounded-[2rem] border-muted bg-card font-medium min-h-[120px] p-4 sm:p-6 focus:ring-accent focus-visible:ring-accent text-foreground transition-all shadow-sm"
                               {...field}
                             />
                           </FormControl>
@@ -370,23 +369,23 @@ export function BookingButton({ photographer }: BookingButtonProps) {
                       )}
                     />
 
-                    <div className="p-8 bg-slate-50/80 backdrop-blur-md rounded-[2.5rem] border border-slate-100 shadow-inner group">
+                    <div className="p-5 sm:p-8 bg-muted/10 backdrop-blur-md rounded-[2.5rem] border border-muted shadow-inner group">
                       <div className="space-y-4">
                         <div className="flex justify-between items-center">
-                          <span className="text-xs font-black text-slate-400 uppercase tracking-widest group-hover:translate-x-1 transition-transform">Layanan Terpilih</span>
-                          <Badge variant="secondary" className="rounded-full bg-white font-black px-4">{selectedPackage?.namaPaket}</Badge>
+                          <span className="text-xs font-black text-muted-foreground uppercase tracking-widest group-hover:translate-x-1 transition-transform">Layanan Terpilih</span>
+                          <Badge variant="secondary" className="rounded-full bg-card border border-muted text-foreground font-black px-4">{selectedPackage?.namaPaket}</Badge>
                         </div>
-                        <div className="h-px bg-slate-200/50 w-full" />
+                        <div className="h-px bg-muted w-full" />
                         <div className="flex justify-between items-end">
                           <div className="space-y-1">
-                            <span className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em]">Total Investasi</span>
-                            <div className="text-4xl font-black text-slate-900 tracking-tighter leading-none">
+                            <span className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.3em]">Total Investasi</span>
+                            <div className="text-4xl font-black text-foreground tracking-tighter leading-none">
                               Rp {selectedPackage?.harga.toLocaleString("id-ID")}
                             </div>
                           </div>
                           <div className="text-right">
-                            <span className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em]">Status DP</span>
-                            <div className="text-lg font-black text-emerald-600">50% di muka</div>
+                            <span className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.3em]">Status DP</span>
+                            <div className="text-lg font-black text-accent">50% di muka</div>
                           </div>
                         </div>
                       </div>
@@ -395,13 +394,14 @@ export function BookingButton({ photographer }: BookingButtonProps) {
                 )}
               </div>
 
-              <div className="p-8 bg-white border-t border-slate-100 flex items-center gap-4">
+              <div className="p-4 sm:p-8 bg-card border-t border-muted flex items-center gap-3 sm:gap-4 shrink-0">
                 {step > 1 ? (
                   <Button
                     type="button"
                     variant="outline"
                     onClick={handleBack}
-                    className="rounded-2xl font-black px-6 h-16 border-2 border-slate-100 hover:bg-slate-50 transition-all flex items-center gap-2"
+                    disabled={mutation.isPending}
+                    className="rounded-2xl font-black px-4 sm:px-6 h-12 sm:h-16 border-2 border-muted hover:bg-muted/50 text-foreground transition-all flex items-center gap-2 cursor-pointer disabled:cursor-not-allowed disabled:opacity-50 text-sm sm:text-base"
                   >
                     <ArrowLeft className="w-4 h-4" />
                   </Button>
@@ -410,9 +410,10 @@ export function BookingButton({ photographer }: BookingButtonProps) {
                     type="button"
                     variant="ghost"
                     onClick={() => handleOpenChange(false)}
-                    className="rounded-2xl font-black px-6 h-16 text-slate-400 hover:text-slate-600"
+                    disabled={mutation.isPending}
+                    className="rounded-2xl font-black px-4 sm:px-6 h-12 sm:h-16 text-muted-foreground hover:text-foreground cursor-pointer disabled:cursor-not-allowed disabled:opacity-50 text-sm sm:text-base"
                   >
-                    BATAL
+                    Batal
                   </Button>
                 )}
 
@@ -420,16 +421,17 @@ export function BookingButton({ photographer }: BookingButtonProps) {
                   <Button
                     type="button"
                     onClick={handleNext}
-                    className="flex-1 rounded-2xl bg-primary hover:bg-primary/90 text-primary-foreground font-black h-16 text-lg tracking-tight shadow-2xl shadow-primary/20 group ripple-effect"
+                    disabled={mutation.isPending}
+                    className="flex-1 rounded-2xl bg-accent hover:bg-accent/90 text-white font-black h-12 sm:h-16 text-sm sm:text-lg tracking-tight shadow-2xl shadow-accent/20 group ripple-effect cursor-pointer disabled:cursor-not-allowed disabled:opacity-50"
                   >
                     Lanjutkan
-                    <ChevronRight className="ml-2 w-5 h-5 group-hover:translate-x-2 transition-transform duration-300" />
+                    <ChevronRight className="ml-2 w-4 h-4 sm:w-5 sm:h-5 group-hover:translate-x-2 transition-transform duration-300" />
                   </Button>
                 ) : (
                   <Button
                     type="submit"
                     disabled={mutation.isPending}
-                    className="flex-1 rounded-2xl bg-primary text-primary-foreground font-black h-16 text-xl tracking-tight shadow-3xl shadow-primary/40 hover:scale-[1.02] active:scale-95 transition-all duration-300"
+                    className="flex-1 rounded-2xl bg-accent text-white font-black h-12 sm:h-16 text-sm sm:text-xl tracking-tight shadow-3xl shadow-accent/40 hover:scale-[1.02] active:scale-95 transition-all duration-300 cursor-pointer disabled:cursor-not-allowed disabled:opacity-50"
                   >
                     {mutation.isPending ? "MEMPROSES..." : "BUAT ORDERAN"}
                   </Button>
@@ -442,27 +444,27 @@ export function BookingButton({ photographer }: BookingButtonProps) {
 
       {/* EXIT CONFIRMATION DIALOG */}
       <Dialog open={showExitConfirm} onOpenChange={setShowExitConfirm}>
-        <DialogContent className="sm:max-w-[400px] p-8 rounded-[2.5rem] border-none shadow-2xl">
+        <DialogContent className="sm:max-w-[400px] p-8 rounded-[2.5rem] border-none shadow-2xl bg-card text-foreground">
           <div className="flex flex-col items-center text-center space-y-4">
-            <div className="w-16 h-16 bg-rose-50 text-rose-500 rounded-2xl flex items-center justify-center mb-2">
+            <div className="w-16 h-16 bg-rose-500/10 text-rose-500 rounded-2xl flex items-center justify-center mb-2">
               <AlertCircle size={32} />
             </div>
             <DialogHeader>
-              <DialogTitle className="text-2xl font-black tracking-tight">Batalkan Order?</DialogTitle>
+              <DialogTitle className="text-2xl font-black tracking-tight text-foreground">Batalkan Order?</DialogTitle>
             </DialogHeader>
-            <p className="text-slate-500 font-medium leading-relaxed">
+            <p className="text-muted-foreground font-medium leading-relaxed">
               Data yang sudah Anda pilih akan terhapus. Apakah Anda yakin ingin keluar dari proses booking ini?
             </p>
             <div className="flex flex-col w-full gap-3 pt-4">
               <Button
-                className="w-full h-14 rounded-2xl font-black bg-slate-900 text-white hover:bg-slate-800"
+                className="w-full h-14 rounded-2xl font-black bg-primary text-primary-foreground hover:bg-primary/90 cursor-pointer"
                 onClick={() => setShowExitConfirm(false)}
               >
                 Lanjutkan Order
               </Button>
               <Button
                 variant="ghost"
-                className="w-full h-12 rounded-2xl font-bold text-rose-500 hover:bg-rose-50 hover:text-rose-600"
+                className="w-full h-12 rounded-2xl font-bold text-rose-500 hover:bg-rose-500/10 hover:text-rose-600 cursor-pointer"
                 onClick={handleForceClose}
               >
                 Ya, Batalkan Saja
