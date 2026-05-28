@@ -12,10 +12,14 @@ const isPublicRoute = createRouteMatcher([
   "/",
   "/sign-in(.*)",
   "/sign-up(.*)",
+  "/mitra",
   // Discovery — bisa dilihat tanpa login
   "/photographers(.*)",
   "/events(.*)",
   "/about",
+  // SEO files
+  "/sitemap.xml",
+  "/robots.txt",
   // API publik — list PG, detail, kalender, events, open recruitment
   "/api/photographers(.*)",
   "/api/events(.*)",
