@@ -11,8 +11,8 @@ Sentry.init({
   // Sampling — capture 10% transaksi di production, 100% di development
   tracesSampleRate: process.env.NODE_ENV === "production" ? 0.1 : 1.0,
 
-  // Session replay — 10% di production
-  replaysSessionSampleRate: 0.1,
+  // Session replay — 0% di production (hanya rekam saat terjadi error) untuk menghemat CPU main thread
+  replaysSessionSampleRate: 0.0,
   replaysOnErrorSampleRate: 1.0,
 
   // Hanya aktif di production

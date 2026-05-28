@@ -30,7 +30,7 @@ export function Footer() {
         {/* Middle: Tautan Navigasi (Sitemap) */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
           <div className="flex flex-col gap-4">
-            <h4 className="text-[11px] font-bold text-[#696969] uppercase tracking-[0.15em]">Layanan</h4>
+            <h3 className="text-[11px] font-bold text-[#A39F99] uppercase tracking-[0.15em]">Layanan</h3>
             <div className="flex flex-col gap-2.5">
               <Link href="/photographers" className="text-sm text-[#D1CDC7] hover:text-white transition-colors">
                 Direktori Fotografer
@@ -45,7 +45,7 @@ export function Footer() {
           </div>
 
           <div className="flex flex-col gap-4">
-            <h4 className="text-[11px] font-bold text-[#696969] uppercase tracking-[0.15em]">Kemitraan</h4>
+            <h3 className="text-[11px] font-bold text-[#A39F99] uppercase tracking-[0.15em]">Kemitraan</h3>
             <div className="flex flex-col gap-2.5">
               <Link href="/onboarding" className="text-sm text-[#D1CDC7] hover:text-white transition-colors">
                 Gabung sebagai Fotografer
@@ -57,7 +57,7 @@ export function Footer() {
           </div>
 
           <div className="flex flex-col gap-4">
-            <h4 className="text-[11px] font-bold text-[#696969] uppercase tracking-[0.15em]">Perusahaan</h4>
+            <h3 className="text-[11px] font-bold text-[#A39F99] uppercase tracking-[0.15em]">Perusahaan</h3>
             <div className="flex flex-col gap-2.5">
               <Link href="/about" className="text-sm text-[#D1CDC7] hover:text-white transition-colors">
                 Tentang Kami
@@ -72,7 +72,7 @@ export function Footer() {
           </div>
 
           <div className="flex flex-col gap-4">
-            <h4 className="text-[11px] font-bold text-[#696969] uppercase tracking-[0.15em]">Lokasi / Bahasa</h4>
+            <h3 className="text-[11px] font-bold text-[#A39F99] uppercase tracking-[0.15em]">Lokasi / Bahasa</h3>
             <div className="flex">
               <button className="flex items-center gap-2 px-4 py-2 border border-white/20 rounded-full text-xs font-bold text-white bg-[#141413] hover:bg-[#20201F] transition-all">
                 <Globe className="w-3.5 h-3.5" />
@@ -83,23 +83,23 @@ export function Footer() {
         </div>
 
         {/* Bottom: Divider & Copyright & Socials */}
-        <div className="border-t border-white/5 pt-8 flex flex-col md:flex-row justify-between items-center gap-6 text-xs text-[#696969]">
+        <div className="border-t border-white/5 pt-8 flex flex-col md:flex-row justify-between items-center gap-6 text-xs text-[#A39F99]">
           <div className="flex flex-col md:flex-row items-center gap-2 md:gap-6">
             <span>&copy; {new Date().getFullYear()} Framic Platform. All rights reserved.</span>
             <span className="hidden md:inline text-white/10">|</span>
           </div>
 
           <div className="flex items-center gap-4">
-            <Link href="https://www.instagram.com/framic.id" className="text-[#D1CDC7] hover:text-white transition-colors">
+            <Link href="https://www.instagram.com/framic.id" className="text-[#D1CDC7] hover:text-white transition-colors" aria-label="Instagram">
               <Instagram className="w-4 h-4" />
             </Link>
-            <Link href="#" className="text-[#D1CDC7] hover:text-white transition-colors">
+            <Link href="#" className="text-[#D1CDC7] hover:text-white transition-colors" aria-label="Facebook">
               <Facebook className="w-4 h-4" />
             </Link>
-            <Link href="#" className="text-[#D1CDC7] hover:text-white transition-colors">
+            <Link href="#" className="text-[#D1CDC7] hover:text-white transition-colors" aria-label="LinkedIn">
               <Linkedin className="w-4 h-4" />
             </Link>
-            <Link href="#" className="text-[#D1CDC7] hover:text-white transition-colors">
+            <Link href="#" className="text-[#D1CDC7] hover:text-white transition-colors" aria-label="YouTube">
               <Youtube className="w-4 h-4" />
             </Link>
           </div>
