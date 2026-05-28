@@ -156,9 +156,9 @@ export default async function LandingPage() {
                   className="w-full h-full object-cover opacity-90 transition-transform duration-700 group-hover:scale-105"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/65 via-transparent to-transparent flex flex-col justify-end p-8 md:p-10">
-                  <h3 className="text-white text-2xl font-medium tracking-tight mb-4 max-w-md">
+                  <p className="text-white text-2xl font-medium tracking-tight mb-4 max-w-md">
                     Merekam kenangan yang tidak akan pernah pudar.
-                  </h3>
+                  </p>
                   <Link href="/onboarding" className="inline-flex items-center gap-2 text-white font-bold text-xs hover:underline mt-2">
                     Gabung sebagai fotografer atau mitra <ArrowRight className="w-4 h-4" />
                   </Link>

@@ -48,6 +48,7 @@ export function ModeToggle() {
     <div className="relative" ref={dropdownRef}>
       <button
         onClick={() => setIsOpen(!isOpen)}
+        aria-label="Pilih Tema"
         className="flex items-center gap-1.5 px-3 py-2 rounded-full border border-muted/60 bg-white/90 dark:bg-[#20201F]/90 hover:bg-muted/20 text-foreground transition-all cursor-pointer shadow-xs font-bold text-xs h-9"
       >
         {getActiveIcon()}

@@ -49,7 +49,7 @@ export default function RootLayout({
           userButtonPopoverFooter: 'border-t border-muted/50 bg-muted/10 text-muted-foreground',
         }
       }} localization={idID}>
-      <html lang="en" className={cn("font-sans", sofiaSans.variable)} suppressHydrationWarning>
+      <html lang="id" className={cn("font-sans", sofiaSans.variable)} suppressHydrationWarning>
         <body className="antialiased bg-background text-foreground">
           <PostHogProvider>
             <QueryProvider>
