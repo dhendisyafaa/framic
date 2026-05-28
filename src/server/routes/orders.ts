@@ -1,7 +1,7 @@
 import { Hono } from "hono"
 import { z } from "zod"
 import { zValidator } from "@hono/zod-validator"
-import { and, eq, desc, or } from "drizzle-orm"
+import { and, eq, desc, or, ne } from "drizzle-orm"
 import { db } from "@/db"
 import {
   orders,
@@ -60,7 +60,8 @@ ordersRouter.post("/", zValidator("json", createOrderSchema), async (c) => {
         body.photographerId,
         startOfDay(tanggalPotretDate),
         endOfDay(tanggalPotretDate),
-        tx
+        tx,
+        body.eventId || undefined
       )
 
       if (blockedDates.includes(tanggalStr)) {
@@ -78,12 +79,16 @@ ordersRouter.post("/", zValidator("json", createOrderSchema), async (c) => {
         throw new Error("Fotografer tidak ditemukan atau belum terverifikasi")
       }
 
-      let totalHarga = 0
-      let platformFeePercent = 10 // Default platform fee
-      let mitraPercent: number | null = null
-      let photographerPercent = 90
+      if (pg.clerkId === clerkId) {
+        throw new Error("Anda tidak dapat memesan jasa Anda sendiri")
+      }
 
-      // 3. Kalkulasi harga & persentase berdasarkan tipe order
+      let totalHarga = 0
+      let jumlahPlatform = 0
+      let jumlahFotografer = 0
+      let platformFeePercent = 10 // Default platform fee
+
+      // 3. Kalkulasi harga berdasarkan tipe order
       if (body.orderType === "direct") {
         if (!body.paketId) throw new Error("Paket ID wajib diisi untuk order direct")
 
@@ -96,9 +101,10 @@ ordersRouter.post("/", zValidator("json", createOrderSchema), async (c) => {
         if (!paket || !paket.isActive) throw new Error("Paket tidak ditemukan atau tidak aktif")
 
         totalHarga = paket.harga
-        // Direct order: mitraPercent = null, platformFeePercent = 10, pg = 90
+        jumlahPlatform = Math.round(totalHarga * (platformFeePercent / 100))
+        jumlahFotografer = totalHarga - jumlahPlatform
       } else {
-        // Order via Event
+        // Order via Event (Mitra as Payer)
         if (!body.eventId) throw new Error("Event ID wajib diisi untuk order event")
 
         const [event] = await tx
@@ -108,6 +114,21 @@ ordersRouter.post("/", zValidator("json", createOrderSchema), async (c) => {
           .limit(1)
 
         if (!event) throw new Error("Event tidak ditemukan")
+
+        // Cegah pembuatan order duplikat jika sudah ada order aktif
+        const [existingOrder] = await tx
+          .select()
+          .from(orders)
+          .where(and(
+            eq(orders.eventId, event.id),
+            eq(orders.photographerId, pg.id),
+            ne(orders.status, "cancelled")
+          ))
+          .limit(1)
+
+        if (existingOrder) {
+          throw new Error("Order untuk fotografer di event ini sudah dibuat")
+        }
 
         const [ep] = await tx
           .select()
@@ -120,36 +141,20 @@ ordersRouter.post("/", zValidator("json", createOrderSchema), async (c) => {
 
         if (!ep) throw new Error("Fotografer tidak terdaftar di event ini")
 
-        // Tentukan harga berdasarkan tipe penugasan PG di event
+        // Tentukan gaji bersih PG berdasarkan tipe penugasan
+        let gajiBersihPg = 0
         if (ep.photographerType === "mitra_permanent") {
-          totalHarga = event.feePgTetap ?? 0
-
-          // Ambil persentase dari kontrak aktif mitra
-          const [contract] = await tx
-            .select()
-            .from(mitraPhotographers)
-            .where(and(
-              eq(mitraPhotographers.mitraId, event.mitraId),
-              eq(mitraPhotographers.photographerId, pg.id),
-              eq(mitraPhotographers.contractStatus, "active")
-            ))
-            .limit(1)
-
-          if (!contract) throw new Error("Kontrak mitra tidak aktif")
-          mitraPercent = contract.mitraPercent ?? 0
-          photographerPercent = contract.photographerPercent ?? 0
+          gajiBersihPg = event.feePgTetap ?? 0
         } else {
           // event_only
-          totalHarga = event.feePgPerEvent ?? 0
+          gajiBersihPg = event.feePgPerEvent ?? 0
           if (ep.invitationStatus !== "accepted") throw new Error("Undangan event belum disetujui")
-
-          if (!ep.mitraPercent || !ep.photographerPercent) {
-            throw new Error("Persentase kontrak event belum disepakati")
-          }
-
-          mitraPercent = ep.mitraPercent
-          photographerPercent = ep.photographerPercent
         }
+
+        // Tagihan Mitra = Gaji PG + 10% Platform Fee
+        jumlahFotografer = gajiBersihPg
+        jumlahPlatform = Math.round(gajiBersihPg * (platformFeePercent / 100))
+        totalHarga = gajiBersihPg + jumlahPlatform
       }
 
       if (totalHarga <= 0) throw new Error("Terjadi kesalahan dalam penentuan harga order")
@@ -167,7 +172,8 @@ ordersRouter.post("/", zValidator("json", createOrderSchema), async (c) => {
           tanggalPotret: tanggalPotretDate,
           catatan: body.catatan,
           totalHarga: totalHarga,
-          status: "pending",
+          status: body.orderType === "event" ? "confirmed" : "pending",
+          confirmedAt: body.orderType === "event" ? new Date() : null,
         })
         .returning()
 
@@ -179,9 +185,9 @@ ordersRouter.post("/", zValidator("json", createOrderSchema), async (c) => {
         orderId: newOrder.id,
         jumlahDp,
         jumlahPelunasan,
+        jumlahPlatform,
+        jumlahFotografer,
         platformFeePercent,
-        mitraPercent,
-        photographerPercent,
         statusDp: "unpaid",
         statusPelunasan: "unpaid",
       })
@@ -235,21 +241,64 @@ ordersRouter.get("/", async (c) => {
       order: orders,
       package: packages,
       photographer: photographerProfiles,
+      payment: payments,
+      review: reviews,
+      event: events,
     })
     .from(orders)
     .leftJoin(packages, eq(orders.paketId, packages.id))
     .leftJoin(photographerProfiles, eq(orders.photographerId, photographerProfiles.id))
+    .leftJoin(payments, eq(orders.id, payments.orderId))
+    .leftJoin(reviews, eq(orders.id, reviews.orderId))
+    .leftJoin(events, eq(orders.eventId, events.id))
     .where(and(...conditions))
     .limit(limit)
     .offset(offset)
     .orderBy(desc(orders.createdAt))
 
+  // Fetch clerk details for photographers in parallel
+  const pgClerkIds = Array.from(new Set(
+    userOrders
+      .map(row => row.photographer?.clerkId)
+      .filter((id): id is string => !!id)
+  ))
+
+  let clerkUserMap: Record<string, { nama: string; avatarUrl: string }> = {}
+  try {
+    const clerk = await clerkClient()
+    const clerkUsers = pgClerkIds.length > 0
+      ? await clerk.users.getUserList({ userId: pgClerkIds })
+      : { data: [] }
+    
+    clerkUserMap = Object.fromEntries(
+      clerkUsers.data.map(u => [
+        u.id,
+        {
+          nama: `${u.firstName ?? ""} ${u.lastName ?? ""}`.trim() || "Fotografer",
+          avatarUrl: u.imageUrl,
+        }
+      ])
+    )
+  } catch (err) {
+    // Silent fail if clerk error
+  }
+
   // Map to structured data
-  const result = userOrders.map(row => ({
-    ...row.order,
-    package: row.package,
-    photographer: row.photographer
-  }))
+  const result = userOrders.map(row => {
+    const pg = row.photographer
+    return {
+      ...row.order,
+      package: row.package,
+      photographer: pg ? {
+        ...pg,
+        nama: clerkUserMap[pg.clerkId]?.nama || "Fotografer",
+        avatarUrl: clerkUserMap[pg.clerkId]?.avatarUrl,
+      } : null,
+      payment: row.payment,
+      review: row.review,
+      event: row.event,
+    }
+  })
 
   return c.json({ success: true, data: result })
 })
@@ -269,11 +318,13 @@ ordersRouter.get("/:id", async (c) => {
       package: packages,
       payment: payments,
       photographer: photographerProfiles,
+      event: events,
     })
     .from(orders)
     .leftJoin(packages, eq(orders.paketId, packages.id))
     .leftJoin(payments, eq(orders.id, payments.orderId))
     .leftJoin(photographerProfiles, eq(orders.photographerId, photographerProfiles.id))
+    .leftJoin(events, eq(orders.eventId, events.id))
     .where(eq(orders.id, orderId))
     .limit(1)
 
@@ -293,18 +344,26 @@ ordersRouter.get("/:id", async (c) => {
     db.select().from(reviews).where(eq(reviews.orderId, orderId)).limit(1)
   ])
 
-  // Resolve Names from Clerk
+  // Resolve Names and Avatars from Clerk
   const clerk = await clerkClient()
   let photographerName = "Fotografer"
   let customerName = "Kustomer"
+  let photographerAvatarUrl: string | undefined
+  let customerAvatarUrl: string | undefined
 
   try {
     const [pgUser, custUser] = await Promise.all([
       orderWithDetails.photographer ? clerk.users.getUser(orderWithDetails.photographer.clerkId) : null,
       clerk.users.getUser(orderWithDetails.order.customerClerkId)
     ])
-    if (pgUser) photographerName = `${pgUser.firstName || ""} ${pgUser.lastName || ""}`.trim()
-    if (custUser) customerName = `${custUser.firstName || ""} ${custUser.lastName || ""}`.trim()
+    if (pgUser) {
+      photographerName = `${pgUser.firstName || ""} ${pgUser.lastName || ""}`.trim() || photographerName
+      photographerAvatarUrl = pgUser.imageUrl
+    }
+    if (custUser) {
+      customerName = `${custUser.firstName || ""} ${custUser.lastName || ""}`.trim() || customerName
+      customerAvatarUrl = custUser.imageUrl
+    }
   } catch (err) {
     // Silent fail if clerk error
   }
@@ -314,11 +373,14 @@ ordersRouter.get("/:id", async (c) => {
     ...orderWithDetails.order,
     package: orderWithDetails.package,
     payment: orderWithDetails.payment,
-    photographer: {
+    photographer: orderWithDetails.photographer ? {
       ...orderWithDetails.photographer,
-      nama: photographerName
-    },
+      nama: photographerName,
+      avatarUrl: photographerAvatarUrl
+    } : null,
+    event: orderWithDetails.event || null,
     customerName,
+    customerAvatarUrl,
     photos: photosData || [],
     review: reviewData[0] || null
   }
@@ -458,6 +520,23 @@ ordersRouter.patch("/:id/deliver", async (c) => {
 
     if (!existing) return c.json({ success: false, error: "Order tidak ditemukan" }, 404)
     if (existing.status !== "ongoing") return c.json({ success: false, error: "Hanya order ongoing yang bisa di-deliver" }, 400)
+
+    // Validate min photos
+    const currentPhotos = await db.select().from(photos).where(eq(photos.orderId, orderId)).execute()
+    let minPhotos = 0
+    if (existing.paketId) {
+      const [pack] = await db.select().from(packages).where(eq(packages.id, existing.paketId)).limit(1)
+      if (pack) {
+        minPhotos = pack.jumlahFotoMin
+      }
+    }
+
+    if (currentPhotos.length < minPhotos) {
+      return c.json({
+        success: false,
+        error: `Anda harus mengunggah minimal ${minPhotos} foto sebelum menyelesaikan upload.`
+      }, 400)
+    }
 
     const [updated] = await db
       .update(orders)

@@ -1,13 +1,24 @@
-import { currentUser } from "@clerk/nextjs/server"
+import { redirect } from "next/navigation"
+import { currentUser, clerkClient } from "@clerk/nextjs/server"
+import { and, eq, inArray, or, sql, desc } from "drizzle-orm"
+
+import { db } from "@/db"
+import {
+  photographerProfiles,
+  mitraProfiles,
+  users,
+  mitraPhotographers,
+  eventPhotographers,
+  events,
+  payments,
+  orders,
+} from "@/db/schema"
 import { getRolesFromMetadata, isPhotographer, isMitra } from "@/lib/clerk"
+
 import { CustomerDashboard } from "@/components/features/dashboard/customer-dashboard"
 import { PhotographerDashboard } from "@/components/features/dashboard/photographer-dashboard"
 import { MitraDashboard } from "@/components/features/dashboard/mitra-dashboard"
 import { SuspendedDashboard } from "@/components/features/dashboard/suspended-dashboard"
-import { redirect } from "next/navigation"
-import { db } from "@/db"
-import { photographerProfiles, mitraProfiles, users } from "@/db/schema"
-import { eq } from "drizzle-orm"
 
 /**
  * Halaman Dashboard Utama.
@@ -40,7 +51,103 @@ export default async function DashboardPage() {
 
   // 1. Mitra (Hanya jika tidak disuspend)
   if (isMitra(roles) && !isMitraSuspended && mitra) {
-    return <MitraDashboard clerkId={clerkUser.id} mitraId={mitra.id} />
+    // Fetch stats secara paralel di server untuk meminimalkan load client-side
+    const [fixedCountResult, perEventCountResult, earningsResult, topPerformersData] = await Promise.all([
+      db
+        .select({ count: sql<number>`cast(count(*) as int)` })
+        .from(mitraPhotographers)
+        .where(
+          and(
+            eq(mitraPhotographers.mitraId, mitra.id),
+            inArray(mitraPhotographers.contractStatus, ["active", "pending_expiry"])
+          )
+        )
+        .then(r => r[0]?.count || 0),
+      db
+        .select({ count: sql<number>`cast(count(distinct ${eventPhotographers.photographerId}) as int)` })
+        .from(eventPhotographers)
+        .innerJoin(events, eq(eventPhotographers.eventId, events.id))
+        .where(
+          and(
+            eq(events.mitraId, mitra.id),
+            eq(eventPhotographers.photographerType, "event_only"),
+            eq(eventPhotographers.invitationStatus, "accepted")
+          )
+        )
+        .then(r => r[0]?.count || 0),
+      db
+        .select({ sum: sql<number>`cast(sum(${orders.totalHarga}) as int)` })
+        .from(orders)
+        .innerJoin(events, eq(orders.eventId, events.id))
+        .where(
+          and(
+            eq(events.mitraId, mitra.id),
+            or(
+              eq(orders.status, "completed"),
+              eq(orders.status, "ongoing"),
+              eq(orders.status, "delivered"),
+              eq(orders.status, "confirmed")
+            )
+          )
+        )
+        .then(r => r[0]?.sum || 0),
+      db
+        .select({
+          id: photographerProfiles.id,
+          clerkId: photographerProfiles.clerkId,
+          ratingAverage: photographerProfiles.ratingAverage,
+        })
+        .from(photographerProfiles)
+        .innerJoin(
+          mitraPhotographers,
+          and(
+            eq(mitraPhotographers.photographerId, photographerProfiles.id),
+            eq(mitraPhotographers.mitraId, mitra.id),
+            inArray(mitraPhotographers.contractStatus, ["active", "pending_expiry"])
+          )
+        )
+        .orderBy(desc(photographerProfiles.ratingAverage))
+        .limit(3)
+    ])
+
+    // Fetch detail dari Clerk untuk top performers
+    const performerClerkIds = topPerformersData.map(p => p.clerkId)
+    const clerk = await clerkClient()
+    const clerkUsers = performerClerkIds.length > 0
+      ? await clerk.users.getUserList({ userId: performerClerkIds })
+      : { data: [] }
+
+    const clerkUserMap = Object.fromEntries(
+      clerkUsers.data.map(u => [
+        u.id,
+        {
+          nama: `${u.firstName ?? ""} ${u.lastName ?? ""}`.trim() || "Fotografer",
+          avatarUrl: u.imageUrl,
+        }
+      ])
+    )
+
+    const topPerformers = topPerformersData.map(p => ({
+      id: p.id,
+      nama: clerkUserMap[p.clerkId]?.nama || "Fotografer",
+      ratingAverage: p.ratingAverage,
+      avatarUrl: clerkUserMap[p.clerkId]?.avatarUrl,
+    }))
+
+    const initialStats = {
+      fixedMembersCount: fixedCountResult,
+      perEventProCount: perEventCountResult,
+      totalExpenditure: earningsResult,
+      topPerformers,
+    }
+
+    return (
+      <MitraDashboard
+        clerkId={clerkUser.id}
+        mitraId={mitra.id}
+        initialStats={initialStats}
+      />
+    )
   }
 
   // 2. Photographer (Hanya jika tidak disuspend)
@@ -49,7 +156,6 @@ export default async function DashboardPage() {
   }
 
   // 3. Fallback: Customer Dashboard
-  // Kirim prop suspensi agar Customer Dashboard bisa menampilkan Banner Peringatan
   return (
     <CustomerDashboard
       clerkId={clerkUser.id}

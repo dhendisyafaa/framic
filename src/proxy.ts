@@ -36,6 +36,8 @@ export default clerkMiddleware(async (auth, req) => {
   if (!isPublicRoute(req)) {
     await auth.protect()
   }
+}, {
+  clockSkewInMs: 30000 // Toleransi perbedaan waktu (clock skew) sampai 30 detik
 })
 
 export const config = {

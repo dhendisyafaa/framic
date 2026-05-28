@@ -1,0 +1,18 @@
+# Refer for explanation to following link:
+# https://lefthook.dev/configuration/
+
+pre-commit:
+  parallel: true
+  commands:
+    secrets:
+      tags: security
+      glob: "*"
+      run: npx @secretlint/quick-start "{staged_files}"
+
+    lint:
+      glob: "*.{js,ts,jsx,tsx}"
+      run: npx eslint {staged_files}
+
+    format:
+      glob: "*.{js,ts,jsx,tsx,json,md,css}"
+      run: npx prettier --write {staged_files}

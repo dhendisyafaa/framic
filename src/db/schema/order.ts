@@ -18,6 +18,7 @@ export const orders = pgTable("orders", {
 
   // Customer diidentifikasi via Clerk ID (tidak ada FK ke customer_profiles
   // karena referensi pakai clerk_id, bukan uuid)
+  // Untuk order Event, customerClerkId ini adalah clerk_id milik Mitra
   customerClerkId: text("customer_clerk_id").notNull(),
 
   photographerId: uuid("photographer_id")
@@ -37,7 +38,7 @@ export const orders = pgTable("orders", {
   catatan: text("catatan"),
 
   // Untuk order direct: dari packages.harga
-  // Untuk order via event: dari events.fee_pg_tetap atau fee_pg_per_event
+  // Untuk order via event: gaji bersih PG (fee_pg_tetap/fee_pg_per_event) + 10% platform fee
   totalHarga: integer("total_harga").notNull(),
 
   status: orderStatusEnum("status").default("pending").notNull(),

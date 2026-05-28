@@ -23,21 +23,34 @@ export const usersRouter = new Hono()
 // Helper: Memastikan record user & customer profile di DB eksis
 // MVP: Menggantikan fungsi webhook Clerk
 // ---------------------------------------------------------------------------
-async function ensureUserExists(clerkId: string) {
+async function ensureUserExists(clerkId: string, username?: string | null) {
   const [existingUser] = await db
     .select()
     .from(users)
     .where(eq(users.clerkId, clerkId))
 
-  if (!existingUser) {
-    await db.transaction(async (tx) => {
-      await tx.insert(users).values({
-        clerkId,
-        roles: ["customer"],
-        isActive: true,
+  try {
+    if (!existingUser) {
+      await db.transaction(async (tx) => {
+        await tx.insert(users).values({
+          clerkId,
+          username: username || null,
+          roles: ["customer"],
+          isActive: true,
+        })
+        await tx.insert(customerProfiles).values({ clerkId })
       })
-      await tx.insert(customerProfiles).values({ clerkId })
-    })
+    } else if (username && existingUser.username !== username) {
+      // Sync username if it changed or was missing
+      await db.update(users)
+        .set({ username, updatedAt: new Date() })
+        .where(eq(users.clerkId, clerkId))
+    }
+  } catch (error: any) {
+    if (error.code === "23505" || error.message?.includes("unique constraint")) {
+      throw new Error(`Username "${username}" sudah digunakan oleh akun lain di sistem. Silakan gunakan username lain.`);
+    }
+    throw error;
   }
 }
 
@@ -51,7 +64,7 @@ usersRouter.get("/me", async (c) => {
     throw new AuthError(401, "Harus login terlebih dahulu")
   }
 
-  await ensureUserExists(clerkUser.clerkId)
+  await ensureUserExists(clerkUser.clerkId, clerkUser.username)
 
   // Ambil profil lengkap setelah dipastikan user ada
   const [dbUser] = await db
@@ -195,7 +208,7 @@ usersRouter.post(
     const data = c.req.valid("json")
 
     // Memastikan user sudah tercatat di datastore utama kita
-    await ensureUserExists(clerkId)
+    await ensureUserExists(clerkId, clerkUser.username)
 
     // Cek apakah sudah punya profil mitra (hanya 1 role tambahan yang diizinkan sesuai instruksi user)
     const [existingMitra] = await db
@@ -222,11 +235,13 @@ usersRouter.post(
       const [updatedProfile] = await db
         .update(photographerProfiles)
         .set({
+          username: clerkUser.username || null,
           bio: data.bio,
           kotaDomisili: data.kotaDomisili,
           kategori: data.kategori,
           portfolioUrls: data.portfolioUrls || [],
           verificationStatus: "pending", // Reset ke pending
+          createdAt: new Date(), // Update waktu pengajuan ke sekarang
           updatedAt: new Date(),
         })
         .where(eq(photographerProfiles.clerkId, clerkId))
@@ -239,12 +254,14 @@ usersRouter.post(
       .insert(photographerProfiles)
       .values({
         clerkId,
+        username: clerkUser.username || null,
         bio: data.bio,
         kotaDomisili: data.kotaDomisili,
         kategori: data.kategori,
         portfolioUrls: data.portfolioUrls || [],
         verificationStatus: "pending",
         isAcceptingOrders: true,
+        createdAt: new Date(),
       })
       .returning()
 
@@ -286,7 +303,7 @@ usersRouter.post(
     const data = c.req.valid("form")
 
     // Memastikan user sudah tercatat di datastore utama kita
-    await ensureUserExists(clerkId)
+    await ensureUserExists(clerkId, clerkUser.username)
 
     // Cek apakah sudah apply/aktif fotografer (Hanya 1 role tambahan yang diizinkan)
     const [existingPg] = await db
@@ -315,7 +332,11 @@ usersRouter.post(
         const file = data.dokumenLegalitas
         const arrayBuffer = await file.arrayBuffer()
         const buffer = Buffer.from(arrayBuffer)
-        const result = await uploadToCloudinary(buffer, "framic/mitra-documents", { resourceType: "auto" })
+        const publicId = `Dokumen Legalitas - ${data.namaOrganisasi} - ${clerkUser.name}`
+        const result = await uploadToCloudinary(buffer, "framic/mitra-documents", {
+          resourceType: "auto",
+          publicId
+        })
         dokumenLegalitasUrl = result.secureUrl
       }
 
@@ -328,7 +349,8 @@ usersRouter.post(
           nomorTelepon: data.nomorTelepon,
           websiteUrl: data.websiteUrl || null,
           dokumenLegalitasUrl,
-          verificationStatus: "pending", // Reset ke pending
+          verificationStatus: "pending",
+          createdAt: new Date(),
           updatedAt: new Date(),
         })
         .where(eq(mitraProfiles.clerkId, clerkId))
@@ -343,8 +365,12 @@ usersRouter.post(
       const file = data.dokumenLegalitas
       const arrayBuffer = await file.arrayBuffer()
       const buffer = Buffer.from(arrayBuffer)
+      const publicId = `Dokumen Legalitas - ${data.namaOrganisasi} - ${clerkUser.name}`
       // Upload ke Cloudinary menggunakan helper
-      const result = await uploadToCloudinary(buffer, "framic/mitra-documents", { resourceType: "auto" })
+      const result = await uploadToCloudinary(buffer, "framic/mitra-documents", {
+        resourceType: "auto",
+        publicId
+      })
       dokumenLegalitasUrl = result.secureUrl
     }
 
@@ -360,6 +386,7 @@ usersRouter.post(
         dokumenLegalitasUrl,
         verificationStatus: "pending",
         platformFeePercent: 10,
+        createdAt: new Date(),
       })
       .returning()
 

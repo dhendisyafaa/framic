@@ -16,7 +16,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Button } from "@/components/ui/button"
 import { Search } from "lucide-react"
 
-const KATEGORI_OPTIONS = ["Wedding", "Graduation", "Portrait", "Event", "Product", "Landscape"]
+import { KATEGORI_OPTIONS } from "@/lib/constants"
 const KOTA_OPTIONS = ["Jakarta", "Bandung", "Surabaya", "Yogyakarta", "Bali", "Medan"]
 
 const filterSchema = z.object({
@@ -86,17 +86,17 @@ export function PhotographerFilter() {
   }
 
   return (
-    <div className="flex flex-col gap-6 p-6 bg-white border border-border/50 rounded-2xl shadow-sm sticky top-24">
+    <div className="flex flex-col gap-6 p-6 bg-card border border-muted rounded-[24px] shadow-sm sticky top-28">
       <div className="flex items-center justify-between">
-        <h3 className="font-bold text-lg flex items-center gap-2">
-          <Search className="w-4 h-4" />
+        <h3 className="font-bold text-base flex items-center gap-2 text-foreground">
+          <Search className="w-4 h-4 text-muted-foreground" />
           Filter
         </h3>
         <Button 
           variant="ghost" 
           size="sm" 
           onClick={resetFilters}
-          className="h-8 text-muted-foreground hover:text-destructive"
+          className="h-8 text-xs font-bold text-muted-foreground hover:text-destructive hover:bg-transparent"
         >
           Reset
         </Button>
@@ -109,13 +109,13 @@ export function PhotographerFilter() {
             name="kota"
             render={({ field }) => (
               <FormItem className="space-y-2">
-                <FormLabel className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Kota Domisili</FormLabel>
+                <FormLabel className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Kota Domisili</FormLabel>
                 <Select 
                   onValueChange={(val) => handleValueChange("kota", val)} 
                   value={field.value}
                 >
                   <FormControl>
-                    <SelectTrigger className="bg-slate-50/50 border-slate-200">
+                    <SelectTrigger className="bg-card border-border rounded-full px-4 text-xs font-medium h-9 text-foreground">
                       <SelectValue placeholder="Pilih Kota" />
                     </SelectTrigger>
                   </FormControl>
@@ -135,13 +135,13 @@ export function PhotographerFilter() {
             name="kategori"
             render={({ field }) => (
               <FormItem className="space-y-2">
-                <FormLabel className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Kategori</FormLabel>
+                <FormLabel className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Kategori</FormLabel>
                 <Select 
                   onValueChange={(val) => handleValueChange("kategori", val)} 
                   value={field.value}
                 >
                   <FormControl>
-                    <SelectTrigger className="bg-slate-50/50 border-slate-200">
+                    <SelectTrigger className="bg-card border-border rounded-full px-4 text-xs font-medium h-9 text-foreground">
                       <SelectValue placeholder="Pilih Kategori" />
                     </SelectTrigger>
                   </FormControl>
@@ -161,13 +161,13 @@ export function PhotographerFilter() {
             name="minRating"
             render={({ field }) => (
               <FormItem className="space-y-2">
-                <FormLabel className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Minimal Rating</FormLabel>
+                <FormLabel className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Minimal Rating</FormLabel>
                 <Select 
                   onValueChange={(val) => handleValueChange("minRating", val)} 
                   value={field.value}
                 >
                   <FormControl>
-                    <SelectTrigger className="bg-slate-50/50 border-slate-200">
+                    <SelectTrigger className="bg-card border-border rounded-full px-4 text-xs font-medium h-9 text-foreground">
                       <SelectValue placeholder="Berapapun" />
                     </SelectTrigger>
                   </FormControl>
@@ -187,13 +187,13 @@ export function PhotographerFilter() {
             name="sortBy"
             render={({ field }) => (
               <FormItem className="space-y-2">
-                <FormLabel className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Urutkan Berdasarkan</FormLabel>
+                <FormLabel className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Urutkan Berdasarkan</FormLabel>
                 <Select 
                   onValueChange={(val) => handleValueChange("sortBy", val)} 
                   value={field.value}
                 >
                   <FormControl>
-                    <SelectTrigger className="bg-slate-50/50 border-slate-200">
+                    <SelectTrigger className="bg-card border-border rounded-full px-4 text-xs font-medium h-9 text-foreground">
                       <SelectValue placeholder="Rating" />
                     </SelectTrigger>
                   </FormControl>

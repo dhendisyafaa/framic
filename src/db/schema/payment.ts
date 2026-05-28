@@ -50,13 +50,10 @@ export const payments = pgTable("payments", {
   // ---------------------------------------------------------------------------
 
   jumlahPlatform: integer("jumlah_platform"),
-  jumlahMitra: integer("jumlah_mitra"), // nullable jika PG independen
   jumlahFotografer: integer("jumlah_fotografer"),
 
   // Persentase di-snapshot agar tidak terpengaruh perubahan config di kemudian hari
   platformFeePercent: real("platform_fee_percent").notNull(),
-  mitraPercent: real("mitra_percent"), // nullable jika PG independen
-  photographerPercent: real("photographer_percent").notNull(),
 
   metodePembayaran: text("metode_pembayaran"),
 

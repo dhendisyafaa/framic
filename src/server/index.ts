@@ -17,6 +17,7 @@ import { webhooksRouter } from "./routes/webhooks"
 import { adminRouter } from "./routes/admin"
 import { mitraRouter } from "./routes/mitra"
 import { contractsRouter } from "./routes/contracts"
+import { chatRouter } from "./routes/chat"
 
 // Export type environment variables (bisa di-extend jika butuh cloudflare bindings)
 export type Env = {
@@ -85,3 +86,4 @@ app.route("/payments", paymentsRouter)
 app.route("/webhooks", webhooksRouter)
 app.route("/photos", photosRouter)
 app.route("/admin", adminRouter)
+app.route("/chat", chatRouter)

@@ -7,7 +7,7 @@
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
+  --font-sans: var(--font-sans);
   --font-mono: var(--font-geist-mono);
   --font-serif: var(--font-serif);
   --color-sidebar-ring: var(--sidebar-ring);
@@ -46,6 +46,9 @@
   --radius-2xl: calc(var(--radius) * 1.8);
   --radius-3xl: calc(var(--radius) * 2.2);
   --radius-4xl: calc(var(--radius) * 2.6);
+  
+  /* Mastercard-specific decorative classes */
+  --animate-orbit: orbit 120s linear infinite;
 }
 
 @layer base {
@@ -53,10 +56,13 @@
     @apply border-border outline-ring/50;
   }
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground antialiased selection:bg-accent/30;
   }
   html {
-    @apply font-serif;
+    @apply font-sans scroll-smooth;
+  }
+  a, button, [role="button"], .cursor-pointer {
+    cursor: pointer !important;
   }
 }
 
@@ -77,71 +83,90 @@
 }
 
 :root {
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.148 0.004 228.8);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.148 0.004 228.8);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.148 0.004 228.8);
-  --primary: oklch(0.508 0.118 165.612);
-  --primary-foreground: oklch(0.979 0.021 166.113);
-  --secondary: oklch(0.967 0.001 286.375);
-  --secondary-foreground: oklch(0.21 0.006 285.885);
-  --muted: oklch(0.963 0.002 197.1);
-  --muted-foreground: oklch(0.56 0.021 213.5);
-  --accent: oklch(0.508 0.118 165.612);
-  --accent-foreground: oklch(0.979 0.021 166.113);
-  --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.925 0.005 214.3);
-  --input: oklch(0.925 0.005 214.3);
-  --ring: oklch(0.723 0.014 214.4);
-  --chart-1: oklch(0.845 0.143 164.978);
-  --chart-2: oklch(0.696 0.17 162.48);
-  --chart-3: oklch(0.596 0.145 163.225);
-  --chart-4: oklch(0.508 0.118 165.612);
-  --chart-5: oklch(0.432 0.095 166.913);
-  --radius: 0.625rem;
-  --sidebar: oklch(0.987 0.002 197.1);
-  --sidebar-foreground: oklch(0.148 0.004 228.8);
-  --sidebar-primary: oklch(0.596 0.145 163.225);
-  --sidebar-primary-foreground: oklch(0.979 0.021 166.113);
-  --sidebar-accent: oklch(0.963 0.002 197.1);
-  --sidebar-accent-foreground: oklch(0.218 0.008 223.9);
-  --sidebar-border: oklch(0.925 0.005 214.3);
-  --sidebar-ring: oklch(0.723 0.014 214.4);
+  --background: #F3F0EE; /* Canvas Cream */
+  --foreground: #141413; /* Ink Black */
+  
+  --card: #FCFBFA; /* Lifted Cream */
+  --card-foreground: #141413;
+  
+  --popover: #FCFBFA;
+  --popover-foreground: #141413;
+  
+  --primary: #141413; /* Primary CTA Ink Black */
+  --primary-foreground: #F3F0EE; /* Putty Cream */
+  
+  --secondary: #FFFFFF; /* White */
+  --secondary-foreground: #141413;
+  
+  --muted: #E8E2DA; /* Slightly darker cream for cards/sections border */
+  --muted-foreground: #696969; /* Slate Gray */
+  
+  --accent: #F37338; /* Light Signal Orange */
+  --accent-foreground: #FFFFFF;
+  
+  --destructive: #CF4500; /* Signal Orange (legal/compliance/destructive) */
+  --destructive-foreground: #FFFFFF;
+  
+  --border: #D1CDC7; /* Dust Taupe */
+  --input: #FFFFFF;
+  --ring: #141413;
+  
+  --chart-1: #CF4500;
+  --chart-2: #F37338;
+  --chart-3: #141413;
+  --chart-4: #696969;
+  --chart-5: #D1CDC7;
+  
+  --radius: 20px; /* Mastercard Button/Pill standard radius */
+  
+  --sidebar: #FCFBFA;
+  --sidebar-foreground: #141413;
+  --sidebar-primary: #141413;
+  --sidebar-primary-foreground: #F3F0EE;
+  --sidebar-accent: #F3F0EE;
+  --sidebar-accent-foreground: #141413;
+  --sidebar-border: #D1CDC7;
+  --sidebar-ring: #141413;
 }
 
 .dark {
-  --background: oklch(0.148 0.004 228.8);
-  --foreground: oklch(0.987 0.002 197.1);
-  --card: oklch(0.218 0.008 223.9);
-  --card-foreground: oklch(0.987 0.002 197.1);
-  --popover: oklch(0.218 0.008 223.9);
-  --popover-foreground: oklch(0.987 0.002 197.1);
-  --primary: oklch(0.432 0.095 166.913);
-  --primary-foreground: oklch(0.979 0.021 166.113);
-  --secondary: oklch(0.274 0.006 286.033);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.275 0.011 216.9);
-  --muted-foreground: oklch(0.723 0.014 214.4);
-  --accent: oklch(0.432 0.095 166.913);
-  --accent-foreground: oklch(0.979 0.021 166.113);
-  --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.56 0.021 213.5);
-  --chart-1: oklch(0.845 0.143 164.978);
-  --chart-2: oklch(0.696 0.17 162.48);
-  --chart-3: oklch(0.596 0.145 163.225);
-  --chart-4: oklch(0.508 0.118 165.612);
-  --chart-5: oklch(0.432 0.095 166.913);
-  --sidebar: oklch(0.218 0.008 223.9);
-  --sidebar-foreground: oklch(0.987 0.002 197.1);
-  --sidebar-primary: oklch(0.696 0.17 162.48);
-  --sidebar-primary-foreground: oklch(0.262 0.051 172.552);
-  --sidebar-accent: oklch(0.275 0.011 216.9);
-  --sidebar-accent-foreground: oklch(0.987 0.002 197.1);
-  --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.56 0.021 213.5);
+  /* Keep similar values for warm dark mode */
+  --background: #141413; /* Ink Black */
+  --foreground: #F3F0EE; /* Canvas Cream */
+  
+  --card: #20201F;
+  --card-foreground: #F3F0EE;
+  
+  --popover: #20201F;
+  --popover-foreground: #F3F0EE;
+  
+  --primary: #F3F0EE;
+  --primary-foreground: #141413;
+  
+  --secondary: #2A2A29;
+  --secondary-foreground: #F3F0EE;
+  
+  --muted: #2A2A29;
+  --muted-foreground: #D1CDC7;
+  
+  --accent: #F37338;
+  --accent-foreground: #FFFFFF;
+  
+  --destructive: #CF4500;
+  --destructive-foreground: #FFFFFF;
+  
+  --border: #2A2A29;
+  --input: #20201F;
+  --ring: #F3F0EE;
+  
+  --sidebar: #20201F;
+  --sidebar-foreground: #F3F0EE;
+  --sidebar-primary: #F3F0EE;
+  --sidebar-primary-foreground: #141413;
+  --sidebar-accent: #2A2A29;
+  --sidebar-accent-foreground: #F3F0EE;
+  --sidebar-border: #2A2A29;
+  --sidebar-ring: #F3F0EE;
 }
+
 

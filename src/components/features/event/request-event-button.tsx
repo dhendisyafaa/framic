@@ -48,7 +48,7 @@ export function RequestEventButton({ eventId, isPhotographer }: { eventId: strin
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold transition-all shadow-md">
+        <Button disabled={requestMutation.isPending} className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-bold transition-all shadow-md cursor-pointer disabled:cursor-not-allowed disabled:opacity-50">
           Request Masuk
         </Button>
       </DialogTrigger>
@@ -70,11 +70,11 @@ export function RequestEventButton({ eventId, isPhotographer }: { eventId: strin
           />
         </div>
         <DialogFooter>
-          <Button variant="ghost" onClick={() => setOpen(false)} className="rounded-xl font-bold">Batal</Button>
+          <Button variant="ghost" onClick={() => setOpen(false)} disabled={requestMutation.isPending} className="rounded-xl font-bold cursor-pointer disabled:cursor-not-allowed disabled:opacity-50">Batal</Button>
           <Button
             onClick={() => requestMutation.mutate()}
             disabled={requestMutation.isPending}
-            className="rounded-xl font-bold bg-emerald-600 hover:bg-emerald-700"
+            className="rounded-xl font-bold bg-primary hover:bg-primary/90 text-primary-foreground cursor-pointer disabled:cursor-not-allowed disabled:opacity-50"
           >
             {requestMutation.isPending ? "Mengirim..." : "Kirim Request"}
           </Button>

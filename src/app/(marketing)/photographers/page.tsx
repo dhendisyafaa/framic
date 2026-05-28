@@ -1,22 +1,143 @@
+export const dynamic = "force-dynamic"
+
 import { PhotographerCard } from "@/components/features/photographer/photographer-card"
 import { PhotographerFilter } from "@/components/features/photographer/photographer-filter"
-import { getBaseUrl } from "@/lib/api-url"
 import { Camera } from "lucide-react"
+import { db } from "@/db"
+import { photographerProfiles, packages } from "@/db/schema"
+import { and, eq, ilike, sql, isNotNull, exists, ne } from "drizzle-orm"
+import { clerkClient } from "@clerk/nextjs/server"
 
 async function getPhotographers(searchParams: { [key: string]: string | string[] | undefined }) {
-  const params = new URLSearchParams()
-  if (searchParams.kota && searchParams.kota !== "all") params.set("kota", searchParams.kota as string)
-  if (searchParams.kategori && searchParams.kategori !== "all") params.set("kategori", searchParams.kategori as string)
-  if (searchParams.minRating) params.set("minRating", searchParams.minRating as string)
-  if (searchParams.sortBy) params.set("sortBy", searchParams.sortBy as string)
+  try {
+    const page = Number(searchParams.page) || 1
+    const limit = Number(searchParams.limit) || 12
+    const offset = (page - 1) * limit
+    const kota = searchParams.kota as string | undefined
+    const kategori = searchParams.kategori as string | undefined
+    const minRating = searchParams.minRating ? Number(searchParams.minRating) : undefined
+    const sortBy = (searchParams.sortBy as string) || "rating"
 
-  const res = await fetch(`${getBaseUrl()}/api/photographers?${params.toString()}`, {
-    cache: 'no-store'
-  })
+    const conditions = [
+      eq(photographerProfiles.verificationStatus, "verified"),
+      isNotNull(photographerProfiles.username),
+      ne(photographerProfiles.username, ""),
+      isNotNull(photographerProfiles.bio),
+      ne(photographerProfiles.bio, ""),
+      sql`cardinality(${photographerProfiles.portfolioUrls}) >= 1`,
+      exists(
+        db.select()
+          .from(packages)
+          .where(
+            and(
+              eq(packages.photographerId, photographerProfiles.id),
+              eq(packages.isActive, true)
+            )
+          )
+      )
+    ]
 
-  if (!res.ok) return { data: [], meta: { total: 0 } }
-  const json = await res.json()
-  return json.success ? { data: json.data, meta: json.meta } : { data: [], meta: { total: 0 } }
+    if (kota && kota !== "all") {
+      conditions.push(ilike(photographerProfiles.kotaDomisili, `%${kota}%`))
+    }
+    if (kategori && kategori !== "all") {
+      conditions.push(sql`${kategori} = ANY(${photographerProfiles.kategori})`)
+    }
+    if (minRating) {
+      conditions.push(sql`${photographerProfiles.ratingAverage} >= ${minRating}`)
+    }
+
+    // Count total items
+    const [{ count }] = await db
+      .select({ count: sql<number>`cast(count(${photographerProfiles.id}) as int)` })
+      .from(photographerProfiles)
+      .where(and(...conditions))
+
+    // Determine sorting
+    let orderBySql: ReturnType<typeof sql>
+    switch (sortBy) {
+      case "price_asc":
+        orderBySql = sql`MIN(${packages.harga}) ASC NULLS LAST`
+        break
+      case "price_desc":
+        orderBySql = sql`MIN(${packages.harga}) DESC NULLS LAST`
+        break
+      case "newest":
+        orderBySql = sql`${photographerProfiles.verifiedAt} DESC NULLS LAST`
+        break
+      default: // rating
+        orderBySql = sql`${photographerProfiles.ratingAverage} DESC NULLS LAST`
+    }
+
+    // Get data
+    const rows = await db
+      .select({
+        id: photographerProfiles.id,
+        username: photographerProfiles.username,
+        clerkId: photographerProfiles.clerkId,
+        bio: photographerProfiles.bio,
+        kotaDomisili: photographerProfiles.kotaDomisili,
+        kategori: photographerProfiles.kategori,
+        ratingAverage: photographerProfiles.ratingAverage,
+        ratingCount: photographerProfiles.ratingCount,
+        isAcceptingOrders: photographerProfiles.isAcceptingOrders,
+        portfolioUrls: photographerProfiles.portfolioUrls,
+        packageStartingFrom: sql<number | null>`MIN(${packages.harga})`,
+      })
+      .from(photographerProfiles)
+      .innerJoin(packages, eq(packages.photographerId, photographerProfiles.id))
+      .where(and(...conditions))
+      .groupBy(photographerProfiles.id)
+      .orderBy(orderBySql)
+      .limit(limit)
+      .offset(offset)
+
+    const clerkIds = rows.map((r) => r.clerkId)
+    let clerkUsersMap: Record<string, { nama: string; avatarUrl: string }> = {}
+
+    if (clerkIds.length > 0) {
+      try {
+        const clerk = await clerkClient()
+        const userList = await clerk.users.getUserList({ userId: clerkIds })
+        userList.data.forEach((u) => {
+          clerkUsersMap[u.id] = {
+            nama: `${u.firstName || ""} ${u.lastName || ""}`.trim() || "Fotografer",
+            avatarUrl: u.imageUrl,
+          }
+        })
+      } catch (clerkErr) {
+        console.error("Failed to fetch photographer user list from Clerk:", clerkErr)
+      }
+    }
+
+    const data = rows.map((r) => ({
+      id: r.id,
+      username: r.username,
+      bio: r.bio,
+      kotaDomisili: r.kotaDomisili,
+      kategori: r.kategori,
+      ratingAverage: r.ratingAverage,
+      ratingCount: r.ratingCount,
+      isAcceptingOrders: r.isAcceptingOrders,
+      portfolioUrls: r.portfolioUrls,
+      packageStartingFrom: r.packageStartingFrom,
+      nama: clerkUsersMap[r.clerkId]?.nama || "User",
+      avatarUrl: clerkUsersMap[r.clerkId]?.avatarUrl || "",
+    }))
+
+    return {
+      data,
+      meta: {
+        total: count,
+        page,
+        limit,
+        totalPages: Math.ceil(count / limit) || 1,
+      }
+    }
+  } catch (err) {
+    console.error("Failed to query photographers list:", err)
+    return { data: [], meta: { total: 0, page: 1, limit: 12, totalPages: 0 } }
+  }
 }
 
 export default async function PhotographersPage({
@@ -46,11 +167,11 @@ export default async function PhotographersPage({
 
           {/* Grid Catalogue */}
           <main className="flex-1 flex flex-col gap-8">
-            <div className="flex items-center justify-between bg-slate-50 border border-slate-200/60 p-4 rounded-xl">
-              <span className="text-sm font-medium text-slate-600">
-                Menampilkan <span className="font-bold text-slate-900">{photographers.length}</span> dari {meta.total} fotografer
+            <div className="flex items-center justify-between bg-card border border-muted p-4 rounded-[20px] shadow-sm">
+              <span className="text-sm font-medium text-foreground">
+                Menampilkan <span className="font-bold">{photographers.length}</span> dari {meta.total} fotografer
               </span>
-              <div className="hidden sm:block h-px flex-1 mx-4 bg-slate-200/60" />
+              <div className="hidden sm:block h-px flex-1 mx-4 bg-muted" />
             </div>
 
             {photographers.length > 0 ? (
@@ -60,12 +181,12 @@ export default async function PhotographersPage({
                 ))}
               </div>
             ) : (
-              <div className="flex flex-col items-center justify-center py-24 text-center gap-4 bg-slate-50/50 border-2 border-dashed rounded-[2rem]">
-                <div className="w-16 h-16 bg-white rounded-2xl shadow-sm flex items-center justify-center">
-                  <Camera className="w-8 h-8 text-slate-300" />
+              <div className="flex flex-col items-center justify-center py-24 text-center gap-4 bg-card border border-dashed border-muted rounded-[24px]">
+                <div className="w-16 h-16 bg-card rounded-full border border-muted shadow-sm flex items-center justify-center">
+                  <Camera className="w-8 h-8 text-muted-foreground" />
                 </div>
                 <div className="flex flex-col gap-1 max-w-xs">
-                  <h3 className="font-bold text-lg">Tidak ada hasil</h3>
+                  <h3 className="font-medium text-lg">Tidak ada hasil</h3>
                   <p className="text-sm text-muted-foreground">
                     Maaf, tidak ada fotografer yang sesuai dengan kriteria filter Anda saat ini. Coba ubah filter atau reset.
                   </p>

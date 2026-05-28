@@ -4,7 +4,6 @@
 //
 // Business rules:
 // - PG hanya boleh punya 1 kontrak dengan contract_status = 'active' atau 'pending_expiry'
-// - mitra_percent + photographer_percent harus = 100
 // - Kontrak tidak bisa expired jika PG masih punya order aktif
 
 import {
@@ -50,10 +49,6 @@ export const mitraPhotographers = pgTable("mitra_photographers", {
   // ---------------------------------------------------------------------------
   // Terms kontrak — diisi setelah invitation accepted, sebelum e-sign
   // ---------------------------------------------------------------------------
-
-  // mitraPercent + photographerPercent harus = 100
-  mitraPercent: real("mitra_percent"), // nullable sampai invitation accepted
-  photographerPercent: real("photographer_percent"),
 
   // Minimum fee per event — proteksi PG, dalam Rupiah
   minimumFeePerEvent: integer("minimum_fee_per_event"),
