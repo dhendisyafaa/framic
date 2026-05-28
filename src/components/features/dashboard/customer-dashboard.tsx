@@ -1,6 +1,6 @@
 "use client"
 
-// 1. React / Next.js
+import { useState, useEffect } from "react"
 import Link from "next/link"
 
 // 2. Third-party libraries
@@ -23,6 +23,7 @@ import {
   MessageSquare,
   User,
   ClockIcon,
+  Coins,
 } from "lucide-react"
 
 // 5. Types
@@ -67,6 +68,17 @@ export function CustomerDashboard({
     .sort((a, b) => new Date(a.tanggalPotret).getTime() - new Date(b.tanggalPotret).getTime())
 
   const nextShoot = upcomingOrders[0]
+
+  const now = Date.now()
+  const pendingPayments = ordersList.filter(o => {
+    if (o.status === "confirmed") {
+      // Hanya tampilkan tagihan DP jika belum kedaluwarsa (< 24 jam sejak confirmed)
+      if (!o.confirmedAt) return false
+      const expiryTime = new Date(o.confirmedAt).getTime() + 24 * 60 * 60 * 1000
+      return expiryTime > now
+    }
+    return o.status === "delivered" && o.payment?.statusPelunasan !== "paid"
+  })
 
   const getGreeting = () => {
     const hours = new Date().getHours()
@@ -139,6 +151,43 @@ export function CustomerDashboard({
           {getGreeting()}, {user?.firstName || "Pelanggan"}.
         </h1>
       </header>
+
+      {/* Pending Payments Alert Section */}
+      {pendingPayments.length > 0 && (
+        <div className="mb-12 flex flex-col gap-4 relative z-10">
+          {pendingPayments.map(order => {
+            const isDp = order.status === "confirmed"
+            const amount = isDp ? order.payment?.jumlahDp : order.payment?.jumlahPelunasan
+            const title = isDp ? "Pembayaran Uang Muka" : "Pelunasan Sesi Foto"
+
+            return (
+              <div key={order.id} className="bg-accent/10 border border-accent/30 p-6 rounded-[24px] flex flex-col md:flex-row items-center justify-between gap-4 shadow-sm animate-in fade-in zoom-in-95 duration-500">
+                <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 bg-accent/20 text-accent rounded-full flex items-center justify-center shrink-0 border border-accent/10">
+                    <Coins className="w-6 h-6" />
+                  </div>
+                  <div className="flex flex-col items-start gap-1">
+                    <div className="flex items-center gap-2">
+                      <h4 className="font-bold text-foreground text-sm">Menunggu {title}</h4>
+                      {isDp && order.confirmedAt && (
+                        <PaymentCountdown confirmedAt={order.confirmedAt} />
+                      )}
+                    </div>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Tagihan order bersama <span className="font-semibold text-foreground">@{order.photographer?.username || "Fotografer"}</span> sebesar <strong className="text-accent font-black text-sm">Rp {amount?.toLocaleString("id-ID")}</strong>.
+                    </p>
+                  </div>
+                </div>
+                <Link href={`/dashboard/orders/${order.id}`}>
+                  <Button className="rounded-full bg-accent hover:bg-accent/90 text-white font-bold h-10 px-6 w-full md:w-auto shadow-md shadow-accent/20 cursor-pointer">
+                    Bayar Sekarang
+                  </Button>
+                </Link>
+              </div>
+            )
+          })}
+        </div>
+      )}
 
       {/* Bento Grid Layout */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 relative z-10">
@@ -396,3 +445,54 @@ function getStatusStyles(status: string) {
     default: return "bg-muted text-muted-foreground border-muted"
   }
 }
+
+function PaymentCountdown({ confirmedAt }: { confirmedAt: Date | string }) {
+  const [timeLeft, setTimeLeft] = useState<string>("")
+
+  useEffect(() => {
+    if (!confirmedAt) return
+
+    const expiryTime = new Date(confirmedAt).getTime() + 24 * 60 * 60 * 1000
+
+    const calculateTimeLeft = () => {
+      const now = new Date().getTime()
+      const distance = expiryTime - now
+
+      if (distance < 0) {
+        return "Kedaluwarsa"
+      }
+
+      const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60))
+      const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60))
+      const seconds = Math.floor((distance % (1000 * 60)) / 1000)
+
+      return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`
+    }
+
+    setTimeLeft(calculateTimeLeft())
+
+    const interval = setInterval(() => {
+      const remaining = calculateTimeLeft()
+      setTimeLeft(remaining)
+      if (remaining === "Kedaluwarsa") {
+        clearInterval(interval)
+      }
+    }, 1000)
+
+    return () => clearInterval(interval)
+  }, [confirmedAt])
+
+  if (!timeLeft) return null
+
+  return (
+    <div className={cn("inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold border",
+      timeLeft === "Kedaluwarsa"
+        ? "bg-destructive/10 text-destructive border-destructive/20"
+        : "bg-orange-500/10 text-orange-500 border-orange-500/20"
+    )}>
+      <ClockIcon className="w-3 h-3" />
+      {timeLeft === "Kedaluwarsa" ? "Kedaluwarsa" : `Sisa Waktu: ${timeLeft}`}
+    </div>
+  )
+}
+

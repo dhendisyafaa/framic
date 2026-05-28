@@ -47,6 +47,24 @@ paymentsRouter.post("/:orderId/dp", async (c) => {
       return c.json({ success: false, error: "Order harus berstatus 'confirmed' untuk bayar DP" }, 400)
     }
 
+    const isExpired = orderData.confirmedAt
+      ? new Date(orderData.confirmedAt).getTime() + 24 * 60 * 60 * 1000 < Date.now()
+      : false
+
+    if (isExpired) {
+      await db
+        .update(orders)
+        .set({
+          status: "cancelled",
+          cancelledAt: new Date(),
+          cancelledBy: "system_expiry",
+          updatedAt: new Date()
+        })
+        .where(eq(orders.id, orderId))
+
+      return c.json({ success: false, error: "Batas waktu pembayaran DP telah habis (24 jam)" }, 400)
+    }
+
     const [paymentData] = await db
       .select()
       .from(payments)

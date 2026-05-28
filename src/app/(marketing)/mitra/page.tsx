@@ -1,3 +1,5 @@
+export const dynamic = "force-dynamic"
+
 import { db } from "@/db"
 import { mitraProfiles, events } from "@/db/schema"
 import { eq, sql, inArray } from "drizzle-orm"

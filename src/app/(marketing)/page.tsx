@@ -1,16 +1,92 @@
+export const dynamic = "force-dynamic"
+
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Star, MapPin, Camera, CheckCircle, ShieldCheck, Instagram, ArrowRight } from "lucide-react"
-import { getBaseUrl } from "@/lib/api-url"
 import { PhotographerCard } from "@/components/features/photographer/photographer-card"
+import { db } from "@/db"
+import { photographerProfiles, packages } from "@/db/schema"
+import { and, eq, sql, isNotNull, exists, ne, desc } from "drizzle-orm"
+import { clerkClient } from "@clerk/nextjs/server"
 
 async function getTopPhotographers() {
-  const res = await fetch(`${getBaseUrl()}/api/photographers?limit=4&sortBy=rating`, {
-    next: { revalidate: 3600 }
-  })
-  if (!res.ok) return []
-  const json = await res.json()
-  return json.success ? json.data : []
+  try {
+    const conditions = [
+      eq(photographerProfiles.verificationStatus, "verified"),
+      isNotNull(photographerProfiles.username),
+      ne(photographerProfiles.username, ""),
+      isNotNull(photographerProfiles.bio),
+      ne(photographerProfiles.bio, ""),
+      sql`cardinality(${photographerProfiles.portfolioUrls}) >= 1`,
+      exists(
+        db.select()
+          .from(packages)
+          .where(
+            and(
+              eq(packages.photographerId, photographerProfiles.id),
+              eq(packages.isActive, true)
+            )
+          )
+      )
+    ]
+
+    const rows = await db
+      .select({
+        id: photographerProfiles.id,
+        username: photographerProfiles.username,
+        clerkId: photographerProfiles.clerkId,
+        bio: photographerProfiles.bio,
+        kotaDomisili: photographerProfiles.kotaDomisili,
+        kategori: photographerProfiles.kategori,
+        ratingAverage: photographerProfiles.ratingAverage,
+        ratingCount: photographerProfiles.ratingCount,
+        isAcceptingOrders: photographerProfiles.isAcceptingOrders,
+        portfolioUrls: photographerProfiles.portfolioUrls,
+        packageStartingFrom: sql<number | null>`MIN(${packages.harga})`,
+      })
+      .from(photographerProfiles)
+      .innerJoin(packages, eq(packages.photographerId, photographerProfiles.id))
+      .where(and(...conditions))
+      .groupBy(photographerProfiles.id)
+      .orderBy(desc(photographerProfiles.ratingAverage))
+      .limit(4)
+
+    const clerkIds = rows.map((r) => r.clerkId)
+    let clerkUsersMap: Record<string, { nama: string; avatarUrl: string }> = {}
+
+    if (clerkIds.length > 0) {
+      try {
+        const clerk = await clerkClient()
+        const userList = await clerk.users.getUserList({ userId: clerkIds })
+        userList.data.forEach((u) => {
+          clerkUsersMap[u.id] = {
+            nama: `${u.firstName || ""} ${u.lastName || ""}`.trim() || "Fotografer",
+            avatarUrl: u.imageUrl,
+          }
+        })
+      } catch (clerkErr) {
+        console.error("Failed to fetch landing page photographers Clerk info:", clerkErr)
+      }
+    }
+
+    return rows.map((r) => ({
+      id: r.id,
+      username: r.username,
+      bio: r.bio,
+      kotaDomisili: r.kotaDomisili,
+      kategori: r.kategori,
+      ratingAverage: r.ratingAverage,
+      ratingCount: r.ratingCount,
+      isAcceptingOrders: r.isAcceptingOrders,
+      portfolioUrls: r.portfolioUrls,
+      packageStartingFrom: r.packageStartingFrom,
+      nama: clerkUsersMap[r.clerkId]?.nama || "User",
+      avatarUrl: clerkUsersMap[r.clerkId]?.avatarUrl || "",
+    }))
+  } catch (err) {
+    console.error("Failed to query top photographers:", err)
+    return []
+  }
 }
 
 export default async function LandingPage() {

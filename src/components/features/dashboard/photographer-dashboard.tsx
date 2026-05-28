@@ -24,6 +24,8 @@ import {
   Sparkles,
   ArrowUpRight,
   User,
+  MapPinIcon,
+  FileTextIcon,
 } from "lucide-react"
 
 // 3. Components
@@ -34,13 +36,12 @@ import { Skeleton } from "@/components/ui/skeleton"
 import { DashboardSkeleton } from "./dashboard-skeleton"
 
 // 4. Types
-import { OrderWithPackage, PhotographerProfile, Review } from "@/types"
+import { OrderWithPackage, OrderDetail, PhotographerProfile, Review } from "@/types"
 
 interface MitraInvitation {
   contractId: string
   namaMitra: string
   invitationMessage: string | null
-  photographerPercent: number
   minimumFeePerEvent: number
   tanggalMulai: string
   tanggalSelesai: string
@@ -61,8 +62,10 @@ interface MitraEvent {
   namaEvent: string
   coverImageUrl: string | null
   feePgPerEvent: number
+  feePgTetap?: number | null
   tanggalMulai: string
   isOpenRecruitment: boolean
+  lokasi: string
 }
 
 /**
@@ -88,7 +91,7 @@ export function PhotographerDashboard({ clerkId }: { clerkId: string }) {
     queryFn: async () => {
       const res = await fetch("/api/orders?limit=10")
       if (!res.ok) throw new Error("Gagal mengambil data order")
-      return res.json() as Promise<{ success: boolean; data: OrderWithPackage[] }>
+      return res.json() as Promise<{ success: boolean; data: OrderDetail[] }>
     },
   })
 
@@ -171,6 +174,7 @@ export function PhotographerDashboard({ clerkId }: { clerkId: string }) {
   const ordersList = response?.data || []
   const pendingOrders = ordersList.filter(o => o.status === "pending")
   const activeJobs = ordersList.filter(o => ["confirmed", "dp_paid", "ongoing", "delivered"].includes(o.status))
+  const assignedEventOrders = ordersList.filter(o => o.orderType === "event" && o.payment?.statusDp === "paid" && o.status !== "cancelled")
 
   const isUsernameMissing = !pgProfile?.username && !user?.username
   const isPortfolioMissing = !pgProfile?.portfolioUrls || pgProfile.portfolioUrls.length === 0
@@ -314,10 +318,14 @@ export function PhotographerDashboard({ clerkId }: { clerkId: string }) {
                           </div>
                           <div>
                             <p className="text-lg font-bold text-foreground">
-                              Pelanggan #{order.customerClerkId.slice(-6).toUpperCase()}
+                              {order.orderType === "event" ? "Mitra Event" : `Pelanggan #${order.customerClerkId.slice(-6).toUpperCase()}`}
                             </p>
                             <p className="text-sm font-medium text-muted-foreground flex flex-wrap items-center gap-2 mt-1">
-                              <span>{order.package?.namaPaket || "Paket Kustom"}</span>
+                              <span>
+                                {order.orderType === "event"
+                                  ? `Event: ${order.event?.namaEvent || "Mitra"}`
+                                  : (order.package?.namaPaket || "Paket Kustom")}
+                              </span>
                               <span className="opacity-50">•</span>
                               <span>{format(new Date(order.tanggalPotret), "d MMM yyyy", { locale: localeId })}</span>
                             </p>
@@ -383,7 +391,11 @@ export function PhotographerDashboard({ clerkId }: { clerkId: string }) {
                           <CameraIcon className="w-5 h-5" />
                         </div>
                         <div>
-                          <div className="font-bold text-foreground mb-0.5">Order #{order.id.slice(0, 8)}</div>
+                          <div className="font-bold text-foreground mb-0.5">
+                            {order.orderType === "event"
+                              ? `Event: ${order.event?.namaEvent || "Mitra"}`
+                              : `Order #${order.id.slice(0, 8)}`}
+                          </div>
                           <div className="text-xs text-muted-foreground font-bold lowercase flex items-center gap-1">
                             <ClockIcon className="w-3 h-3" />
                             {format(new Date(order.tanggalPotret), "p • d MMM yyyy", { locale: localeId })}
@@ -409,6 +421,10 @@ export function PhotographerDashboard({ clerkId }: { clerkId: string }) {
                 </div>
               )}
             </div>
+
+            {/* Events I am Assigned To */}
+            <PendingContractsSection />
+            <MyAssignedEventsSection assignedEventOrders={assignedEventOrders} />
 
             {/* New Events from My Mitra */}
             <MitraEventsSection clerkId={clerkId} />
@@ -718,14 +734,10 @@ function PendingInvitations({ clerkId }: { clerkId: string }) {
                     </div>
                   )}
 
-                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-                    <div className="p-3 bg-accent/5 rounded-2xl border border-accent/10">
-                      <div className="text-[10px] font-black text-accent/70 uppercase tracking-widest mb-1">Bagi Hasil</div>
-                      <div className="font-black text-accent text-sm">{inv.photographerPercent}% PG</div>
-                    </div>
-                    <div className="p-3 bg-emerald-50/50 dark:bg-emerald-950/10 rounded-2xl border border-emerald-100/50 dark:border-emerald-900/30">
-                      <div className="text-[10px] font-black text-emerald-600 dark:text-emerald-400 uppercase tracking-widest mb-1">Min. Fee</div>
-                      <div className="font-black text-emerald-700 dark:text-emerald-300 text-sm">Rp {inv.minimumFeePerEvent.toLocaleString('id-ID')}</div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div className="p-3 bg-accent/10 rounded-2xl border border-accent/20">
+                      <div className="text-[10px] font-black text-accent uppercase tracking-widest mb-1">Min. Fee</div>
+                      <div className="font-black text-foreground text-sm">Rp {inv.minimumFeePerEvent.toLocaleString('id-ID')}</div>
                     </div>
                     <div className="p-3 bg-muted rounded-2xl border border-border/30 hidden sm:block">
                       <div className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-1">Durasi</div>
@@ -867,9 +879,19 @@ function MitraEventsSection({ clerkId }: { clerkId: string }) {
                   <div>
                     <div className="flex justify-between items-start gap-2 mb-2">
                       <h3 className="font-bold text-foreground text-base group-hover:text-accent transition-colors">{event.namaEvent}</h3>
-                      <div className="flex items-center gap-1 text-accent font-bold shrink-0">
-                        <BanknoteIcon className="w-4 h-4" />
-                        <span className="text-sm">Rp {(event.feePgPerEvent || 0).toLocaleString("id-ID")}</span>
+                      <div className="flex flex-col items-end gap-0.5 shrink-0">
+                        {(event.feePgTetap ?? 0) > 0 && (
+                          <div className="flex items-center gap-1 text-accent font-bold">
+                            <BanknoteIcon className="w-3.5 h-3.5" />
+                            <span className="text-sm" title="Fee Fotografer Tetap">Rp {(event.feePgTetap!).toLocaleString("id-ID")} <span className="text-[10px] text-muted-foreground font-medium uppercase tracking-wider">(Tetap)</span></span>
+                          </div>
+                        )}
+                        {(event.feePgPerEvent ?? 0) > 0 && (
+                          <div className="flex items-center gap-1 text-accent font-bold">
+                            <BanknoteIcon className="w-3.5 h-3.5" />
+                            <span className="text-sm" title="Fee Fotografer Open Recruitment">Rp {(event.feePgPerEvent!).toLocaleString("id-ID")} <span className="text-[10px] text-muted-foreground font-medium uppercase tracking-wider">(Open)</span></span>
+                          </div>
+                        )}
                       </div>
                     </div>
                     <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted-foreground font-semibold">
@@ -896,6 +918,124 @@ function MitraEventsSection({ clerkId }: { clerkId: string }) {
           Belum ada event baru dari Mitra.
         </div>
       )}
+    </div>
+  )
+}
+
+function MyAssignedEventsSection({ assignedEventOrders }: { assignedEventOrders: OrderDetail[] }) {
+  if (assignedEventOrders.length === 0) return null
+
+  return (
+    <div className="bg-card p-8 md:p-10 rounded-[32px] md:rounded-[40px] border border-border shadow-sm space-y-6">
+      <div className="flex items-center gap-3">
+        <h3 className="text-xl font-bold text-foreground tracking-tight">Event Yang Akan Dijalani</h3>
+        <Badge className="bg-primary text-primary-foreground rounded-full font-bold px-3 h-5">{assignedEventOrders.length}</Badge>
+      </div>
+
+      <div className="grid gap-4">
+        {assignedEventOrders.map((order) => {
+          const event = order.event;
+          if (!event) return null;
+
+          return (
+            <Card key={order.id} className="border-border shadow-sm bg-background dark:bg-muted/40 overflow-hidden group hover:border-accent/40 transition-all rounded-[28px]">
+              <CardContent className="p-0 flex flex-col sm:flex-row items-stretch">
+                <div className="sm:w-40 h-32 bg-muted relative shrink-0 overflow-hidden">
+                  {event.coverImageUrl ? (
+                    <Image src={event.coverImageUrl} alt={event.namaEvent} fill className="object-cover group-hover:scale-110 transition-transform duration-500" />
+                  ) : (
+                    <div className="absolute inset-0 flex items-center justify-center text-muted-foreground">
+                      <TentIcon className="w-10 h-10" />
+                    </div>
+                  )}
+                </div>
+                <div className="p-6 flex-1 flex flex-col justify-between">
+                  <div>
+                    <div className="flex justify-between items-start gap-2 mb-2">
+                      <h3 className="font-bold text-foreground text-base group-hover:text-accent transition-colors">{event.namaEvent}</h3>
+                      <div className="flex flex-col items-end gap-0.5 shrink-0">
+                        {(event.feePgTetap ?? 0) > 0 && (
+                          <div className="flex items-center gap-1 text-accent font-bold">
+                            <BanknoteIcon className="w-3.5 h-3.5" />
+                            <span className="text-sm" title="Fee Fotografer Tetap">Rp {(event.feePgTetap!).toLocaleString("id-ID")} <span className="text-[10px] text-muted-foreground font-medium uppercase tracking-wider">(Tetap)</span></span>
+                          </div>
+                        )}
+                        {(event.feePgPerEvent ?? 0) > 0 && (
+                          <div className="flex items-center gap-1 text-accent font-bold">
+                            <BanknoteIcon className="w-3.5 h-3.5" />
+                            <span className="text-sm" title="Fee Fotografer Open Recruitment">Rp {(event.feePgPerEvent!).toLocaleString("id-ID")} <span className="text-[10px] text-muted-foreground font-medium uppercase tracking-wider">(Open)</span></span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                    <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted-foreground font-semibold">
+                      <span className="flex items-center gap-1.5"><CalendarIcon className="w-3.5 h-3.5" /> {format(new Date(event.tanggalMulai), "dd MMM yyyy", { locale: localeId })}</span>
+                      <span className="flex items-center gap-1.5"><MapPinIcon className="w-3.5 h-3.5" /> {event.lokasi}</span>
+                    </div>
+                  </div>
+                  <div className="mt-4 flex justify-end">
+                    <Link href={`/dashboard/orders/${order.id}`}>
+                      <Button size="sm" className="bg-primary hover:bg-accent text-primary-foreground hover:text-accent-foreground font-bold rounded-xl px-6 gap-2 h-9 cursor-pointer transition-colors">
+                        Lihat Order <ChevronRightIcon className="w-4 h-4" />
+                      </Button>
+                    </Link>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          )
+        })}
+      </div>
+    </div>
+  )
+}
+
+function PendingContractsSection() {
+  const { data: response, isLoading } = useQuery({
+    queryKey: ["photographer-contracts-pending"],
+    queryFn: async () => {
+      const res = await fetch("/api/photographers/me/contracts")
+      if (!res.ok) throw new Error("Gagal mengambil data kontrak")
+      return res.json() as Promise<{
+        success: boolean;
+        data: any[]
+      }>
+    },
+  })
+
+  const pendingContracts = response?.data?.filter(c => c.type === "event" && !c.photographerSignedAt) || []
+
+  if (isLoading || pendingContracts.length === 0) return null
+
+  return (
+    <div className="bg-card p-8 md:p-10 rounded-[32px] md:rounded-[40px] border border-border shadow-sm space-y-6">
+      <div className="flex items-center gap-3">
+        <h3 className="text-xl font-bold text-foreground tracking-tight">Kontrak Menunggu TTD Anda</h3>
+        <Badge className="bg-rose-500 text-white rounded-full font-bold px-3 h-5">{pendingContracts.length}</Badge>
+      </div>
+
+      <div className="grid gap-4">
+        {pendingContracts.map((contract) => (
+          <div key={contract.id} className="p-5 bg-background dark:bg-muted/40 hover:bg-muted/80 rounded-[24px] border border-rose-500/20 shadow-sm flex items-center justify-between transition-colors">
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 bg-rose-500/10 text-rose-500 rounded-2xl flex items-center justify-center shrink-0">
+                <FileTextIcon className="w-5 h-5" />
+              </div>
+              <div>
+                <div className="font-bold text-foreground mb-0.5">Event: {contract.eventName || "Event"}</div>
+                <div className="text-xs text-muted-foreground font-medium flex items-center gap-1">
+                  Mitra: {contract.mitraName}
+                </div>
+              </div>
+            </div>
+            <Link href={`/dashboard/contracts/${contract.id}?type=event`}>
+              <Button size="sm" className="bg-rose-500 hover:bg-rose-600 text-white font-bold rounded-xl px-5 gap-2 h-9 cursor-pointer transition-colors">
+                Tinjau & TTD
+              </Button>
+            </Link>
+          </div>
+        ))}
+      </div>
     </div>
   )
 }

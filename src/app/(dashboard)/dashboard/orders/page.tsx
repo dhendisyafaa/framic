@@ -7,13 +7,15 @@ import { OrderWithPackage } from "@/types"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
+import { BackButton } from "@/components/ui/back-button"
 import {
   CalendarIcon,
   CameraIcon,
   ChevronRightIcon,
   FilterIcon,
   SearchIcon,
-  ShoppingBagIcon
+  ShoppingBagIcon,
+  ArrowLeftIcon,
 } from "lucide-react"
 import { format } from "date-fns"
 import { id as localeId } from "date-fns/locale"
@@ -43,9 +45,12 @@ export default function OrdersPage() {
     <div className="container mx-auto p-4 md:p-8 animate-in fade-in slide-in-from-bottom-2 duration-500 text-foreground">
       {/* Header */}
       <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6 mb-8">
-        <div>
-          <h1 className="text-3xl font-black tracking-tighter text-foreground mb-1">Semua Order</h1>
-          <p className="text-muted-foreground font-medium">Lacak status sesi foto dan histori pemesanan Anda.</p>
+        <div className="space-y-3">
+          <BackButton href="/dashboard" label="Kembali ke Dashboard" className="mb-2" />
+          <div>
+            <h1 className="text-3xl font-black tracking-tighter text-foreground mb-1">Semua Order</h1>
+            <p className="text-muted-foreground font-medium">Lacak status sesi foto dan histori pemesanan Anda.</p>
+          </div>
         </div>
         <div className="flex items-center gap-2 bg-card p-1.5 rounded-2xl border border-muted shadow-sm">
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
@@ -81,7 +86,9 @@ export default function OrdersPage() {
                       <div>
                         <div className="flex items-center gap-2 mb-1">
                           <h3 className="font-black text-foreground leading-none">
-                            {order.orderType === "event" ? "Sesi Event" : "Sesi Privat"}
+                            {order.orderType === "event" 
+                              ? `Sesi Event: ${order.event?.namaEvent || "Mitra"}` 
+                              : "Sesi Privat"}
                           </h3>
                           <Badge variant="outline" className="text-[10px] font-black uppercase tracking-widest px-1.5 border-muted text-muted-foreground">
                             #{order.id.slice(0, 8)}

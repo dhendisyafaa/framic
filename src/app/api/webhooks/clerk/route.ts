@@ -51,41 +51,41 @@ export async function POST(req: Request) {
     const { username } = evt.data
     const clerkId = id as string
 
-    if (username) {
-      try {
-        await db.transaction(async (tx) => {
-          // 1. UPSERT ke tabel users
-          await tx.insert(users)
-            .values({
-              clerkId: clerkId,
-              username: username,
-              roles: ['customer'],
-              isActive: true,
-            })
-            .onConflictDoUpdate({
-              target: users.clerkId,
-              set: {
-                username: username,
-                updatedAt: new Date()
-              }
-            })
+    try {
+      await db.transaction(async (tx) => {
+        // 1. UPSERT ke tabel users
+        await tx.insert(users)
+          .values({
+            clerkId: clerkId,
+            username: username || null,
+            roles: ['customer'],
+            isActive: true,
+          })
+          .onConflictDoUpdate({
+            target: users.clerkId,
+            set: {
+              ...(username ? { username } : {}),
+              updatedAt: new Date()
+            }
+          })
 
-          // 2. Pastikan customerProfiles ada (karena semua user minimal punya ini)
-          await tx.insert(customerProfiles)
-            .values({ clerkId: clerkId })
-            .onConflictDoNothing()
+        // 2. Pastikan customerProfiles ada (karena semua user minimal punya ini)
+        await tx.insert(customerProfiles)
+          .values({ clerkId: clerkId })
+          .onConflictDoNothing()
 
-          // 3. Sync ke photographer_profiles (HANYA UPDATE jika sudah ada)
+        // 3. Sync ke photographer_profiles (HANYA UPDATE jika sudah ada dan username ada)
+        if (username) {
           await tx.update(photographerProfiles)
             .set({
               username: username,
               updatedAt: new Date()
             })
             .where(eq(photographerProfiles.clerkId, clerkId))
-        })
-      } catch (err) {
-        console.error('Error syncing username to DB:', err)
-      }
+        }
+      })
+    } catch (err) {
+      console.error('Error syncing user to DB:', err)
     }
   }
 

@@ -16,6 +16,7 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Switch } from "@/components/ui/switch"
 import { Skeleton } from "@/components/ui/skeleton"
+import { BackButton } from "@/components/ui/back-button"
 import {
   Dialog,
   DialogContent,
@@ -88,7 +89,7 @@ export function MitraEventsClient({ mitraId }: EventsClientProps) {
   const { data: response, isLoading } = useQuery({
     queryKey: ["mitra-events-list", mitraId],
     queryFn: async () => {
-      const res = await fetch(`/api/events?mitraId=${mitraId}&includeDrafts=true&limit=50`)
+      const res = await fetch(`/api/events?mitraId=${mitraId}&limit=50`)
       if (!res.ok) throw new Error("Gagal memuat data event")
       return res.json() as Promise<{ success: boolean; data: EventEntry[] }>
     },
@@ -115,10 +116,7 @@ export function MitraEventsClient({ mitraId }: EventsClientProps) {
 
   return (
     <div className="container mx-auto p-4 md:p-8 max-w-5xl animate-in fade-in duration-700">
-      <Link href="/dashboard" className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground font-bold text-sm mb-6 group">
-        <ArrowLeftIcon className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
-        Kembali ke Dashboard
-      </Link>
+      <BackButton href="/dashboard" label="Kembali ke Dashboard" />
 
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
         <div className="flex items-center gap-4">
@@ -170,7 +168,7 @@ export function MitraEventsClient({ mitraId }: EventsClientProps) {
                         <TentIcon className="w-12 h-12" />
                       </div>
                     )}
-                    <Badge className="absolute top-4 left-4 border-2 font-black bg-blue-500/10 text-blue-500 border-blue-500/20">
+                    <Badge className="absolute top-4 left-4 border-2 font-black bg-emerald-500/10 text-emerald-500 border-emerald-500/20">
                       PUBLISHED
                     </Badge>
                   </div>
@@ -256,11 +254,11 @@ function CreateEventDialog({ open, onOpenChange, onSuccess }: { open: boolean, o
     }
     if (formData.isOpenRecruitment) {
       if (!formData.deadlineRequest) {
-        setErrorMsg("Deadline request wajib diisi jika open recruitment.")
+        setErrorMsg("Deadline Pendaftaran wajib diisi secara lengkap (tanggal & jam) jika merekrut PG independen.")
         return false
       }
       if (formData.tanggalMulai && new Date(formData.deadlineRequest) >= new Date(formData.tanggalMulai)) {
-        setErrorMsg("Deadline request harus sebelum tanggal mulai event.")
+        setErrorMsg("Deadline Pendaftaran harus sebelum tanggal dan jam mulai event.")
         return false
       }
     }
@@ -420,17 +418,17 @@ function CreateEventDialog({ open, onOpenChange, onSuccess }: { open: boolean, o
                 <p className="text-xs text-muted-foreground font-medium">Buka bagian ini jika Anda ingin menugaskan fotografer yang sudah terikat kontrak tetap dengan Anda.</p>
                 <div className="grid grid-cols-2 gap-4 pt-2">
                   <div className="space-y-2">
-                    <Label className="font-bold text-xs text-muted-foreground">Fee per PG (Rp)</Label>
-                    <Input type="number" min={0} placeholder="150000" className="rounded-xl" value={formData.feePgTetap} onChange={e => setFormData(s => ({ ...s, feePgTetap: e.target.value }))} />
+                    <Label className="font-bold text-xs text-muted-foreground">Fee per Fotografer (Rp)</Label>
+                    <Input type="number" min={0} className="rounded-xl" value={formData.feePgTetap} onChange={e => setFormData(s => ({ ...s, feePgTetap: e.target.value }))} />
                   </div>
                   <div className="space-y-2">
                     <Label className="font-bold text-xs text-muted-foreground">Kuota</Label>
-                    <Input type="number" min={0} placeholder="2" className="rounded-xl" value={formData.kuotaPgTetap} onChange={e => setFormData(s => ({ ...s, kuotaPgTetap: Number(e.target.value) }))} />
+                    <Input type="number" min={0} className="rounded-xl" value={formData.kuotaPgTetap} onChange={e => setFormData(s => ({ ...s, kuotaPgTetap: Number(e.target.value) }))} />
                   </div>
                 </div>
                 {/* Note: In future we can add multi-select assigned PG here */}
                 <div className="mt-2 text-[10px] text-muted-foreground/60 font-bold">
-                  * Anda bisa langsung menugaskan nama PG spesifik setelah event berhasil dibuat.
+                  * Anda bisa langsung menugaskan nama Fotografer spesifik setelah event berhasil dibuat.
                 </div>
               </AccordionContent>
             </AccordionItem>
@@ -442,18 +440,18 @@ function CreateEventDialog({ open, onOpenChange, onSuccess }: { open: boolean, o
                   <div className="w-8 h-8 rounded-full bg-accent/10 flex items-center justify-center text-accent">
                     <CalendarIcon className="w-4 h-4" />
                   </div>
-                  <span className="text-base font-black">Open Recruitment (PG Independen)</span>
+                  <span className="text-base font-black">Open Recruitment</span>
                 </div>
               </AccordionTrigger>
-              <AccordionContent className="pb-6 space-y-4 pt-2">
-                <p className="text-xs text-muted-foreground font-medium">Aktifkan bagian ini jika Anda butuh tenaga tambahan dari Photographer luar (independen).</p>
+              <AccordionContent className="pb-6 space-y-4 pt-2 overflow-auto">
+                <p className="text-xs text-muted-foreground font-medium">Aktifkan bagian ini jika Anda butuh tenaga tambahan dari fotografer luar independen.</p>
                 <div className="grid grid-cols-2 gap-4 pt-2">
                   <div className="space-y-2">
-                    <Label className="font-bold text-xs text-muted-foreground">Fee per PG (Rp)</Label>
-                    <Input type="number" min={0} placeholder="200000" className="rounded-xl" value={formData.feePgPerEvent} onChange={e => setFormData(s => ({ ...s, feePgPerEvent: e.target.value }))} />
+                    <Label className="font-bold text-xs text-muted-foreground">Fee per Fotografer (Rp)</Label>
+                    <Input type="number" min={0} className="rounded-xl" value={formData.feePgPerEvent} onChange={e => setFormData(s => ({ ...s, feePgPerEvent: e.target.value }))} />
                   </div>
                   <div className="space-y-2">
-                    <Label className="font-bold text-xs text-muted-foreground">Kuota PG Open</Label>
+                    <Label className="font-bold text-xs text-muted-foreground">Kuota Fotografer Open</Label>
                     <Input type="number" min={0} placeholder="3" className="rounded-xl" value={formData.kuotaPgPerEvent} onChange={e => {
                       const val = Number(e.target.value);
                       setFormData(s => ({
@@ -465,15 +463,22 @@ function CreateEventDialog({ open, onOpenChange, onSuccess }: { open: boolean, o
                   </div>
                 </div>
 
-                {formData.kuotaPgPerEvent > 0 && (
-                  <div className="space-y-2 pt-4 border-t border-border/50 animate-in fade-in slide-in-from-top-2">
-                    <Label className="font-bold text-foreground flex items-center gap-2">
-                      Deadline Pendaftaran <span className="text-rose-500 font-bold">*</span>
-                    </Label>
-                    <Input type="datetime-local" className="rounded-xl" value={formData.deadlineRequest} onChange={e => setFormData(s => ({ ...s, deadlineRequest: e.target.value }))} />
-                    <p className="text-[10px] text-muted-foreground font-medium">Halaman rekrutmen akan ditutup otomatis setelah melewati waktu ini.</p>
+                <div
+                  className={`grid transition-all duration-300 ease-in-out ${formData.kuotaPgPerEvent > 0
+                    ? "grid-rows-[1fr] opacity-100 pt-4 border-t border-border/50"
+                    : "grid-rows-[0fr] opacity-0 pt-0 border-transparent"
+                    }`}
+                >
+                  <div className="overflow-hidden">
+                    <div className="space-y-2">
+                      <Label className="font-bold text-foreground flex items-center gap-2">
+                        Deadline Pendaftaran <span className="text-rose-500 font-bold">*</span>
+                      </Label>
+                      <Input type="datetime-local" className="rounded-xl" value={formData.deadlineRequest} onChange={e => setFormData(s => ({ ...s, deadlineRequest: e.target.value }))} />
+                      <p className="text-[10px] text-muted-foreground font-medium">Halaman rekrutmen akan ditutup otomatis setelah melewati waktu ini.</p>
+                    </div>
                   </div>
-                )}
+                </div>
               </AccordionContent>
             </AccordionItem>
           </Accordion>

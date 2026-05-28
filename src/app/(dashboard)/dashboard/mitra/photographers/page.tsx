@@ -18,6 +18,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Skeleton } from "@/components/ui/skeleton"
+import { BackButton } from "@/components/ui/back-button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
@@ -42,8 +43,6 @@ interface MitraPhotographerEntry {
   invitationStatus: string
   tanggalMulai: string | null
   tanggalSelesai: string | null
-  mitraPercent: number | null
-  photographerPercent: number | null
   minimumFeePerEvent: number | null
 }
 
@@ -52,10 +51,7 @@ export default function MitraPhotographersPage() {
 
   return (
     <div className="container mx-auto p-4 md:p-8 max-w-5xl animate-in fade-in duration-700">
-      <Link href="/dashboard" className="inline-flex items-center gap-2 text-muted-foreground hover:text-primary font-bold text-sm mb-6 group">
-        <ArrowLeftIcon className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
-        Kembali ke Dashboard
-      </Link>
+      <BackButton href="/dashboard" label="Kembali ke Dashboard" />
 
       <div className="flex items-center gap-4 mb-8">
         <div className="w-14 h-14 bg-primary/10 text-primary rounded-2xl flex items-center justify-center">
@@ -169,18 +165,10 @@ function AnggotaTetapTab() {
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-4 my-6 p-4 bg-muted/50 rounded-2xl border border-border/40">
-              <div>
-                <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-1">Bagi Hasil</div>
-                <div className="font-bold text-foreground text-sm">
-                  {pg.photographerPercent ?? 0}% PG / {pg.mitraPercent ?? 0}% Mitra
-                </div>
-              </div>
-              <div>
-                <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-1">Min. Fee</div>
-                <div className="font-bold text-foreground text-sm">
-                  Rp {(pg.minimumFeePerEvent ?? 0).toLocaleString("id-ID")}
-                </div>
+            <div className="my-6 p-4 bg-muted/50 rounded-2xl border border-border/40">
+              <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-1">Min. Fee (Take Home Pay PG)</div>
+              <div className="font-bold text-foreground text-sm">
+                Rp {(pg.minimumFeePerEvent ?? 0).toLocaleString("id-ID")}
               </div>
             </div>
 
@@ -258,8 +246,6 @@ function UndangFotograferTab() {
   const queryClient = useQueryClient()
   const [formData, setFormData] = useState({
     username: "",
-    mitraPercent: 20,
-    photographerPercent: 80,
     minimumFeePerEvent: 500000,
     tanggalMulai: "",
     tanggalSelesai: "",
@@ -270,8 +256,7 @@ function UndangFotograferTab() {
   const [searchUsername, setSearchUsername] = useState("")
   const [foundPg, setFoundPg] = useState<{ id: string; nama: string; avatarUrl: string; baseMinimumFee: number } | null>(null)
 
-  // Validasi % 
-  const isPercentError = (formData.mitraPercent + formData.photographerPercent) !== 100
+
 
   const inviteMutation = useMutation({
     mutationFn: async (data: typeof formData) => {
@@ -280,8 +265,6 @@ function UndangFotograferTab() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           username: data.username,
-          mitraPercent: data.mitraPercent,
-          photographerPercent: data.photographerPercent,
           minimumFeePerEvent: data.minimumFeePerEvent,
           tanggalMulai: new Date(data.tanggalMulai).toISOString(),
           tanggalSelesai: new Date(data.tanggalSelesai).toISOString(),
@@ -297,8 +280,6 @@ function UndangFotograferTab() {
       queryClient.invalidateQueries({ queryKey: ["mitra-photographers-list"] })
       setFormData({
         username: "",
-        mitraPercent: 20,
-        photographerPercent: 80,
         minimumFeePerEvent: 500000,
         tanggalMulai: "",
         tanggalSelesai: "",
@@ -355,7 +336,6 @@ function UndangFotograferTab() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    if (isPercentError) return
     if (!foundPg) {
       toast.error("Silakan cari dan pilih fotografer yang valid terlebih dahulu")
       return
@@ -413,40 +393,7 @@ function UndangFotograferTab() {
             )}
           </div>
 
-          <div className="grid grid-cols-2 gap-6 p-5 bg-primary/5 border border-primary/20 rounded-2xl">
-            <div className="space-y-2">
-              <Label className="font-bold text-foreground">Komisi Mitra (%)</Label>
-              <Input
-                type="number"
-                min={0} max={100}
-                required
-                className="rounded-xl border-border/60 bg-background text-foreground"
-                value={formData.mitraPercent}
-                onChange={(e) => {
-                  const val = Number(e.target.value)
-                  setFormData(s => ({ ...s, mitraPercent: val, photographerPercent: 100 - val }))
-                }}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label className="font-bold text-foreground">Komisi Fotografer (%)</Label>
-              <Input
-                type="number"
-                min={0} max={100}
-                required
-                className="rounded-xl border-border/60 bg-background text-foreground"
-                value={formData.photographerPercent}
-                onChange={(e) => {
-                  const val = Number(e.target.value)
-                  setFormData(s => ({ ...s, photographerPercent: val, mitraPercent: 100 - val }))
-                }}
-              />
-            </div>
-            {isPercentError && <p className="col-span-2 text-xs font-bold text-destructive text-center">Total persentase harus 100%.</p>}
-            <p className="col-span-2 text-xs text-muted-foreground font-medium tracking-tight">
-              *Persentase di atas dihitung dari sisa pendapatan setelah dipotong biaya layanan platform (10%).
-            </p>
-          </div>
+
 
           <div className="space-y-2">
             <Label htmlFor="minFee" className="font-bold text-foreground">Minimum Fee per Event (Rp)</Label>
@@ -503,7 +450,7 @@ function UndangFotograferTab() {
           <Button
             type="submit"
             className="w-full rounded-2xl bg-primary hover:bg-primary/90 text-primary-foreground font-bold py-6 text-base cursor-pointer disabled:cursor-not-allowed disabled:opacity-50"
-            disabled={isPercentError || inviteMutation.isPending}
+            disabled={inviteMutation.isPending}
           >
             {inviteMutation.isPending ? "Mengirim Undangan..." : "Kirim Undangan MoU"}
           </Button>

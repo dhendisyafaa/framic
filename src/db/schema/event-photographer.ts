@@ -57,11 +57,8 @@ export const eventPhotographers = pgTable("event_photographers", {
 
   // ---------------------------------------------------------------------------
   // Terms per-event — hanya untuk PG per-event
-  // mitraPercent + photographerPercent = 100 (yang sisanya ke platform)
+  // Gaji PG ditentukan di event.fee_pg_per_event
   // ---------------------------------------------------------------------------
-
-  mitraPercent: real("mitra_percent"),
-  photographerPercent: real("photographer_percent"),
 
   // ---------------------------------------------------------------------------
   // E-sign MoU per-event — hanya untuk PG per-event (MVP: metadata saja)

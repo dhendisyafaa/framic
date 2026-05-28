@@ -45,7 +45,7 @@ export function EventCard({ event, showRecruitmentInfo = false, isPhotographer =
         )}
 
         {event.isOpenRecruitment && (
-          <div className="absolute top-4 left-4 bg-primary text-white text-[10px] font-bold uppercase tracking-widest px-3 py-1 rounded-full shadow-lg">
+          <div className="absolute top-4 left-4 bg-primary text-primary-foreground text-[10px] font-bold uppercase tracking-widest px-3 py-1 rounded-full shadow-lg">
             Open Recruitment
           </div>
         )}
@@ -73,7 +73,7 @@ export function EventCard({ event, showRecruitmentInfo = false, isPhotographer =
               <div className="flex items-center justify-between text-sm">
                 <div className="flex items-center gap-2 text-muted-foreground">
                   <Users className="w-3.5 h-3.5 text-muted-foreground" />
-                  <span>Sisa Slot PG</span>
+                  <span>Sisa Slot</span>
                 </div>
                 <span className="font-bold text-primary">{slotsLeft} Posisi</span>
               </div>
@@ -96,8 +96,8 @@ export function EventCard({ event, showRecruitmentInfo = false, isPhotographer =
           <RequestEventButton eventId={event.id} isPhotographer={isPhotographer} />
         ) : (
           <Link href={`/events/${event.id}`} className="w-full">
-            <Button variant="outline" className="w-full group-hover:bg-primary group-hover:text-white transition-all cursor-pointer">
-              {showRecruitmentInfo ? "Hubungi Mitra" : "Lihat Detail"}
+            <Button variant="outline" className="w-full group-hover:bg-primary group-hover:text-primary-foreground transition-all cursor-pointer">
+              {showRecruitmentInfo ? "Gabung Event" : "Lihat Detail"}
             </Button>
           </Link>
         )}
