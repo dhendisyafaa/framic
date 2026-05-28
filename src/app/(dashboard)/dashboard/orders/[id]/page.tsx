@@ -1,6 +1,6 @@
 "use client"
 
-import { use, useState } from "react"
+import { use, useState, useEffect } from "react"
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { useUser } from "@clerk/nextjs"
 import { OrderDetail } from "@/types"
@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { BackButton } from "@/components/ui/back-button"
 import {
   CalendarIcon,
   MapPinIcon,
@@ -22,6 +23,7 @@ import {
   ChevronRight,
   EyeIcon,
   MessageSquare,
+  ClockIcon,
 } from "lucide-react"
 import { format } from "date-fns"
 import { id as localeId } from "date-fns/locale"
@@ -123,10 +125,7 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
     <>
       <div className="container mx-auto p-4 md:p-8 animate-in fade-in slide-in-from-bottom-2 duration-700 max-w-6xl">
         {/* Back Button */}
-        <Link href="/dashboard/orders" className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground font-bold text-xs mb-8 group bg-card px-4 py-2 rounded-full border border-muted shadow-sm transition-all">
-          <ArrowLeftIcon className="w-3.5 h-3.5 group-hover:-translate-x-1 transition-transform" />
-          Daftar Order
-        </Link>
+        <BackButton href="/dashboard/orders" label="Daftar Order" />
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Kolom Kiri: Detil Order */}
@@ -144,7 +143,9 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
                     <span className="text-[9px] font-bold text-[#D1CDC7] uppercase tracking-[0.2em] bg-white/5 px-3 py-1 rounded-full">ID: #{order.id.slice(0, 8)}</span>
                   </div>
                   <CardTitle className="text-3xl md:text-4xl font-medium tracking-[-0.02em]">
-                    {order.package?.namaPaket || "Sesi Fotografi Privat"}
+                    {order.orderType === "event"
+                      ? `Penugasan Event: ${order.event?.namaEvent || "Event Mitra"}`
+                      : (order.package?.namaPaket || "Sesi Fotografi Privat")}
                   </CardTitle>
                 </div>
               </CardHeader>
@@ -156,6 +157,20 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
                       <CalendarIcon className="w-3.5 h-3.5 text-accent" /> Detail Sesi
                     </h3>
                     <div className="space-y-4">
+                      {order.orderType === "event" && order.event && (
+                        <div className="flex items-start gap-4">
+                          <div className="w-9 h-9 rounded-full bg-muted flex items-center justify-center text-accent flex-shrink-0 border border-muted/50">
+                            <CameraIcon className="w-4 h-4" />
+                          </div>
+                          <div>
+                            <div className="text-[9px] font-bold text-muted-foreground uppercase mb-0.5">Nama Event</div>
+                            <div className="font-bold text-foreground text-sm leading-tight">{order.event.namaEvent}</div>
+                            {order.event.deskripsi && (
+                              <p className="text-xs text-muted-foreground mt-1 font-medium leading-relaxed">{order.event.deskripsi}</p>
+                            )}
+                          </div>
+                        </div>
+                      )}
                       <div className="flex items-start gap-4">
                         <div className="w-9 h-9 rounded-full bg-muted flex items-center justify-center text-accent flex-shrink-0 border border-muted/50">
                           <CalendarIcon className="w-4 h-4" />
@@ -180,7 +195,7 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
                   {/* Partner Terlibat */}
                   <div className="space-y-6">
                     <h3 className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest flex items-center gap-2 border-b border-muted/50 pb-2">
-                      <MessageSquare className="w-3.5 h-3.5 text-accent" /> {isCustomer ? "Fotografer" : "Kustomer"}
+                      <MessageSquare className="w-3.5 h-3.5 text-accent" /> {isCustomer ? "Fotografer" : (order.orderType === "event" ? "Mitra" : "Kustomer")}
                     </h3>
                     <div className="flex items-center gap-4 p-4 rounded-[24px] border border-muted bg-background">
                       <Avatar className="w-12 h-12 bg-muted border border-muted/50 rounded-full text-foreground font-bold text-base uppercase">
@@ -198,7 +213,7 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
                           className="p-0 h-auto text-[9px] font-bold uppercase text-accent tracking-wider hover:no-underline flex items-center gap-1 cursor-pointer mt-0.5"
                           onClick={() => setIsChatOpen(true)}
                         >
-                          Chat ke {isCustomer ? "Fotografer" : "Kustomer"} <ChevronRight className="w-3 h-3" />
+                          Chat ke {isCustomer ? "Fotografer" : (order.orderType === "event" ? "Mitra" : "Kustomer")} <ChevronRight className="w-3 h-3" />
                         </Button>
                       </div>
                     </div>
@@ -303,8 +318,13 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
           {/* Kolom Kanan: Actions & Payment Summary */}
           <div className="space-y-8">
             <Card className="border-muted bg-card shadow-sm rounded-[32px] overflow-hidden sticky top-24">
-              <CardHeader className="p-8 bg-[#141413] text-[#FCFBFA] border-b border-muted">
-                <h3 className="text-[9px] font-bold text-[#D1CDC7] uppercase tracking-[0.2em] mb-1">Rincian Pembayaran</h3>
+              <CardHeader className="p-8 bg-[#141413] text-[#FCFBFA] border-b border-muted flex flex-col gap-2">
+                <div className="flex justify-between items-center w-full">
+                  <h3 className="text-[9px] font-bold text-[#D1CDC7] uppercase tracking-[0.2em]">Rincian Pembayaran</h3>
+                  {status === "confirmed" && order.confirmedAt && (
+                    <PaymentCountdown confirmedAt={order.confirmedAt} />
+                  )}
+                </div>
                 <div className="text-3xl font-medium tracking-tight text-white">Rp {order.totalHarga.toLocaleString("id-ID")}</div>
               </CardHeader>
               <CardContent className="p-8 space-y-8">
@@ -408,13 +428,11 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
                   {isCustomer && (
                     <div className="grid gap-3">
                       {status === "confirmed" && (
-                        <Button
-                          className="w-full rounded-full bg-primary hover:bg-primary/90 text-primary-foreground font-bold py-6 text-base shadow-sm cursor-pointer"
+                        <BayarDpButton
+                          confirmedAt={order.confirmedAt!}
                           onClick={() => actionMutation.mutate({ path: `payments/${orderId}/dp`, method: "POST" })}
                           disabled={actionMutation.isPending}
-                        >
-                          <CreditCardIcon className="mr-3 w-5 h-5" /> Bayar Down Payment
-                        </Button>
+                        />
                       )}
                       {status === "delivered" && order.payment?.statusPelunasan !== "paid" && (
                         <Button
@@ -462,7 +480,7 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
         onClose={() => setIsChatOpen(false)}
         orderId={orderId}
         currentUserClerkId={user?.id}
-        partnerName={isCustomer ? (order.photographer?.nama ?? "Fotografer") : (order.customerName ?? "Kustomer")}
+        partnerName={isCustomer ? (order.photographer?.nama ?? "Fotografer") : (order.customerName ?? (order.orderType === "event" ? "Mitra" : "Kustomer"))}
         partnerAvatarUrl={isCustomer ? order.photographer?.avatarUrl : order.customerAvatarUrl}
       />
     </>
@@ -499,3 +517,91 @@ function OrderDetailsSkeleton() {
     </div>
   )
 }
+
+function BayarDpButton({ confirmedAt, onClick, disabled }: { confirmedAt: Date | string; onClick: () => void; disabled: boolean }) {
+  const [isExpired, setIsExpired] = useState(() => {
+    return new Date(confirmedAt).getTime() + 24 * 60 * 60 * 1000 < Date.now()
+  })
+
+  useEffect(() => {
+    if (isExpired) return
+    const expiryTime = new Date(confirmedAt).getTime() + 24 * 60 * 60 * 1000
+    const timeUntilExpiry = expiryTime - Date.now()
+    if (timeUntilExpiry <= 0) { setIsExpired(true); return }
+    const t = setTimeout(() => {
+      setIsExpired(true)
+      // Refresh halaman agar status order (yang sudah di-cancel oleh cron) ter-update
+      window.location.reload()
+    }, timeUntilExpiry)
+    return () => clearTimeout(t)
+  }, [confirmedAt, isExpired])
+
+  if (isExpired) {
+    return (
+      <div className="w-full rounded-full bg-muted border border-border text-muted-foreground font-bold py-4 text-sm text-center px-4">
+        Batas waktu pembayaran DP telah habis
+      </div>
+    )
+  }
+
+  return (
+    <Button
+      className="w-full rounded-full bg-primary hover:bg-primary/90 text-primary-foreground font-bold py-6 text-base shadow-sm cursor-pointer"
+      onClick={onClick}
+      disabled={disabled}
+    >
+      <CreditCardIcon className="mr-3 w-5 h-5" /> Bayar Uang Muka
+    </Button>
+  )
+}
+
+function PaymentCountdown({ confirmedAt }: { confirmedAt: Date | string }) {
+  const [timeLeft, setTimeLeft] = useState<string>("")
+
+  useEffect(() => {
+    if (!confirmedAt) return
+
+    const expiryTime = new Date(confirmedAt).getTime() + 24 * 60 * 60 * 1000
+
+    const calculateTimeLeft = () => {
+      const now = new Date().getTime()
+      const distance = expiryTime - now
+
+      if (distance < 0) {
+        return "Kedaluwarsa"
+      }
+
+      const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60))
+      const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60))
+      const seconds = Math.floor((distance % (1000 * 60)) / 1000)
+
+      return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`
+    }
+
+    setTimeLeft(calculateTimeLeft())
+
+    const interval = setInterval(() => {
+      const remaining = calculateTimeLeft()
+      setTimeLeft(remaining)
+      if (remaining === "Kedaluwarsa") {
+        clearInterval(interval)
+      }
+    }, 1000)
+
+    return () => clearInterval(interval)
+  }, [confirmedAt])
+
+  if (!timeLeft) return null
+
+  return (
+    <div className={cn("inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold border shrink-0",
+      timeLeft === "Kedaluwarsa"
+        ? "bg-destructive/10 text-destructive border-destructive/20"
+        : "bg-orange-500/10 text-orange-500 border-orange-500/20"
+    )}>
+      <ClockIcon className="w-3 h-3" />
+      {timeLeft === "Kedaluwarsa" ? "Kedaluwarsa" : `Sisa Waktu: ${timeLeft}`}
+    </div>
+  )
+}
+

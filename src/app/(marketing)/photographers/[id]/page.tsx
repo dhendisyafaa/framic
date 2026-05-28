@@ -1,21 +1,123 @@
+export const dynamic = "force-dynamic"
+
 import { CalendarView } from "@/components/features/calendar/calendar-view"
 import { Card, CardContent } from "@/components/ui/card"
 import { Star, MapPin, Camera, CheckCircle, ShieldCheck, Instagram, Globe, Clock, Users } from "lucide-react"
+import { PortfolioGallery } from "@/components/features/portfolio/portfolio-gallery"
 import { BookingButton } from "@/components/features/booking/booking-button"
 import Link from "next/link"
 import { notFound } from "next/navigation"
 import { cn } from "@/lib/utils"
-import { getBaseUrl } from "@/lib/api-url"
+import { db } from "@/db"
+import { photographerProfiles, packages, reviews, orders } from "@/db/schema"
+import { and, eq, sql } from "drizzle-orm"
+import { clerkClient } from "@clerk/nextjs/server"
 
-import { PortfolioGallery } from "@/components/features/portfolio/portfolio-gallery"
+async function getPhotographerDetail(username: string) {
+  try {
+    const [profile] = await db
+      .select()
+      .from(photographerProfiles)
+      .where(
+        and(
+          eq(photographerProfiles.username, username),
+          eq(photographerProfiles.verificationStatus, "verified")
+        )
+      )
+      .limit(1)
 
-async function getPhotographerDetail(id: string) {
-  const res = await fetch(`${getBaseUrl()}/api/photographers/${id}`, {
-    cache: 'no-store'
-  })
-  if (!res.ok) return null
-  const json = await res.json()
-  return json.success ? json.data : null
+    if (!profile) return null
+
+    const pgId = profile.id
+
+    // Fetch user info from Clerk
+    let nama = "Fotografer"
+    let avatarUrl = ""
+    try {
+      const clerk = await clerkClient()
+      const u = await clerk.users.getUser(profile.clerkId)
+      nama = `${u.firstName || ""} ${u.lastName || ""}`.trim() || "Fotografer"
+      avatarUrl = u.imageUrl
+    } catch (err) {
+      console.error("Failed to fetch photographer clerk info:", err)
+    }
+
+    // Fetch packages
+    const pgPackages = await db
+      .select({
+        id: packages.id,
+        namaPaket: packages.namaPaket,
+        deskripsi: packages.deskripsi,
+        harga: packages.harga,
+        durasiJam: packages.durasiJam,
+        jumlahFotoMin: packages.jumlahFotoMin,
+        includesEditing: packages.includesEditing,
+        kategori: packages.kategori,
+        isActive: packages.isActive,
+        bookingCount: sql<number>`cast(count(${orders.id}) as int)`
+      })
+      .from(packages)
+      .leftJoin(orders, eq(orders.paketId, packages.id))
+      .where(
+        and(
+          eq(packages.photographerId, pgId),
+          eq(packages.isActive, true)
+        )
+      )
+      .groupBy(packages.id)
+      .orderBy(packages.harga)
+
+    // Fetch reviews
+    const pgReviews = await db
+      .select()
+      .from(reviews)
+      .where(eq(reviews.photographerId, pgId))
+      .orderBy(sql`${reviews.createdAt} DESC`)
+      .limit(5)
+
+    // Enrich review customer names/avatars
+    const enrichedReviews = await Promise.all(
+      pgReviews.map(async (rev) => {
+        let customerName = "Customer"
+        let customerAvatarUrl = ""
+        try {
+          const clerk = await clerkClient()
+          const u = await clerk.users.getUser(rev.customerClerkId)
+          customerName = `${u.firstName || ""} ${u.lastName || ""}`.trim() || "Customer"
+          customerAvatarUrl = u.imageUrl
+        } catch (err) {
+          console.warn(`Failed to fetch review customer name for ${rev.customerClerkId}:`, err)
+        }
+        return {
+          ...rev,
+          customerName,
+          customerAvatarUrl,
+        }
+      })
+    )
+
+    // Enforce public requirements (bio, username, package, and portfolio must exist)
+    if (
+      !profile.bio ||
+      !profile.username ||
+      !profile.portfolioUrls ||
+      profile.portfolioUrls.length === 0 ||
+      pgPackages.length === 0
+    ) {
+      return null
+    }
+
+    return {
+      ...profile,
+      nama,
+      avatarUrl,
+      packages: pgPackages,
+      recentReviews: enrichedReviews,
+    }
+  } catch (err) {
+    console.error("Failed to query photographer detail:", err)
+    return null
+  }
 }
 
 export default async function PhotographerDetailPage({
@@ -27,6 +129,16 @@ export default async function PhotographerDetailPage({
   const pg = await getPhotographerDetail(pgId)
 
   if (!pg) {
+    notFound()
+  }
+
+  const isProfileComplete = 
+    pg.bio && 
+    pg.username && 
+    pg.packages && pg.packages.length > 0 && 
+    pg.portfolioUrls && pg.portfolioUrls.length > 0
+
+  if (!isProfileComplete) {
     notFound()
   }
 
@@ -142,7 +254,7 @@ export default async function PhotographerDetailPage({
             <div className="flex flex-col gap-6 h-full">
               <h2 className="text-2xl font-bold tracking-tight text-foreground">Cek Jadwal</h2>
               <div className="bg-card rounded-[2rem] border border-border/50 shadow-sm p-2">
-                <CalendarView photographerId={pgId} />
+                <CalendarView photographerId={pg.id} />
               </div>
             </div>
           </div>

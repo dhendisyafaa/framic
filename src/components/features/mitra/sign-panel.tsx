@@ -106,7 +106,7 @@ export function SignPanel({
               <div className="text-xs font-bold text-muted-foreground uppercase">Fotografer</div>
               <div className="font-black text-foreground">{photographerNama}</div>
               {photographerSignedAt && (
-                <div className="text-xs text-blue-600 font-medium mt-1">
+                <div className="text-xs text-blue-500 font-medium mt-1">
                   ✓ {formatSignDate(photographerSignedAt)}
                 </div>
               )}
@@ -124,7 +124,7 @@ export function SignPanel({
               <div className="text-xs font-bold text-muted-foreground uppercase">Mitra</div>
               <div className="font-black text-foreground">{mitraName}</div>
               {mitraSignedAt && (
-                <div className="text-xs text-blue-600 font-medium mt-1">
+                <div className="text-xs text-blue-500 font-medium mt-1">
                   ✓ {formatSignDate(mitraSignedAt)}
                 </div>
               )}
@@ -139,11 +139,11 @@ export function SignPanel({
 
         {/* Banner: kedua pihak sudah sign */}
         {bothSigned && (
-          <div className="flex items-center gap-3 p-4 rounded-2xl bg-blue-50 border-2 border-blue-200">
-            <CheckCircle2Icon className="w-6 h-6 text-blue-600 shrink-0" />
+          <div className="flex items-center gap-3 p-4 rounded-2xl bg-blue-500/10 border-2 border-blue-500/20">
+            <CheckCircle2Icon className="w-6 h-6 text-blue-500 shrink-0" />
             <div>
-              <div className="font-black text-blue-800">Kontrak Aktif</div>
-              <div className="text-sm text-blue-700 font-medium">
+              <div className="font-black text-blue-500">Kontrak Aktif</div>
+              <div className="text-sm text-blue-500 font-medium">
                 Kedua pihak telah menandatangani kontrak ini.
               </div>
             </div>
@@ -152,17 +152,17 @@ export function SignPanel({
 
         {/* Sukses pesan setelah sign */}
         {successMessage && !bothSigned && (
-          <div className="flex items-center gap-3 p-4 rounded-2xl bg-blue-50 border border-blue-200">
-            <CheckCircle2Icon className="w-5 h-5 text-blue-600 shrink-0" />
-            <p className="text-sm font-medium text-blue-800">{successMessage}</p>
+          <div className="flex items-center gap-3 p-4 rounded-2xl bg-blue-500/10 border border-blue-500/20">
+            <CheckCircle2Icon className="w-5 h-5 text-blue-500 shrink-0" />
+            <p className="text-sm font-medium text-blue-500">{successMessage}</p>
           </div>
         )}
 
         {/* Info: invitation harus accepted */}
         {invitationStatus !== "accepted" && (
-          <div className="flex items-center gap-3 p-4 rounded-2xl bg-amber-50 border border-amber-200">
-            <AlertCircleIcon className="w-5 h-5 text-amber-600 shrink-0" />
-            <p className="text-sm font-medium text-amber-800">
+          <div className="flex items-center gap-3 p-4 rounded-2xl bg-amber-500/10 border border-amber-500/20">
+            <AlertCircleIcon className="w-5 h-5 text-amber-500 shrink-0" />
+            <p className="text-sm font-medium text-amber-500">
               Kontrak baru bisa ditandatangani setelah kedua pihak menyetujui terms (invitation_status = accepted).
             </p>
           </div>
@@ -193,7 +193,7 @@ export function SignPanel({
             </Button>
 
             {signMutation.isError && (
-              <p className="text-sm text-rose-600 font-bold text-center">
+              <p className="text-sm text-rose-500 font-bold text-center">
                 {(signMutation.error as Error).message}
               </p>
             )}
@@ -202,9 +202,9 @@ export function SignPanel({
 
         {/* Sudah sign */}
         {alreadySigned && !bothSigned && (
-          <div className="p-4 rounded-2xl bg-blue-50 border border-blue-200 text-center">
-            <CheckCircle2Icon className="w-6 h-6 text-blue-600 mx-auto mb-2" />
-            <p className="text-sm font-bold text-blue-800">
+          <div className="p-4 rounded-2xl bg-blue-500/10 border border-blue-500/20 text-center">
+            <CheckCircle2Icon className="w-6 h-6 text-blue-500 mx-auto mb-2" />
+            <p className="text-sm font-bold text-blue-500">
               Anda sudah menandatangani. Menunggu pihak lain.
             </p>
           </div>

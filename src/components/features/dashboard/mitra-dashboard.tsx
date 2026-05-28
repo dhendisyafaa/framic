@@ -1,7 +1,7 @@
 "use client"
 
 // 1. React / Next.js
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 
@@ -34,6 +34,7 @@ import {
   DollarSignIcon,
   UserPlusIcon,
   BriefcaseIcon,
+  Coins,
 } from "lucide-react"
 
 // ---------------------------------------------------------------------------
@@ -47,8 +48,6 @@ interface MitraPhotographerEntry {
   invitationStatus: string
   tanggalMulai: string | null
   tanggalSelesai: string | null
-  mitraPercent: number | null
-  photographerPercent: number | null
   minimumFeePerEvent: number | null
 }
 
@@ -68,7 +67,7 @@ interface MitraDashboardProps {
   initialStats: {
     fixedMembersCount: number
     perEventProCount: number
-    totalEarnings: number
+    totalExpenditure: number
     topPerformers: Array<{
       id: string
       nama: string
@@ -84,6 +83,8 @@ interface MitraDashboardProps {
 export function MitraDashboard({ clerkId, mitraId, initialStats }: MitraDashboardProps) {
   const pathname = usePathname()
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
+
+  const [activeWidgetTab, setActiveWidgetTab] = useState<"events" | "tagihan">("events")
 
   // Query 1 — Profil Mitra untuk mendapatkan nama organisasi
   const { data: mitraInfoResp } = useQuery({
@@ -109,23 +110,45 @@ export function MitraDashboard({ clerkId, mitraId, initialStats }: MitraDashboar
   const { data: eventsResp, isLoading: isLoadingEvents } = useQuery({
     queryKey: ["mitra-events", mitraId],
     queryFn: async () => {
-      const res = await fetch(`/api/events?mitraId=${mitraId}&includeDrafts=true&limit=50`)
+      const res = await fetch(`/api/events?mitraId=${mitraId}&limit=50`)
       if (!res.ok) throw new Error("Gagal memuat data event")
       return res.json() as Promise<{ success: boolean; data: MitraEventEntry[] }>
     },
   })
 
-  const isLoading = isLoadingPg || isLoadingEvents
+  // Query 4 — List semua order milik mitra untuk mendeteksi tagihan pending
+  const { data: ordersResp, isLoading: isLoadingOrders } = useQuery({
+    queryKey: ["mitra-orders", clerkId],
+    queryFn: async () => {
+      const res = await fetch("/api/orders?limit=50")
+      if (!res.ok) throw new Error("Gagal memuat data order")
+      return res.json() as Promise<{ success: boolean; data: any[] }>
+    },
+  })
+
+  const isLoading = isLoadingPg || isLoadingEvents || isLoadingOrders
 
   if (isLoading) return <MitraDashboardSkeleton />
 
   const photographers = photographersResp?.data ?? []
   const allEvents = eventsResp?.data ?? []
+  const ordersList = ordersResp?.data ?? []
   const studioName = mitraInfoResp?.data?.namaOrganisasi || "Partner Studio"
 
+  // Filter pending payments:
+  // DP: status === "confirmed" && belum bayar DP && belum kedaluwarsa 24 jam
+  // Pelunasan: status === "delivered" && paymentStatusPelunasan !== "paid"
+  const now = Date.now()
+  const pendingPayments = ordersList.filter(o => {
+    if (o.status === "confirmed" && o.payment?.statusDp !== "paid") {
+      if (!o.confirmedAt) return false
+      const expiryTime = new Date(o.confirmedAt).getTime() + 24 * 60 * 60 * 1000
+      return expiryTime > now
+    }
+    return o.status === "delivered" && o.payment?.statusPelunasan !== "paid"
+  })
+
   // Derive status counts
-  const eventPublished = allEvents.filter(e => e.isPublished).length
-  const eventDraft = allEvents.filter(e => !e.isPublished).length
   const recentEvents = allEvents.slice(0, 3)
 
   const formatCurrency = (amount: number) => {
@@ -298,17 +321,17 @@ export function MitraDashboard({ clerkId, mitraId, initialStats }: MitraDashboar
             <Card className="border-border/60 bg-card shadow-sm rounded-[32px] overflow-hidden group hover:shadow-md transition-all duration-300">
               <CardContent className="p-6 flex flex-col justify-between h-full min-h-[140px]">
                 <div className="flex items-center justify-between">
-                  <span className="text-[10px] font-bold text-muted-foreground uppercase">Proyeksi Pendapatan</span>
+                  <span className="text-[10px] font-bold text-muted-foreground uppercase">Total Pengeluaran</span>
                   <div className="p-2 bg-accent/10 text-accent rounded-xl">
-                    <TrendingUpIcon className="w-4 h-4" />
+                    <DollarSignIcon className="w-4 h-4" />
                   </div>
                 </div>
                 <div className="mt-4">
                   <h3 className="text-3xl font-bold text-foreground tracking-tight truncate">
-                    {formatCurrency(initialStats.totalEarnings)}
+                    {formatCurrency(initialStats.totalExpenditure)}
                   </h3>
                   <p className="text-[10px] text-muted-foreground font-medium mt-2">
-                    Total bagi hasil komisi mitra terkonfirmasi
+                    Total pengeluaran untuk layanan fotografer
                   </p>
                 </div>
               </CardContent>
@@ -318,7 +341,7 @@ export function MitraDashboard({ clerkId, mitraId, initialStats }: MitraDashboar
             <Card className="border-border/60 bg-card shadow-sm rounded-[32px] overflow-hidden group hover:shadow-md transition-all duration-300">
               <CardContent className="p-6 flex flex-col justify-between h-full min-h-[140px]">
                 <div className="flex items-center justify-between">
-                  <span className="text-[10px] font-bold text-muted-foreground uppercase">Status Event</span>
+                  <span className="text-[10px] font-bold text-muted-foreground uppercase">Total Event</span>
                   <div className="p-2 bg-secondary text-secondary-foreground rounded-xl border border-border">
                     <TentIcon className="w-4 h-4" />
                   </div>
@@ -329,16 +352,7 @@ export function MitraDashboard({ clerkId, mitraId, initialStats }: MitraDashboar
                   </h3>
                   <div className="flex items-center gap-4 mt-2 text-[10px] text-muted-foreground font-medium">
                     <span className="flex items-center gap-1">
-                      <Badge variant="outline" className="rounded-full px-2 py-0 h-4 text-[9px] bg-primary/5 text-primary border-primary/20">
-                        {eventPublished}
-                      </Badge>{" "}
-                      Published
-                    </span>
-                    <span className="flex items-center gap-1">
-                      <Badge variant="outline" className="rounded-full px-2 py-0 h-4 text-[9px] bg-muted text-muted-foreground border-border">
-                        {eventDraft}
-                      </Badge>{" "}
-                      Draft
+                      Event Aktif Keseluruhan
                     </span>
                   </div>
                 </div>
@@ -350,66 +364,157 @@ export function MitraDashboard({ clerkId, mitraId, initialStats }: MitraDashboar
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
             {/* Left Column: Active Events & Recruitment */}
             <div className="lg:col-span-7 space-y-8">
-              {/* Active Events Widget */}
+              {/* Active Events & Billings Tabbed Widget */}
               <section>
-                <div className="flex justify-between items-center mb-4">
-                  <h3 className="text-lg font-bold text-foreground">Daftar Event Terkini</h3>
-                  <Link href="/dashboard/mitra/events" className="text-xs font-bold text-primary hover:underline flex items-center gap-0.5">
-                    Lihat Semua <ChevronRightIcon className="w-3.5 h-3.5" />
-                  </Link>
-                </div>
-
-                <div className="space-y-4">
-                  {allEvents.length === 0 ? (
-                    <div className="bg-card rounded-[32px] p-8 border border-border/60 border-dashed text-center flex flex-col items-center justify-center min-h-[200px]">
-                      <CalendarIcon className="w-8 h-8 text-muted-foreground/30 mb-3" />
-                      <p className="text-xs text-muted-foreground font-medium">Belum ada event yang terdaftar.</p>
-                      <Link href="/dashboard/mitra/events?create=true" className="mt-4">
-                        <Button variant="outline" size="sm" className="rounded-full font-bold text-xs h-9 border-border/60 hover:bg-muted/40">
-                          Buat Event Pertama
-                        </Button>
-                      </Link>
-                    </div>
-                  ) : (
-                    recentEvents.map((event) => (
-                      <div
-                        key={event.id}
-                        className="flex items-center justify-between p-4 rounded-[24px] bg-card border border-border/60 shadow-sm hover:shadow-md transition-all duration-300"
-                      >
-                        <div className="flex items-center gap-4 min-w-0">
-                          <div className="w-12 h-12 rounded-[16px] bg-muted overflow-hidden flex items-center justify-center shrink-0 border border-border/40 relative">
-                            {event.coverImageUrl ? (
-                              <img src={event.coverImageUrl} alt={event.namaEvent} className="w-full h-full object-cover" />
-                            ) : (
-                              <TentIcon className="w-5 h-5 text-muted-foreground/40" />
-                            )}
-                          </div>
-                          <div className="min-w-0">
-                            <h4 className="font-bold text-foreground text-xs truncate max-w-[200px] sm:max-w-[280px]">
-                              {event.namaEvent}
-                            </h4>
-                            <p className="text-[10px] text-muted-foreground font-medium mt-0.5 flex items-center gap-1">
-                              <MapPinIcon className="w-3 h-3 text-accent shrink-0" />
-                              <span className="truncate">{event.lokasi}</span>
-                            </p>
-                          </div>
-                        </div>
-
-                        <div className="flex items-center gap-3 shrink-0">
-                          <div className="text-right hidden sm:block">
-                            <p className="text-[10px] font-bold text-foreground">{getDisplayDate(event.tanggalMulai)}</p>
-                            <p className="text-[9px] text-muted-foreground font-medium mt-0.5">Mulai Event</p>
-                          </div>
-                          <Link href={`/dashboard/mitra/events/${event.id}`}>
-                            <Button className="rounded-xl font-bold bg-primary hover:bg-primary/90 text-primary-foreground cursor-pointer text-xs h-8 px-3.5">
-                              Kelola <ChevronRightIcon className="w-3.5 h-3.5 ml-1" />
-                            </Button>
-                          </Link>
-                        </div>
-                      </div>
-                    ))
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+                  <div className="flex bg-muted/40 p-1.5 rounded-full border border-border/50">
+                    <button
+                      onClick={() => setActiveWidgetTab("events")}
+                      className={cn(
+                        "px-4 py-1.5 rounded-full text-xs font-bold transition-all duration-300 cursor-pointer",
+                        activeWidgetTab === "events"
+                          ? "bg-card text-foreground shadow-sm"
+                          : "text-muted-foreground hover:text-foreground"
+                      )}
+                    >
+                      Daftar Event
+                    </button>
+                    <button
+                      onClick={() => setActiveWidgetTab("tagihan")}
+                      className={cn(
+                        "px-4 py-1.5 rounded-full text-xs font-bold transition-all duration-300 flex items-center gap-2 relative cursor-pointer",
+                        activeWidgetTab === "tagihan"
+                          ? "bg-card text-foreground shadow-sm"
+                          : "text-muted-foreground hover:text-foreground"
+                      )}
+                    >
+                      Tagihan Pending
+                      {pendingPayments.length > 0 && (
+                        <span className="w-5 h-5 flex items-center justify-center text-[10px] font-black bg-rose-500 text-white rounded-full">
+                          {pendingPayments.length}
+                        </span>
+                      )}
+                    </button>
+                  </div>
+                  {activeWidgetTab === "events" && (
+                    <Link href="/dashboard/mitra/events" className="text-xs font-bold text-primary hover:underline flex items-center gap-0.5">
+                      Lihat Semua <ChevronRightIcon className="w-3.5 h-3.5" />
+                    </Link>
                   )}
                 </div>
+
+                {activeWidgetTab === "events" ? (
+                  <div className="space-y-4">
+                    {allEvents.length === 0 ? (
+                      <div className="bg-card rounded-[32px] p-8 border border-border/60 border-dashed text-center flex flex-col items-center justify-center min-h-[200px]">
+                        <CalendarIcon className="w-8 h-8 text-muted-foreground/30 mb-3" />
+                        <p className="text-xs text-muted-foreground font-medium">Belum ada event yang terdaftar.</p>
+                        <Link href="/dashboard/mitra/events?create=true" className="mt-4">
+                          <Button variant="outline" size="sm" className="rounded-full font-bold text-xs h-9 border-border/60 hover:bg-muted/40">
+                            Buat Event Pertama
+                          </Button>
+                        </Link>
+                      </div>
+                    ) : (
+                      recentEvents.map((event) => (
+                        <div
+                          key={event.id}
+                          className="flex items-center justify-between p-4 rounded-[24px] bg-card border border-border/60 shadow-sm hover:shadow-md transition-all duration-300"
+                        >
+                          <div className="flex items-center gap-4 min-w-0">
+                            <div className="w-12 h-12 rounded-[16px] bg-muted overflow-hidden flex items-center justify-center shrink-0 border border-border/40 relative">
+                              {event.coverImageUrl ? (
+                                <img src={event.coverImageUrl} alt={event.namaEvent} className="w-full h-full object-cover" />
+                              ) : (
+                                <TentIcon className="w-5 h-5 text-muted-foreground/40" />
+                              )}
+                            </div>
+                            <div className="min-w-0">
+                              <h4 className="font-bold text-foreground text-xs truncate max-w-[200px] sm:max-w-[280px]">
+                                {event.namaEvent}
+                              </h4>
+                              <p className="text-[10px] text-muted-foreground font-medium mt-0.5 flex items-center gap-1">
+                                <MapPinIcon className="w-3 h-3 text-accent shrink-0" />
+                                <span className="truncate">{event.lokasi}</span>
+                              </p>
+                            </div>
+                          </div>
+
+                          <div className="flex items-center gap-3 shrink-0">
+                            <div className="text-right hidden sm:block">
+                              <p className="text-[10px] font-bold text-foreground">{getDisplayDate(event.tanggalMulai)}</p>
+                              <p className="text-[9px] text-muted-foreground font-medium mt-0.5">Mulai Event</p>
+                            </div>
+                            <Link href={`/dashboard/mitra/events/${event.id}`}>
+                              <Button className="rounded-xl font-bold bg-primary hover:bg-primary/90 text-primary-foreground cursor-pointer text-xs h-8 px-3.5">
+                                Kelola <ChevronRightIcon className="w-3.5 h-3.5 ml-1" />
+                              </Button>
+                            </Link>
+                          </div>
+                        </div>
+                      ))
+                    )}
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {pendingPayments.length === 0 ? (
+                      <div className="bg-card rounded-[32px] p-8 border border-border/60 border-dashed text-center flex flex-col items-center justify-center min-h-[200px]">
+                        <Coins className="w-8 h-8 text-muted-foreground/30 mb-3 animate-bounce" />
+                        <p className="text-xs text-muted-foreground font-medium">Tidak ada tagihan pending.</p>
+                      </div>
+                    ) : (
+                      pendingPayments.map((order) => {
+                        const isDp = order.status === "confirmed"
+                        const amount = isDp ? order.payment?.jumlahDp : order.payment?.jumlahPelunasan
+                        const title = isDp ? "Pembayaran DP (50%)" : "Pelunasan (50%)"
+                        
+                        return (
+                          <div
+                            key={order.id}
+                            className="p-5 rounded-[24px] bg-card border border-border/60 shadow-sm hover:shadow-md transition-all duration-300 space-y-4"
+                          >
+                            <div className="flex items-start justify-between gap-4">
+                              <div className="flex items-center gap-3">
+                                <div className="w-10 h-10 bg-accent/15 text-accent rounded-full flex items-center justify-center shrink-0 border border-accent/10">
+                                  <Coins className="w-5 h-5" />
+                                </div>
+                                <div>
+                                  <div className="flex flex-wrap items-center gap-2">
+                                    <h4 className="font-bold text-foreground text-xs">
+                                      Menunggu {title}
+                                    </h4>
+                                    {isDp && order.confirmedAt && (
+                                      <PaymentCountdown confirmedAt={order.confirmedAt} />
+                                    )}
+                                  </div>
+                                  <p className="text-[10px] text-muted-foreground mt-1">
+                                    Event: <span className="font-semibold text-foreground">{order.event?.namaEvent || "Event Mitra"}</span>
+                                  </p>
+                                  <p className="text-[10px] text-muted-foreground">
+                                    Fotografer: <span className="font-semibold text-foreground">@{order.photographer?.username || "Fotografer"}</span>
+                                  </p>
+                                </div>
+                              </div>
+                              <div className="text-right">
+                                <span className="text-[10px] font-bold text-muted-foreground block uppercase">Jumlah</span>
+                                <span className="text-sm font-black text-accent block mt-0.5 animate-pulse">
+                                  {formatCurrency(amount || 0)}
+                                </span>
+                              </div>
+                            </div>
+                            <div className="flex justify-end gap-2 pt-3 border-t border-border/40">
+                              <Link href={`/dashboard/orders/${order.id}`}>
+                                <Button size="sm" className="rounded-xl font-bold bg-primary hover:bg-primary/90 text-primary-foreground cursor-pointer text-xs h-8 px-4">
+                                  Bayar Sekarang
+                                </Button>
+                              </Link>
+                            </div>
+                          </div>
+                        )
+                      })
+                    )}
+                  </div>
+                )}
               </section>
 
               {/* Open Recruitment Action Card */}
@@ -573,6 +678,56 @@ function MitraDashboardSkeleton() {
           </div>
         </div>
       </div>
+    </div>
+  )
+}
+
+function PaymentCountdown({ confirmedAt }: { confirmedAt: Date | string }) {
+  const [timeLeft, setTimeLeft] = useState<string>("")
+
+  useEffect(() => {
+    if (!confirmedAt) return
+
+    const expiryTime = new Date(confirmedAt).getTime() + 24 * 60 * 60 * 1000
+
+    const calculateTimeLeft = () => {
+      const now = new Date().getTime()
+      const distance = expiryTime - now
+
+      if (distance < 0) {
+        return "Kedaluwarsa"
+      }
+
+      const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60))
+      const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60))
+      const seconds = Math.floor((distance % (1000 * 60)) / 1000)
+
+      return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`
+    }
+
+    setTimeLeft(calculateTimeLeft())
+
+    const interval = setInterval(() => {
+      const remaining = calculateTimeLeft()
+      setTimeLeft(remaining)
+      if (remaining === "Kedaluwarsa") {
+        clearInterval(interval)
+      }
+    }, 1000)
+
+    return () => clearInterval(interval)
+  }, [confirmedAt])
+
+  if (!timeLeft) return null
+
+  return (
+    <div className={cn("inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold border",
+      timeLeft === "Kedaluwarsa"
+        ? "bg-destructive/10 text-destructive border-destructive/20"
+        : "bg-orange-500/10 text-orange-500 border-orange-500/20"
+    )}>
+      <ClockIcon className="w-3 h-3 animate-pulse" />
+      {timeLeft === "Kedaluwarsa" ? "Kedaluwarsa" : `Sisa Waktu: ${timeLeft}`}
     </div>
   )
 }

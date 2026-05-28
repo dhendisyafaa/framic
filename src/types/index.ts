@@ -72,6 +72,7 @@ export type DisputeInsert = InferInsertModel<typeof disputes>
 export type OrderWithPackage = Order & {
   package?: Package | null
   photographer?: PhotographerProfile | null
+  event?: Event | null
 }
 
 export type OrderDetail = Order & {
@@ -82,6 +83,7 @@ export type OrderDetail = Order & {
   review?: Review | null
   customerName?: string
   customerAvatarUrl?: string
+  event?: Event | null
 }
 
 // ---------------------------------------------------------------------------

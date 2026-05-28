@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import * as z from "zod"
+import { useUser } from "@clerk/nextjs"
 import {
   Dialog,
   DialogContent,
@@ -47,6 +48,9 @@ interface BookingButtonProps {
 }
 
 export function BookingButton({ photographer }: BookingButtonProps) {
+  const { user } = useUser()
+  const isSelf = user?.id === photographer.clerkId
+
   const [open, setOpen] = useState(false)
   const [showExitConfirm, setShowExitConfirm] = useState(false)
   const [step, setStep] = useState(1)
@@ -141,6 +145,17 @@ export function BookingButton({ photographer }: BookingButtonProps) {
     { title: "Pilih Jadwal", id: 2 },
     { title: "Konfirmasi Orderan", id: 3 },
   ]
+
+  if (isSelf) {
+    return (
+      <Button
+        disabled
+        className="flex-1 font-black shadow-none rounded-[1.25rem] py-6 text-base bg-muted text-muted-foreground cursor-not-allowed border border-border"
+      >
+        Profil Anda Sendiri
+      </Button>
+    )
+  }
 
   if (!mounted) {
     return (
@@ -378,14 +393,14 @@ export function BookingButton({ photographer }: BookingButtonProps) {
                         <div className="h-px bg-muted w-full" />
                         <div className="flex justify-between items-end">
                           <div className="space-y-1">
-                            <span className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.3em]">Total Investasi</span>
+                            <span className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.3em]">Total Biaya</span>
                             <div className="text-4xl font-black text-foreground tracking-tighter leading-none">
                               Rp {selectedPackage?.harga.toLocaleString("id-ID")}
                             </div>
                           </div>
                           <div className="text-right">
-                            <span className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.3em]">Status DP</span>
-                            <div className="text-lg font-black text-accent">50% di muka</div>
+                            <span className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.3em]">Bayar Sekarang (DP 50%)</span>
+                            <div className="text-lg font-black text-accent">Rp {((selectedPackage?.harga || 0) * 0.5).toLocaleString("id-ID")}</div>
                           </div>
                         </div>
                       </div>

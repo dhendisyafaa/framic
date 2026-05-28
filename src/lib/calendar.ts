@@ -18,7 +18,8 @@ export async function getPhotographerBlockedDates(
   photographerId: string,
   startDate: Date,
   endDate: Date,
-  tx?: any 
+  tx?: any,
+  ignoreEventId?: string
 ): Promise<string[]> {
   const client = tx || db
   const blockedDates = new Set<string>()
@@ -28,7 +29,7 @@ export async function getPhotographerBlockedDates(
   // ---------------------------------------------------------------------------
   
   // Gunakan raw SQL untuk menghindari issue "anonymous composite types" yang membandel di Drizzle builder v0.45
-  const pgEventsResult = await client.execute(sql`
+  let eventQuery = sql`
     SELECT 
       e.tanggal_mulai as "tanggalMulai", 
       e.tanggal_selesai as "tanggalSelesai"
@@ -41,7 +42,12 @@ export async function getPhotographerBlockedDates(
       )
       AND e.tanggal_mulai <= ${endOfDay(endDate).toISOString()}::timestamp
       AND e.tanggal_selesai >= ${startOfDay(startDate).toISOString()}::timestamp
-  `)
+  `
+  if (ignoreEventId) {
+    eventQuery = sql`${eventQuery} AND e.id != ${ignoreEventId}::uuid`
+  }
+
+  const pgEventsResult = await client.execute(eventQuery)
 
   // Drizzle execute returns rows in different formats depending on driver, handle safely
   const pgEvents = (pgEventsResult.rows || pgEventsResult) as any[]
@@ -71,7 +77,10 @@ export async function getPhotographerBlockedDates(
     SELECT tanggal_potret as "tanggalPotret"
     FROM orders
     WHERE photographer_id = ${photographerId}::uuid
-      AND status::text IN ('confirmed', 'dp_paid', 'ongoing')
+      AND (
+        status::text IN ('dp_paid', 'ongoing') 
+        OR (status::text = 'confirmed' AND confirmed_at >= NOW() - INTERVAL '24 hours')
+      )
       AND tanggal_potret >= ${startOfDay(startDate).toISOString()}::timestamp
       AND tanggal_potret <= ${endOfDay(endDate).toISOString()}::timestamp
   `)

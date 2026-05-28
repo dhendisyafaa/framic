@@ -72,26 +72,12 @@ webhooksRouter.post("/xendit", async (c) => {
 
       } else {
         // --- LOGIC SETTLEMENT PAID ---
-        // 1. Hitung pembagian komisi berdasarkan snapshot persentase
-        const totalHarga = paymentData.jumlahDp + paymentData.jumlahPelunasan
-        const platformAmount = Math.floor(totalHarga * (paymentData.platformFeePercent / 100))
-
-        // Guna "null" jika tidak ada mitra (PG independen)
-        const mitraAmount = paymentData.mitraPercent
-          ? Math.floor(totalHarga * (paymentData.mitraPercent / 100))
-          : null
-
-        const photographerAmount = totalHarga - platformAmount - (mitraAmount ?? 0)
-
-        // 2. Update Payment record (breakdown komisi)
+        // 1. Update Payment record (breakdown komisi sudah ada saat order dibuat)
         await tx
           .update(payments)
           .set({
             statusPelunasan: "paid",
             tanggalPelunasan: now,
-            jumlahPlatform: platformAmount,
-            jumlahMitra: mitraAmount,
-            jumlahFotografer: photographerAmount,
             updatedAt: now,
           })
           .where(eq(payments.id, paymentData.id))

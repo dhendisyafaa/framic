@@ -25,8 +25,6 @@ export interface MitraContractData {
   initiatedBy: string
   mitra: { id: string; namaOrganisasi: string }
   photographer: { id: string; nama: string }
-  mitraPercent: number | null
-  photographerPercent: number | null
   minimumFeePerEvent: number | null
   tanggalMulai: string | null
   tanggalSelesai: string | null
@@ -51,8 +49,6 @@ export interface EventContractData {
   }
   mitra: { id: string; namaOrganisasi: string }
   photographer: { id: string; nama: string }
-  mitraPercent: number | null
-  photographerPercent: number | null
   feeAmount: number | null
   photographerSignedAt: string | null
   mitraSignedAt: string | null
@@ -79,19 +75,19 @@ function formatDate(dateStr: string | null): string {
 
 function getInvitationBadgeStyle(status: string): string {
   switch (status) {
-    case "pending": return "text-amber-600 border-amber-300 bg-amber-50"
-    case "accepted": return "text-blue-600 border-blue-200 bg-blue-50"
-    case "rejected": return "text-rose-600 border-rose-300 bg-rose-50"
+    case "pending": return "text-amber-500 border-amber-500/20 bg-amber-500/10"
+    case "accepted": return "text-blue-500 border-blue-500/20 bg-blue-500/10"
+    case "rejected": return "text-rose-500 border-rose-500/20 bg-rose-500/10"
     default: return "text-muted-foreground border-border bg-muted"
   }
 }
 
 function getContractStatusBadgeStyle(status: string | null): string {
   switch (status) {
-    case "active": return "text-blue-600 border-blue-200 bg-blue-50"
-    case "pending_expiry": return "text-amber-600 border-amber-300 bg-amber-50"
+    case "active": return "text-blue-500 border-blue-500/20 bg-blue-500/10"
+    case "pending_expiry": return "text-amber-500 border-amber-500/20 bg-amber-500/10"
     case "expired": return "text-muted-foreground border-border bg-muted"
-    case "terminated": return "text-rose-600 border-rose-300 bg-rose-50"
+    case "terminated": return "text-rose-500 border-rose-500/20 bg-rose-500/10"
     default: return "text-muted-foreground border-border bg-muted"
   }
 }
@@ -138,15 +134,15 @@ export function ContractReviewCard({ type, data }: ContractReviewCardProps) {
         </CardHeader>
         <CardContent className="p-6 pt-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="flex items-start gap-3 p-4 rounded-2xl bg-indigo-50/60 border border-indigo-100">
-              <BuildingIcon className="w-5 h-5 text-indigo-500 mt-0.5 shrink-0" />
+            <div className="flex items-start gap-3 p-4 rounded-2xl bg-primary/5 border border-primary/20">
+              <BuildingIcon className="w-5 h-5 text-primary mt-0.5 shrink-0" />
               <div>
                 <div className="text-xs font-bold text-muted-foreground uppercase mb-1">Mitra / Organisasi</div>
                 <div className="font-black text-foreground">{data.mitra.namaOrganisasi}</div>
               </div>
             </div>
-            <div className="flex items-start gap-3 p-4 rounded-2xl bg-violet-50/60 border border-violet-100">
-              <CameraIcon className="w-5 h-5 text-violet-500 mt-0.5 shrink-0" />
+            <div className="flex items-start gap-3 p-4 rounded-2xl bg-accent/5 border border-accent/20">
+              <CameraIcon className="w-5 h-5 text-accent mt-0.5 shrink-0" />
               <div>
                 <div className="text-xs font-bold text-muted-foreground uppercase mb-1">Fotografer</div>
                 <div className="font-black text-foreground">{data.photographer.nama}</div>
@@ -192,29 +188,7 @@ export function ContractReviewCard({ type, data }: ContractReviewCardProps) {
         </CardHeader>
         <CardContent className="p-6 pt-4">
           <div className="space-y-4">
-            {/* Bagi hasil */}
-            {(data.mitraPercent !== null || data.photographerPercent !== null) && (
-              <div className="flex items-start gap-3 p-4 rounded-2xl bg-muted border border-border/60 bg-card">
-                <PercentIcon className="w-5 h-5 text-muted-foreground mt-0.5 shrink-0" />
-                <div className="w-full">
-                  <div className="text-xs font-bold text-muted-foreground uppercase mb-3">Bagi Hasil</div>
-                  <div className="flex gap-4">
-                    <div className="flex-1 text-center py-3 bg-white rounded-xl border border-indigo-100">
-                      <div className="text-2xl font-black text-indigo-600">
-                        {data.mitraPercent ?? "—"}%
-                      </div>
-                      <div className="text-xs font-bold text-muted-foreground uppercase mt-1">Mitra</div>
-                    </div>
-                    <div className="flex-1 text-center py-3 bg-white rounded-xl border border-violet-100">
-                      <div className="text-2xl font-black text-violet-600">
-                        {data.photographerPercent ?? "—"}%
-                      </div>
-                      <div className="text-xs font-bold text-muted-foreground uppercase mt-1">Fotografer</div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )}
+
 
             {/* Minimum fee (hanya mitra) */}
             {type === "mitra" && (data as MitraContractData).minimumFeePerEvent !== null && (
@@ -248,7 +222,7 @@ export function ContractReviewCard({ type, data }: ContractReviewCardProps) {
                 <CalendarIcon className="w-5 h-5 text-muted-foreground mt-0.5 shrink-0" />
                 <div>
                   <div className="text-xs font-bold text-muted-foreground uppercase mb-1">Durasi Kontrak</div>
-                  <div className="font-bold text-slate-900">
+                  <div className="font-bold text-foreground">
                     {formatDate((data as MitraContractData).tanggalMulai)} —{" "}
                     {formatDate((data as MitraContractData).tanggalSelesai)}
                   </div>

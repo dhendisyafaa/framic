@@ -3,11 +3,13 @@
 import { useState } from "react"
 import Link from "next/link"
 import Image from "next/image"
+import { useRouter } from "next/navigation"
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { format } from "date-fns"
 import { id as localeId } from "date-fns/locale"
 import { toast } from "sonner"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Skeleton } from "@/components/ui/skeleton"
@@ -16,6 +18,7 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Switch } from "@/components/ui/switch"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { BackButton } from "@/components/ui/back-button"
 import {
   ArrowLeftIcon,
   TentIcon,
@@ -28,6 +31,7 @@ import {
   UserPlusIcon,
   SettingsIcon,
   SaveIcon,
+  TrashIcon,
 } from "lucide-react"
 
 // Types
@@ -40,6 +44,12 @@ interface AssignedPG {
   invitationStatus: string | null
   initiatedBy: string | null
   isAvailable: boolean
+  orderId?: string | null
+  orderStatus?: string | null
+  paymentStatusDp?: string | null
+  paymentStatusPelunasan?: string | null
+  photographerSignedAt?: string | null
+  mitraSignedAt?: string | null
 }
 
 interface EventDetail {
@@ -71,6 +81,7 @@ interface MitraPhotographerEntry {
 
 export function EventDetailClient({ eventId, mitraId }: { eventId: string; mitraId: string }) {
   const [activeTab, setActiveTab] = useState<"pg-tetap" | "pg-perevent" | "open-recruitment" | "edit-event">("pg-tetap")
+  const router = useRouter()
 
   const { data: response, isLoading } = useQuery({
     queryKey: ["event-detail", eventId],
@@ -88,10 +99,7 @@ export function EventDetailClient({ eventId, mitraId }: { eventId: string; mitra
 
   return (
     <div className="container mx-auto p-4 md:p-8 max-w-5xl animate-in fade-in duration-700">
-      <Link href="/dashboard/mitra/events" className="inline-flex items-center gap-2 text-muted-foreground hover:text-primary font-bold text-sm mb-6 group">
-        <ArrowLeftIcon className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
-        Kembali ke Daftar Event
-      </Link>
+      <BackButton href="/dashboard/mitra/events" label="Kembali ke Daftar Event" />
 
       <Card className="border-border/60 shadow-sm rounded-3xl overflow-hidden mb-8 bg-card">
         <CardContent className="p-0 sm:flex items-stretch">
@@ -103,9 +111,8 @@ export function EventDetailClient({ eventId, mitraId }: { eventId: string; mitra
                 <TentIcon className="w-12 h-12" />
               </div>
             )}
-            <Badge className={`absolute top-4 left-4 border-2 font-black ${event.isPublished ? "bg-blue-500/10 text-blue-500 border-blue-500/20" : "bg-muted text-muted-foreground border-border"
-              }`}>
-              {event.isPublished ? "PUBLISHED" : "DRAFT"}
+            <Badge className="absolute top-4 left-4 border-2 font-black bg-emerald-500/10 text-emerald-500 border-emerald-500/20">
+              PUBLISHED
             </Badge>
           </div>
           <div className="p-6 md:p-8 flex-1">
@@ -119,14 +126,14 @@ export function EventDetailClient({ eventId, mitraId }: { eventId: string; mitra
               <div>
                 <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-1">PG Tetap</p>
                 <div className="font-bold text-foreground text-sm">
-                  Fee: <span className="font-black text-indigo-500">Rp {(event.feePgTetap ?? 0).toLocaleString("id-ID")}</span>
+                  Fee: <span className="font-black text-foreground">Rp {(event.feePgTetap ?? 0).toLocaleString("id-ID")}</span>
                   <span className="text-xs text-muted-foreground/60 ml-2">(Kuota {event.kuotaPgTetap})</span>
                 </div>
               </div>
               <div>
                 <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-1">PG Per-event</p>
                 <div className="font-bold text-foreground text-sm">
-                  Fee: <span className="font-black text-blue-500">Rp {(event.feePgPerEvent ?? 0).toLocaleString("id-ID")}</span>
+                  Fee: <span className="font-black text-foreground">Rp {(event.feePgPerEvent ?? 0).toLocaleString("id-ID")}</span>
                   <span className="text-xs text-muted-foreground/60 ml-2">(Kuota {event.kuotaPgPerEvent})</span>
                 </div>
               </div>
@@ -148,7 +155,7 @@ export function EventDetailClient({ eventId, mitraId }: { eventId: string; mitra
           className={`px-5 py-2.5 rounded-xl font-bold text-sm transition-all flex items-center gap-2 ${activeTab === "pg-perevent" ? "bg-background text-primary shadow-sm" : "text-muted-foreground hover:text-foreground"
             }`}
         >
-          Fotografer Per-Event (Invite/Req)
+          Tugaskan Fotografer Independen
         </button>
         <button
           onClick={() => setActiveTab("open-recruitment")}
@@ -179,6 +186,46 @@ export function EventDetailClient({ eventId, mitraId }: { eventId: string; mitra
 
 function PgTetapTab({ event }: { event: EventDetail }) {
   const queryClient = useQueryClient()
+  const router = useRouter()
+
+  const checkoutMutation = useMutation({
+    mutationFn: async ({ orderId, type }: { orderId: string; type: "dp" | "settle" }) => {
+      const res = await fetch(`/api/payments/${orderId}/${type}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+      })
+      const json = await res.json()
+      if (!json.success) throw new Error(json.error || "Gagal memproses pembayaran")
+      return json.data as { invoiceUrl: string }
+    },
+    onSuccess: (data) => {
+      if (data.invoiceUrl) {
+        window.location.href = data.invoiceUrl
+      }
+    },
+    onError: (err: any) => {
+      toast.error(err.message)
+    }
+  })
+
+  const unassignMutation = useMutation({
+    mutationFn: async (photographerId: string) => {
+      const res = await fetch(`/api/events/${event.id}/photographers/${photographerId}`, {
+        method: "DELETE",
+      })
+      const json = await res.json()
+      if (!res.ok) throw new Error(json.error || "Gagal membatalkan penugasan")
+      return json
+    },
+    onSuccess: () => {
+      toast.success("Penugasan berhasil dibatalkan")
+      queryClient.invalidateQueries({ queryKey: ["event-detail", event.id] })
+    },
+    onError: (err: any) => {
+      toast.error(err.message)
+    }
+  })
+
   const { data: response, isLoading } = useQuery({
     queryKey: ["mitra-photographers-list"],
     queryFn: async () => {
@@ -189,6 +236,7 @@ function PgTetapTab({ event }: { event: EventDetail }) {
 
   const [selectedPgId, setSelectedPgId] = useState<string>("")
   const [assignError, setAssignError] = useState<string | null>(null)
+  const [cancelPgTarget, setCancelPgTarget] = useState<{ id: string; nama: string } | null>(null)
 
   const assignMutation = useMutation({
     mutationFn: async () => {
@@ -257,10 +305,111 @@ function PgTetapTab({ event }: { event: EventDetail }) {
             ) : (
               assignedList.map(pg => (
                 <div key={pg.id} className="flex justify-between items-center bg-muted/30 p-3 rounded-2xl border border-border/50">
-                  <div className="font-bold text-foreground text-sm">{pg.nama}</div>
-                  <Badge variant="outline" className={`font-black uppercase text-[10px] px-2 py-0 border-2 ${pg.isAvailable ? 'text-blue-500 border-blue-500/20 bg-blue-500/10' : 'text-rose-500 border-rose-500/20 bg-rose-500/10'}`}>
-                    {pg.isAvailable ? "Available" : "Not Available"}
-                  </Badge>
+                  <div>
+                    <div className="font-bold text-foreground text-sm mb-1">{pg.nama}</div>
+                    <Badge variant="outline" className={`font-black uppercase text-[10px] px-2 py-0 border-2 ${pg.isAvailable ? 'text-emerald-500 border-emerald-500/20 bg-emerald-500/10' : 'text-rose-500 border-rose-500/20 bg-rose-500/10'}`}>
+                      {pg.isAvailable ? "Available" : "Not Available"}
+                    </Badge>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    {pg.orderId ? (
+                      <>
+                        {pg.paymentStatusDp !== "paid" && (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="text-rose-500 border-rose-500/20 hover:bg-rose-500/10 font-bold cursor-pointer rounded-xl px-3"
+                            onClick={() => {
+                              setCancelPgTarget({ id: pg.photographerId, nama: pg.nama })
+                            }}
+                            disabled={unassignMutation.isPending}
+                          >
+                            Batal
+                          </Button>
+                        )}
+                        {pg.paymentStatusDp === "paid" ? (
+                          <Badge className="bg-emerald-500/15 text-emerald-500 border-emerald-500/20 px-3 py-1 font-bold rounded-lg border-2 uppercase text-[10px]">
+                            {pg.paymentStatusPelunasan === "paid" ? "Lunas" : "DP Paid"}
+                          </Badge>
+                        ) : (
+                          <Badge className="bg-amber-500/15 text-amber-500 border-amber-500/20 px-3 py-1 font-bold rounded-lg border-2 uppercase text-[10px]">
+                            Belum Bayar
+                          </Badge>
+                        )}
+                        {pg.orderStatus === "delivered" && pg.paymentStatusPelunasan !== "paid" ? (
+                          <Button
+                            size="sm"
+                            className="bg-primary hover:bg-primary/90 text-primary-foreground font-bold cursor-pointer rounded-xl px-4"
+                            disabled={checkoutMutation.isPending}
+                            onClick={() => checkoutMutation.mutate({ orderId: pg.orderId!, type: "settle" })}
+                          >
+                            {checkoutMutation.isPending && checkoutMutation.variables?.orderId === pg.orderId ? "Memproses..." : "Bayar Pelunasan"}
+                          </Button>
+                        ) : pg.paymentStatusDp !== "paid" ? (
+                          <Button
+                            size="sm"
+                            className="bg-primary hover:bg-primary/90 text-primary-foreground font-bold cursor-pointer rounded-xl px-4"
+                            disabled={checkoutMutation.isPending}
+                            onClick={() => checkoutMutation.mutate({ orderId: pg.orderId!, type: "dp" })}
+                          >
+                            {checkoutMutation.isPending && checkoutMutation.variables?.orderId === pg.orderId ? "Memproses..." : "Bayar DP"}
+                          </Button>
+                        ) : (
+                          <Link href={`/dashboard/orders/${pg.orderId}`}>
+                            <Button
+                              size="sm"
+                              className="bg-primary hover:bg-primary/90 text-primary-foreground font-bold cursor-pointer rounded-xl px-4"
+                            >
+                              Lihat Order
+                            </Button>
+                          </Link>
+                        )}
+                      </>
+                    ) : (
+                      <>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="text-rose-500 border-rose-500/20 hover:bg-rose-500/10 font-bold cursor-pointer rounded-xl px-3"
+                          onClick={() => {
+                            setCancelPgTarget({ id: pg.photographerId, nama: pg.nama })
+                          }}
+                          disabled={unassignMutation.isPending}
+                        >
+                          Batal
+                        </Button>
+                        <Button
+                          size="sm"
+                          className="bg-primary hover:bg-primary/90 text-primary-foreground font-bold cursor-pointer rounded-xl px-4"
+                          onClick={async () => {
+                            const res = await fetch("/api/orders", {
+                              method: "POST",
+                              headers: { "Content-Type": "application/json" },
+                              body: JSON.stringify({
+                                photographerId: pg.photographerId,
+                                paketId: null,
+                                orderType: "event",
+                                eventId: event.id,
+                                lokasi: event.lokasi,
+                                tanggalPotret: new Date(event.tanggalMulai).toISOString(),
+                                catatan: `Penugasan untuk Event: ${event.namaEvent}`
+                              })
+                            })
+                            const json = await res.json()
+                            if (!json.success) {
+                              const errMsg = typeof json.error === "string" ? json.error : (json.error?.message || "Terjadi kesalahan saat membuat order")
+                              toast.error(errMsg)
+                            } else {
+                              toast.success("Order berhasil dibuat!")
+                              router.push(`/dashboard/orders/${json.data.id}`)
+                            }
+                          }}
+                        >
+                          Buat Order & Bayar
+                        </Button>
+                      </>
+                    )}
+                  </div>
                 </div>
               ))
             )}
@@ -269,9 +418,9 @@ function PgTetapTab({ event }: { event: EventDetail }) {
       </Card>
 
       {/* Form */}
-      <Card className="border-indigo-500/20 shadow-md shadow-indigo-500/5 rounded-[2rem] bg-indigo-500/5">
+      <Card className="border-border/60 shadow-md shadow-black/5 rounded-[2rem] bg-card">
         <CardHeader>
-          <CardTitle className="text-lg font-black text-indigo-600 dark:text-indigo-400">Tugaskan Fotografer</CardTitle>
+          <CardTitle className="text-lg font-black text-foreground">Tugaskan Fotografer</CardTitle>
           <CardDescription className="text-muted-foreground">Pilih dari anggota tetap Anda yang aktif.</CardDescription>
         </CardHeader>
         <CardContent>
@@ -307,16 +456,85 @@ function PgTetapTab({ event }: { event: EventDetail }) {
           )}
         </CardContent>
       </Card>
+
+      <Dialog open={!!cancelPgTarget} onOpenChange={(open) => !open && setCancelPgTarget(null)}>
+        <DialogContent className="rounded-[24px]">
+          <DialogHeader>
+            <DialogTitle className="font-bold text-foreground">Batalkan Penugasan</DialogTitle>
+            <DialogDescription className="text-muted-foreground text-xs leading-relaxed mt-2">
+              Apakah Anda yakin ingin membatalkan penugasan fotografer <strong>{cancelPgTarget?.nama}</strong>?
+              Semua tagihan (order/invoice) yang belum dibayar terkait penugasan ini akan ikut terhapus secara otomatis.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="mt-4 gap-2">
+            <Button variant="outline" className="rounded-xl font-bold cursor-pointer" onClick={() => setCancelPgTarget(null)}>
+              Batal
+            </Button>
+            <Button
+              className="bg-rose-500 hover:bg-rose-600 text-white rounded-xl font-bold cursor-pointer"
+              onClick={() => {
+                if (cancelPgTarget) {
+                  unassignMutation.mutate(cancelPgTarget.id)
+                  setCancelPgTarget(null)
+                }
+              }}
+              disabled={unassignMutation.isPending}
+            >
+              {unassignMutation.isPending ? "Memproses..." : "Ya, Batalkan"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }
 
 function PgPerEventTab({ event }: { event: EventDetail }) {
   const queryClient = useQueryClient()
+  const router = useRouter()
   const listEventOnly = event.photographers.filter(p => p.photographerType === "event_only")
+
+  const checkoutMutation = useMutation({
+    mutationFn: async ({ orderId, type }: { orderId: string; type: "dp" | "settle" }) => {
+      const res = await fetch(`/api/payments/${orderId}/${type}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+      })
+      const json = await res.json()
+      if (!json.success) throw new Error(json.error || "Gagal memproses pembayaran")
+      return json.data as { invoiceUrl: string }
+    },
+    onSuccess: (data) => {
+      if (data.invoiceUrl) {
+        window.location.href = data.invoiceUrl
+      }
+    },
+    onError: (err: any) => {
+      toast.error(err.message)
+    }
+  })
+
+  const unassignMutation = useMutation({
+    mutationFn: async (photographerId: string) => {
+      const res = await fetch(`/api/events/${event.id}/photographers/${photographerId}`, {
+        method: "DELETE",
+      })
+      const json = await res.json()
+      if (!res.ok) throw new Error(json.error || "Gagal membatalkan penugasan")
+      return json
+    },
+    onSuccess: () => {
+      toast.success("Penugasan/undangan berhasil dibatalkan")
+      queryClient.invalidateQueries({ queryKey: ["event-detail", event.id] })
+    },
+    onError: (err: any) => {
+      toast.error(err.message)
+    }
+  })
 
   const [inviteUsername, setInviteUsername] = useState("")
   const [inviteMessage, setInviteMessage] = useState("")
+  const [cancelPgTarget, setCancelPgTarget] = useState<{ id: string; nama: string; type: "unassign" | "withdraw" | "delete_history" } | null>(null)
 
   const respondMutation = useMutation({
     mutationFn: async ({ entryId, status }: { entryId: string; status: "accepted" | "rejected" }) => {
@@ -359,8 +577,8 @@ function PgPerEventTab({ event }: { event: EventDetail }) {
       {/* List Request & Invite */}
       <Card className="border-border/60 shadow-md rounded-[2rem] bg-card">
         <CardHeader>
-          <CardTitle className="text-lg font-black text-foreground">Request & Undangan Per-Event</CardTitle>
-          <CardDescription className="text-muted-foreground">Status negosiasi dan MoU PG eksternal.</CardDescription>
+          <CardTitle className="text-lg font-black text-foreground">Request & Undangan</CardTitle>
+          <CardDescription className="text-muted-foreground">Status negosiasi dan MoU Fotografer Independen.</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
@@ -372,11 +590,11 @@ function PgPerEventTab({ event }: { event: EventDetail }) {
                   <div className="flex justify-between items-start gap-4">
                     <div>
                       <div className="font-bold text-foreground text-sm mb-1">{pg.nama}</div>
-                      <Badge variant="outline" className={`text-[9px] font-black uppercase tracking-widest px-1.5 py-0 border-2 ${pg.initiatedBy === 'mitra' ? 'text-indigo-500 bg-indigo-500/10 border-indigo-500/20' : 'text-blue-500 bg-blue-500/10 border-blue-500/20'}`}>
+                      <Badge variant="outline" className={`text-[9px] font-black uppercase tracking-widest px-1.5 py-0 border-2 ${pg.initiatedBy === 'mitra' ? 'text-accent bg-accent/10 border-accent/20' : 'text-primary bg-primary/10 border-primary/20'}`}>
                         {pg.initiatedBy === 'mitra' ? "Diundang Mitra" : "Request Masuk"}
                       </Badge>
                     </div>
-                    <Badge variant="outline" className={`font-black uppercase text-[10px] px-2 py-0 border-2 ${pg.invitationStatus === 'accepted' ? 'text-blue-500 border-blue-500/20 bg-blue-500/10' :
+                    <Badge variant="outline" className={`font-black uppercase text-[10px] px-2 py-0 border-2 ${pg.invitationStatus === 'accepted' ? 'text-emerald-500 border-emerald-500/20 bg-emerald-500/10' :
                       pg.invitationStatus === 'rejected' ? 'text-rose-500 border-rose-500/20 bg-rose-500/10' :
                         'text-amber-500 border-amber-500/20 bg-amber-500/10'
                       }`}>
@@ -387,18 +605,138 @@ function PgPerEventTab({ event }: { event: EventDetail }) {
                   {/* Actions */}
                   {pg.invitationStatus === "pending" && pg.initiatedBy === "photographer" && (
                     <div className="flex gap-2 pt-2 border-t border-border/40">
-                      <Button size="sm" className="flex-1 bg-primary hover:bg-primary/90 text-primary-foreground font-bold cursor-pointer disabled:cursor-not-allowed disabled:opacity-50" disabled={respondMutation.isPending} onClick={() => respondMutation.mutate({ entryId: pg.id, status: "accepted" })}>Terima</Button>
                       <Button size="sm" variant="outline" className="flex-1 text-rose-500 hover:bg-rose-500/10 border-rose-500/20 font-bold cursor-pointer disabled:cursor-not-allowed disabled:opacity-50" disabled={respondMutation.isPending} onClick={() => respondMutation.mutate({ entryId: pg.id, status: "rejected" })}>Tolak</Button>
+                      <Button size="sm" className="flex-1 bg-primary hover:bg-primary/90 text-primary-foreground font-bold cursor-pointer disabled:cursor-not-allowed disabled:opacity-50" disabled={respondMutation.isPending} onClick={() => respondMutation.mutate({ entryId: pg.id, status: "accepted" })}>Terima</Button>
                     </div>
                   )}
 
-                  {pg.invitationStatus === "accepted" && (
-                    <div className="pt-2 border-t border-border/40">
-                      <Link href={`/dashboard/contracts/${pg.id}?type=event`}>
-                        <Button size="sm" variant="outline" className="w-full text-indigo-500 border-indigo-500/20 hover:bg-indigo-500/10 font-bold cursor-pointer">Lihat Kontrak</Button>
-                      </Link>
+                  {pg.invitationStatus === "pending" && pg.initiatedBy === "mitra" && (
+                    <div className="flex gap-2 pt-2 border-t border-border/40">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="w-full text-rose-500 border-rose-500/20 hover:bg-rose-500/10 font-bold cursor-pointer"
+                        onClick={() => {
+                          setCancelPgTarget({ id: pg.photographerId, nama: pg.nama, type: "withdraw" })
+                        }}
+                        disabled={unassignMutation.isPending}
+                      >
+                        Batalkan Undangan
+                      </Button>
                     </div>
                   )}
+
+                  {pg.invitationStatus === "rejected" && (
+                    <div className="flex gap-2 pt-2 border-t border-border/40">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="w-full text-rose-500 border-rose-500/20 hover:bg-rose-500/10 font-bold cursor-pointer"
+                        onClick={() => {
+                          setCancelPgTarget({ id: pg.photographerId, nama: pg.nama, type: "delete_history" })
+                        }}
+                        disabled={unassignMutation.isPending}
+                      >
+                        Hapus Riwayat
+                      </Button>
+                    </div>
+                  )}
+
+                   {pg.invitationStatus === "accepted" && (() => {
+                    const bothSigned = !!pg.photographerSignedAt && !!pg.mitraSignedAt;
+                    const canCancel = pg.paymentStatusDp !== "paid" && (!pg.photographerSignedAt || !pg.mitraSignedAt);
+
+                    return (
+                      <div className="flex gap-2 pt-2 border-t border-border/40">
+                        <Link href={`/dashboard/contracts/${pg.id}?type=event`} className="flex-1">
+                          <Button size="sm" variant="outline" className="w-full text-foreground border-border hover:bg-muted font-bold cursor-pointer">Lihat Kontrak</Button>
+                        </Link>
+
+                        {canCancel && (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="flex-1 text-rose-500 border-rose-500/20 hover:bg-rose-500/10 font-bold cursor-pointer"
+                            onClick={() => {
+                              setCancelPgTarget({ id: pg.photographerId, nama: pg.nama, type: "unassign" })
+                            }}
+                            disabled={unassignMutation.isPending}
+                          >
+                            Batal
+                          </Button>
+                        )}
+
+                        {bothSigned ? (
+                          pg.orderId ? (
+                            <>
+                              {pg.orderStatus === "delivered" && pg.paymentStatusPelunasan !== "paid" ? (
+                                <Button
+                                  size="sm"
+                                  className="flex-1 bg-primary hover:bg-primary/90 text-primary-foreground font-bold cursor-pointer rounded-xl"
+                                  disabled={checkoutMutation.isPending}
+                                  onClick={() => checkoutMutation.mutate({ orderId: pg.orderId!, type: "settle" })}
+                                >
+                                  {checkoutMutation.isPending && checkoutMutation.variables?.orderId === pg.orderId ? "Memproses..." : "Bayar Pelunasan"}
+                                </Button>
+                              ) : pg.paymentStatusDp !== "paid" ? (
+                                <Button
+                                  size="sm"
+                                  className="flex-1 bg-primary hover:bg-primary/90 text-primary-foreground font-bold cursor-pointer rounded-xl"
+                                  disabled={checkoutMutation.isPending}
+                                  onClick={() => checkoutMutation.mutate({ orderId: pg.orderId!, type: "dp" })}
+                                >
+                                  {checkoutMutation.isPending && checkoutMutation.variables?.orderId === pg.orderId ? "Memproses..." : "Bayar DP"}
+                                </Button>
+                              ) : (
+                                <Link href={`/dashboard/orders/${pg.orderId}`} className="flex-1">
+                                  <Button
+                                    size="sm"
+                                    className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-bold cursor-pointer rounded-xl"
+                                  >
+                                    Lihat Order
+                                  </Button>
+                                </Link>
+                              )}
+                            </>
+                          ) : (
+                            <Button
+                              size="sm"
+                              className="flex-1 bg-primary hover:bg-primary/90 text-primary-foreground font-bold cursor-pointer rounded-xl"
+                              onClick={async () => {
+                                const res = await fetch("/api/orders", {
+                                  method: "POST",
+                                  headers: { "Content-Type": "application/json" },
+                                  body: JSON.stringify({
+                                    photographerId: pg.photographerId,
+                                    paketId: null,
+                                    orderType: "event",
+                                    eventId: event.id,
+                                    lokasi: event.lokasi,
+                                    tanggalPotret: new Date(event.tanggalMulai).toISOString(),
+                                    catatan: `Penugasan untuk Event: ${event.namaEvent}`
+                                  })
+                                })
+                                const json = await res.json()
+                                if (!json.success) {
+                                  const errMsg = typeof json.error === "string" ? json.error : (json.error?.message || "Terjadi kesalahan saat membuat order")
+                                  toast.error(errMsg)
+                                } else {
+                                  toast.success("Order berhasil dibuat!")
+                                  router.push(`/dashboard/orders/${json.data.id}`)
+                                }
+                              }}
+                            >
+                              Bayar Order
+                            </Button>
+                          )
+                        ) : (
+                          <div className="flex-1 text-center py-2 px-3 bg-muted/50 rounded-xl text-muted-foreground text-[10px] font-bold uppercase tracking-wider flex items-center justify-center">
+                            Menunggu TTD MoU Kedua Pihak
+                          </div>
+                        )}
+                      </div>
+                    )
+                  })()}
                 </div>
               ))
             )}
@@ -407,15 +745,15 @@ function PgPerEventTab({ event }: { event: EventDetail }) {
       </Card>
 
       {/* Form Invite */}
-      <Card className="border-indigo-500/20 shadow-md shadow-indigo-500/5 rounded-[2rem] bg-indigo-500/5 self-start">
+      <Card className="border-border/60 shadow-md shadow-black/5 rounded-[2rem] bg-card self-start">
         <CardHeader>
-          <CardTitle className="text-lg font-black text-indigo-600 dark:text-indigo-400">Undang PG Langsung</CardTitle>
+          <CardTitle className="text-lg font-black text-foreground">Undang Fotografer Independen</CardTitle>
           <CardDescription className="text-muted-foreground">Kirim undangan kontrak per-event. Fee akan otomatis mengacu pada Event Fee.</CardDescription>
         </CardHeader>
         <CardContent>
           <form className="space-y-4" onSubmit={e => { e.preventDefault(); inviteMutation.mutate(); }}>
             <div className="space-y-2">
-              <Label className="font-bold text-indigo-600 dark:text-indigo-400">Username Fotografer</Label>
+              <Label className="font-bold text-foreground">Username Fotografer</Label>
               <Input required placeholder="Misal: @johndoe" className="bg-background rounded-xl border-border/60" value={inviteUsername} onChange={e => setInviteUsername(e.target.value)} />
             </div>
             <div className="space-y-2">
@@ -428,6 +766,46 @@ function PgPerEventTab({ event }: { event: EventDetail }) {
           </form>
         </CardContent>
       </Card>
+
+      <Dialog open={!!cancelPgTarget} onOpenChange={(open) => !open && setCancelPgTarget(null)}>
+        <DialogContent className="rounded-[24px]">
+          <DialogHeader>
+            <DialogTitle className="font-bold text-foreground">
+              {cancelPgTarget?.type === "withdraw" && "Batalkan Undangan"}
+              {cancelPgTarget?.type === "delete_history" && "Hapus Riwayat Penolakan"}
+              {cancelPgTarget?.type === "unassign" && "Batalkan Penugasan"}
+            </DialogTitle>
+            <DialogDescription className="text-muted-foreground text-xs leading-relaxed mt-2">
+              {cancelPgTarget?.type === "withdraw" && (
+                <>Apakah Anda yakin ingin membatalkan undangan kontrak untuk fotografer <strong>{cancelPgTarget?.nama}</strong>?</>
+              )}
+              {cancelPgTarget?.type === "delete_history" && (
+                <>Apakah Anda yakin ingin menghapus riwayat penolakan fotografer <strong>{cancelPgTarget?.nama}</strong> dari daftar ini?</>
+              )}
+              {cancelPgTarget?.type === "unassign" && (
+                <>Apakah Anda yakin ingin membatalkan penugasan fotografer <strong>{cancelPgTarget?.nama}</strong>? Semua tagihan (order/invoice) yang belum dibayar terkait penugasan ini akan ikut terhapus secara otomatis.</>
+              )}
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="mt-4 gap-2">
+            <Button variant="outline" className="rounded-xl font-bold cursor-pointer" onClick={() => setCancelPgTarget(null)}>
+              Batal
+            </Button>
+            <Button
+              className="bg-rose-500 hover:bg-rose-600 text-white rounded-xl font-bold cursor-pointer"
+              onClick={() => {
+                if (cancelPgTarget) {
+                  unassignMutation.mutate(cancelPgTarget.id)
+                  setCancelPgTarget(null)
+                }
+              }}
+              disabled={unassignMutation.isPending}
+            >
+              {unassignMutation.isPending ? "Memproses..." : "Ya, Proses"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }
@@ -512,14 +890,14 @@ function OpenRecruitmentTab({ event }: { event: EventDetail }) {
           </div>
 
           {isOpen && (
-            <div className="space-y-4 p-4 border border-indigo-500/20 bg-indigo-500/5 rounded-2xl">
+            <div className="space-y-4 p-4 border border-border/60 bg-muted/20 rounded-2xl">
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label className="font-bold text-indigo-600 dark:text-indigo-400">Batas Waktu Request</Label>
+                  <Label className="font-bold text-foreground">Batas Waktu Request</Label>
                   <Input type="datetime-local" className="bg-background rounded-xl border-border/60" value={deadline} onChange={e => setDeadline(e.target.value)} />
                 </div>
                 <div className="space-y-2">
-                  <Label className="font-bold text-indigo-600 dark:text-indigo-400">Kuota PG Per-Event</Label>
+                  <Label className="font-bold text-foreground">Kuota PG Per-Event</Label>
                   <Input type="number" min="0" className="bg-background rounded-xl border-border/60" value={kuota} onChange={e => setKuota(e.target.value)} placeholder="Misal: 3" />
                 </div>
               </div>
@@ -532,9 +910,9 @@ function OpenRecruitmentTab({ event }: { event: EventDetail }) {
         </CardContent>
       </Card>
 
-      <Card className="border-blue-500/20 shadow-md rounded-[2rem] bg-blue-500/5">
+      <Card className="border-border/60 shadow-md shadow-black/5 rounded-[2rem] bg-card">
         <CardHeader>
-          <CardTitle className="text-lg font-black text-blue-600 dark:text-blue-400">Statistik Request Masuk</CardTitle>
+          <CardTitle className="text-lg font-black text-foreground">Statistik Request Masuk</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-3 gap-3">
@@ -543,7 +921,7 @@ function OpenRecruitmentTab({ event }: { event: EventDetail }) {
               <div className="text-3xl font-black text-foreground">{pendingCount}</div>
             </div>
             <div className="bg-background p-4 rounded-2xl text-center border border-border/60">
-              <div className="text-[10px] font-black uppercase text-blue-500 mb-1">Diterima</div>
+              <div className="text-[10px] font-black uppercase text-emerald-500 mb-1">Diterima</div>
               <div className="text-3xl font-black text-foreground">{acceptedCount}</div>
             </div>
             <div className="bg-background p-4 rounded-2xl text-center border border-border/60">
@@ -650,12 +1028,12 @@ function EditEventTab({ event }: { event: EventDetail }) {
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-4 border-t border-dashed border-border/60">
               <div className="space-y-2">
-                <Label className="font-black text-indigo-500 text-xs uppercase tracking-widest">Fee PG Tetap (Rp)</Label>
-                <Input type="number" className="rounded-xl border-indigo-500/20 bg-indigo-500/5 h-11 font-black text-indigo-500" value={feeTetap} onChange={e => setFeeTetap(e.target.value)} />
+                <Label className="font-black text-foreground text-xs uppercase tracking-widest">Fee PG Tetap (Rp)</Label>
+                <Input type="number" className="rounded-xl border-border bg-background h-11 font-black text-foreground" value={feeTetap} onChange={e => setFeeTetap(e.target.value)} />
               </div>
               <div className="space-y-2">
-                <Label className="font-black text-blue-500 text-xs uppercase tracking-widest">Fee PG Per-Event (Rp)</Label>
-                <Input type="number" className="rounded-xl border-blue-500/20 bg-blue-500/5 h-11 font-black text-blue-500" value={feeEvent} onChange={e => setFeeEvent(e.target.value)} />
+                <Label className="font-black text-foreground text-xs uppercase tracking-widest">Fee PG Per-Event (Rp)</Label>
+                <Input type="number" className="rounded-xl border-border bg-background h-11 font-black text-foreground" value={feeEvent} onChange={e => setFeeEvent(e.target.value)} />
               </div>
             </div>
 

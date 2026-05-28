@@ -8,6 +8,8 @@ import {
   photographerProfiles,
   mitraProfiles,
   mitraPhotographers,
+  orders,
+  payments,
 } from "@/db/schema"
 import { and, desc, eq, gte, inArray, isNull, or, sql } from "drizzle-orm"
 import { requireRole, AuthError } from "@/lib/clerk"
@@ -25,6 +27,7 @@ const listEventsSchema = z.object({
   // openOnly=true → hanya event open recruitment yang deadline-nya belum lewat
   openOnly: z.enum(["true", "false"]).optional().default("false"),
   myMitraOnly: z.enum(["true", "false"]).optional().default("false"),
+  myAssignedOnly: z.enum(["true", "false"]).optional().default("false"),
 })
 
 // ---------------------------------------------------------------------------
@@ -32,7 +35,7 @@ const listEventsSchema = z.object({
 // List semua event (auto-published). Filter: mitraId, openOnly
 // ---------------------------------------------------------------------------
 eventsRouter.get("/", zValidator("query", listEventsSchema), async (c) => {
-  const { page, limit, mitraId, openOnly, myMitraOnly } = c.req.valid("query")
+  const { page, limit, mitraId, openOnly, myMitraOnly, myAssignedOnly } = c.req.valid("query")
   const offset = (page - 1) * limit
 
   const conditions: any[] = []
@@ -79,6 +82,45 @@ eventsRouter.get("/", zValidator("query", listEventsSchema), async (c) => {
         const myMitraIds = myMitras.map((m) => m.mitraId)
         if (myMitraIds.length > 0) {
           conditions.push(inArray(events.mitraId, myMitraIds))
+        } else {
+          conditions.push(sql`1 = 0`)
+        }
+      } else {
+        conditions.push(sql`1 = 0`)
+      }
+    } catch (e) {
+      // Auth error or other
+    }
+  }
+
+  if (myAssignedOnly === "true") {
+    try {
+      const auth = await requireRole("photographer")
+      const { clerkId } = auth
+
+      const [pg] = await db
+        .select({ id: photographerProfiles.id })
+        .from(photographerProfiles)
+        .where(eq(photographerProfiles.clerkId, clerkId))
+        .limit(1)
+
+      if (pg) {
+        const assignedEvents = await db
+          .select({ eventId: eventPhotographers.eventId })
+          .from(eventPhotographers)
+          .where(
+            and(
+              eq(eventPhotographers.photographerId, pg.id),
+              or(
+                sql`${eventPhotographers.photographerType}::text = 'mitra_permanent'`,
+                sql`${eventPhotographers.invitationStatus}::text = 'accepted'`
+              )
+            )
+          )
+
+        const assignedEventIds = assignedEvents.map((e) => e.eventId)
+        if (assignedEventIds.length > 0) {
+          conditions.push(inArray(events.id, assignedEventIds))
         } else {
           conditions.push(sql`1 = 0`)
         }
@@ -219,9 +261,24 @@ eventsRouter.get("/:id", async (c) => {
       invitationStatus: eventPhotographers.invitationStatus,
       initiatedBy: eventPhotographers.initiatedBy,
       isAvailable: eventPhotographers.isAvailable,
+      orderId: orders.id,
+      orderStatus: orders.status,
+      paymentStatusDp: payments.statusDp,
+      paymentStatusPelunasan: payments.statusPelunasan,
+      photographerSignedAt: eventPhotographers.photographerSignedAt,
+      mitraSignedAt: eventPhotographers.mitraSignedAt,
     })
     .from(eventPhotographers)
     .innerJoin(photographerProfiles, eq(photographerProfiles.id, eventPhotographers.photographerId))
+    .leftJoin(
+      orders,
+      and(
+        eq(orders.eventId, eventId),
+        eq(orders.photographerId, photographerProfiles.id),
+        sql`${orders.status} != 'cancelled'`
+      )
+    )
+    .leftJoin(payments, eq(payments.orderId, orders.id))
     .where(
       isDashboard
         ? eq(eventPhotographers.eventId, eventId) // Dashboard: Semua anggota/request (termasuk pending/rejected)
@@ -518,6 +575,113 @@ eventsRouter.post(
         .returning()
 
       return c.json({ success: true, data: inserted }, 201)
+    } catch (err) {
+      if (err instanceof AuthError) {
+        return c.json({ success: false, error: err.message }, err.statusCode)
+      }
+      throw err
+    }
+  }
+)
+
+// ---------------------------------------------------------------------------
+// DELETE /api/events/:id/photographers/:photographerId — [MITRA]
+// Batalkan penugasan fotografer dari event (hanya jika belum bayar DP)
+// ---------------------------------------------------------------------------
+eventsRouter.delete(
+  "/:id/photographers/:photographerId",
+  async (c) => {
+    try {
+      const { clerkId } = await requireRole("mitra")
+      const eventId = c.req.param("id")
+      const photographerId = c.req.param("photographerId")
+
+      const [mitra] = await db
+        .select({ id: mitraProfiles.id })
+        .from(mitraProfiles)
+        .where(eq(mitraProfiles.clerkId, clerkId))
+        .limit(1)
+
+      if (!mitra) {
+        return c.json({ success: false, error: "Profil mitra tidak ditemukan" }, 404)
+      }
+
+      // Validasi: event harus milik mitra ini
+      const [event] = await db
+        .select()
+        .from(events)
+        .where(and(eq(events.id, eventId), eq(events.mitraId, mitra.id)))
+        .limit(1)
+
+      if (!event) {
+        return c.json(
+          { success: false, error: "Event tidak ditemukan atau bukan milik mitra Anda" },
+          404
+        )
+      }
+
+      // Cari entry di event_photographers
+      const [ep] = await db
+        .select()
+        .from(eventPhotographers)
+        .where(
+          and(
+            eq(eventPhotographers.eventId, eventId),
+            eq(eventPhotographers.photographerId, photographerId)
+          )
+        )
+        .limit(1)
+
+      if (!ep) {
+        return c.json({ success: false, error: "Fotografer tidak terdaftar di event ini" }, 404)
+      }
+
+      // Cek apakah sudah ada order yang aktif (sudah bayar DP atau ongoing)
+      const existingOrders = await db
+        .select()
+        .from(orders)
+        .where(
+          and(
+            eq(orders.eventId, eventId),
+            eq(orders.photographerId, photographerId)
+          )
+        )
+
+      const activeOrder = existingOrders.find(o => 
+        ["dp_paid", "ongoing", "delivered", "completed"].includes(o.status)
+      )
+
+      if (activeOrder) {
+        return c.json(
+          { 
+            success: false, 
+            error: "Tidak dapat membatalkan penugasan karena DP sudah dibayar atau order sedang berlangsung" 
+          }, 
+          400
+        )
+      }
+
+      // Jika ada order yang masih pending/confirmed (belum bayar DP), hapus order & payment-nya
+      const unpaidOrders = existingOrders.filter(o => 
+        ["pending", "confirmed"].includes(o.status)
+      )
+
+      await db.transaction(async (tx) => {
+        if (unpaidOrders.length > 0) {
+          const orderIds = unpaidOrders.map(o => o.id)
+          // Hapus payments terkait
+          await tx.delete(payments).where(inArray(payments.orderId, orderIds))
+          // Hapus orders
+          await tx.delete(orders).where(inArray(orders.id, orderIds))
+        }
+
+        // Hapus penugasan dari event
+        await tx
+          .delete(eventPhotographers)
+          .where(eq(eventPhotographers.id, ep.id))
+      })
+
+      return c.json({ success: true, message: "Penugasan fotografer berhasil dibatalkan" })
     } catch (err) {
       if (err instanceof AuthError) {
         return c.json({ success: false, error: err.message }, err.statusCode)

@@ -76,16 +76,17 @@ export default async function DashboardPage() {
         )
         .then(r => r[0]?.count || 0),
       db
-        .select({ sum: sql<number>`cast(sum(${payments.jumlahMitra}) as int)` })
-        .from(payments)
-        .innerJoin(orders, eq(payments.orderId, orders.id))
+        .select({ sum: sql<number>`cast(sum(${orders.totalHarga}) as int)` })
+        .from(orders)
         .innerJoin(events, eq(orders.eventId, events.id))
         .where(
           and(
             eq(events.mitraId, mitra.id),
             or(
-              eq(payments.statusDp, "paid"),
-              eq(payments.statusPelunasan, "paid")
+              eq(orders.status, "completed"),
+              eq(orders.status, "ongoing"),
+              eq(orders.status, "delivered"),
+              eq(orders.status, "confirmed")
             )
           )
         )
@@ -136,7 +137,7 @@ export default async function DashboardPage() {
     const initialStats = {
       fixedMembersCount: fixedCountResult,
       perEventProCount: perEventCountResult,
-      totalEarnings: earningsResult,
+      totalExpenditure: earningsResult,
       topPerformers,
     }
 

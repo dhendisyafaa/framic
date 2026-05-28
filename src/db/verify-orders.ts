@@ -34,7 +34,6 @@ async function verify() {
         jumlahDp,
         jumlahPelunasan,
         platformFeePercent: 10,
-        photographerPercent: 90,
         statusDp: "unpaid",
         statusPelunasan: "unpaid",
       })

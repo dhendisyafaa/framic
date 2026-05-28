@@ -1,10 +1,14 @@
 "use client"
 
 import Link from "next/link"
+import { useParams } from "next/navigation"
 import { CheckCircle2, ArrowRight, Home, Calendar } from "lucide-react"
 import { Button } from "@/components/ui/button"
 
 export default function PaymentSuccessPage() {
+  const params = useParams()
+  const id = params?.id as string
+
   return (
     <div className="min-h-screen bg-background flex items-center justify-center p-4">
       <div className="max-w-md w-full animate-in fade-in zoom-in duration-700">
@@ -25,10 +29,18 @@ export default function PaymentSuccessPage() {
           </div>
 
           <div className="grid gap-3 pt-4">
+            {id && (
+              <Link href={`/dashboard/orders/${id}`}>
+                <Button className="w-full h-14 rounded-2xl bg-primary hover:bg-primary/90 text-primary-foreground font-black gap-2 group transition-all cursor-pointer">
+                  Tinjau & Beri Review Order
+                  <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                </Button>
+              </Link>
+            )}
+
             <Link href="/dashboard/orders">
-              <Button className="w-full h-14 rounded-2xl bg-primary hover:bg-primary/90 text-primary-foreground font-black gap-2 group transition-all cursor-pointer">
+              <Button variant="outline" className="w-full h-14 rounded-2xl border-border/60 hover:bg-muted/40 font-bold gap-2 cursor-pointer">
                 Cek Daftar Order
-                <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
               </Button>
             </Link>
             

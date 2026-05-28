@@ -9,13 +9,15 @@ import {
   ClockIcon, 
   ChevronRightIcon,
   ShieldCheckIcon,
-  Building2Icon
+  Building2Icon,
+  ArrowLeftIcon
 } from "lucide-react"
 import Link from "next/link"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
+import { BackButton } from "@/components/ui/back-button"
 
 export default function ContractsListPage() {
   const { user } = useUser()
@@ -35,10 +37,13 @@ export default function ContractsListPage() {
   return (
     <div className="container mx-auto p-8 max-w-5xl space-y-8 pb-20">
       {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-3xl font-black tracking-tight text-foreground">Manajemen Kontrak</h1>
-          <p className="text-muted-foreground font-medium">Tinjau dan tanda tangani MoU kerjasama Anda dengan Mitra.</p>
+      <div className="flex flex-col gap-2">
+        <BackButton href="/dashboard" label="Dashboard" />
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div>
+            <h1 className="text-3xl font-black tracking-tight text-foreground">Manajemen Kontrak</h1>
+            <p className="text-muted-foreground font-medium">Tinjau dan tanda tangani MoU kerjasama Anda dengan Mitra.</p>
+          </div>
         </div>
       </div>
 

@@ -1,3 +1,5 @@
+export const dynamic = "force-dynamic"
+
 import { Card, CardContent } from "@/components/ui/card"
 import { Calendar, MapPin, Users, Building, ShieldCheck, Clock } from "lucide-react"
 import { notFound } from "next/navigation"
@@ -9,17 +11,105 @@ import { RequestEventButton } from "@/components/features/event/request-event-bu
 import { currentUser } from "@clerk/nextjs/server"
 
 import { db } from "@/db"
-import { photographerProfiles } from "@/db/schema"
-import { eq } from "drizzle-orm"
-import { getBaseUrl } from "@/lib/api-url"
+import { photographerProfiles, events, mitraProfiles, eventPhotographers, orders, payments } from "@/db/schema"
+import { eq, and, or, sql } from "drizzle-orm"
+import { clerkClient } from "@clerk/nextjs/server"
 
 async function getEventDetail(id: string) {
-  const res = await fetch(`${getBaseUrl()}/api/events/${id}`, {
-    cache: 'no-store'
-  })
-  if (!res.ok) return null
-  const json = await res.json()
-  return json.success ? json.data : null
+  try {
+    const [eventData] = await db
+      .select()
+      .from(events)
+      .where(and(eq(events.id, id), eq(events.isPublished, true)))
+
+    if (!eventData) return null
+
+    const [mitraData] = await db
+      .select({
+        id: mitraProfiles.id,
+        namaOrganisasi: mitraProfiles.namaOrganisasi,
+        tipeMitra: mitraProfiles.tipeMitra,
+        websiteUrl: mitraProfiles.websiteUrl,
+      })
+      .from(mitraProfiles)
+      .where(eq(mitraProfiles.id, eventData.mitraId))
+
+    const pgTersediaRows = await db
+      .select({
+        id: eventPhotographers.id,
+        photographerType: eventPhotographers.photographerType,
+        photographerId: photographerProfiles.id,
+        clerkId: photographerProfiles.clerkId,
+        username: photographerProfiles.username,
+        bio: photographerProfiles.bio,
+        ratingAverage: photographerProfiles.ratingAverage,
+        invitationStatus: eventPhotographers.invitationStatus,
+        initiatedBy: eventPhotographers.initiatedBy,
+        isAvailable: eventPhotographers.isAvailable,
+        orderId: orders.id,
+        orderStatus: orders.status,
+        paymentStatusDp: payments.statusDp,
+        paymentStatusPelunasan: payments.statusPelunasan,
+        photographerSignedAt: eventPhotographers.photographerSignedAt,
+        mitraSignedAt: eventPhotographers.mitraSignedAt,
+      })
+      .from(eventPhotographers)
+      .innerJoin(photographerProfiles, eq(photographerProfiles.id, eventPhotographers.photographerId))
+      .leftJoin(
+        orders,
+        and(
+          eq(orders.eventId, id),
+          eq(orders.photographerId, photographerProfiles.id),
+          sql`${orders.status} != 'cancelled'`
+        )
+      )
+      .leftJoin(payments, eq(payments.orderId, orders.id))
+      .where(
+        and(
+          eq(eventPhotographers.eventId, id),
+          eq(eventPhotographers.isAvailable, true),
+          or(
+            eq(eventPhotographers.photographerType, "mitra_permanent"),
+            and(
+              eq(eventPhotographers.photographerType, "event_only"),
+              eq(eventPhotographers.invitationStatus, "accepted")
+            )
+          )
+        )
+      )
+
+    let clerkNamaMap: Record<string, string> = {}
+    const pgClerkIds = pgTersediaRows.map((r) => r.clerkId)
+
+    if (pgClerkIds.length > 0) {
+      try {
+        const clerk = await clerkClient()
+        const userList = await clerk.users.getUserList({ userId: pgClerkIds })
+        userList.data.forEach((u) => {
+          clerkNamaMap[u.id] = `${u.firstName ?? ""} ${u.lastName ?? ""}`.trim() || "Fotografer"
+        })
+      } catch (clerkErr) {
+        console.error("Failed to fetch photographer names from Clerk:", clerkErr)
+      }
+    }
+
+    const pgTersedia = pgTersediaRows.map(row => ({
+      ...row,
+      nama: clerkNamaMap[row.clerkId] ?? "Fotografer",
+    }))
+
+    const slotTerisi = pgTersedia.filter(p => p.photographerType === "event_only" && p.invitationStatus === "accepted").length
+
+    return {
+      ...eventData,
+      slotTerisi,
+      mitra: mitraData,
+      photographers: pgTersedia,
+    }
+  } catch (err) {
+    console.error("Failed to query event detail:", err)
+    return null
+  }
 }
 
 export default async function EventDetailPage({
@@ -188,7 +278,7 @@ export default async function EventDetailPage({
                       <div className="flex flex-col">
                         <span className="font-bold text-foreground group-hover:text-accent transition-colors">{pg.nama}</span>
                         <span className="text-xs text-muted-foreground font-medium tracking-wide">
-                          {pg.photographerType === "mitra_permanent" ? "PG Tetap (Mitra)" : "PG Per-Event"}
+                          {pg.photographerType === "mitra_permanent" ? "Fotografer Mitra" : "Fotografer Pilihan Mitra"}
                         </span>
                       </div>
                     </div>

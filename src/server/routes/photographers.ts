@@ -61,6 +61,8 @@ photographersRouter.get("/me/contracts", async (c) => {
           mitraName: mitra?.namaOrganisasi || "Mitra",
           invitationStatus: mp.invitationStatus,
           contractStatus: mp.contractStatus,
+          photographerSignedAt: mp.photographerSignedAt,
+          mitraSignedAt: mp.mitraSignedAt,
           createdAt: mp.createdAt,
           type: "mitra" as const,
           eventName: null
@@ -104,6 +106,8 @@ photographersRouter.get("/me/contracts", async (c) => {
           mitraName,
           invitationStatus: ep.invitationStatus,
           contractStatus: null,
+          photographerSignedAt: ep.photographerSignedAt,
+          mitraSignedAt: ep.mitraSignedAt,
           createdAt: ep.updatedAt,
           type: "event" as const,
           eventName: event?.namaEvent || "Event"
@@ -670,8 +674,6 @@ photographersRouter.get("/me/invitations", async (c) => {
         mitraId: mitraProfiles.id,
         namaMitra: mitraProfiles.namaOrganisasi,
         invitationMessage: mitraPhotographers.invitationMessage,
-        mitraPercent: mitraPhotographers.mitraPercent,
-        photographerPercent: mitraPhotographers.photographerPercent,
         minimumFeePerEvent: mitraPhotographers.minimumFeePerEvent,
         tanggalMulai: mitraPhotographers.tanggalMulai,
         tanggalSelesai: mitraPhotographers.tanggalSelesai,

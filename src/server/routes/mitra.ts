@@ -166,8 +166,6 @@ mitraRouter.get("/me/photographers", async (c) => {
         contractStatus: mitraPhotographers.contractStatus,
         invitationStatus: mitraPhotographers.invitationStatus,
         initiatedBy: mitraPhotographers.initiatedBy,
-        mitraPercent: mitraPhotographers.mitraPercent,
-        photographerPercent: mitraPhotographers.photographerPercent,
         minimumFeePerEvent: mitraPhotographers.minimumFeePerEvent,
         tanggalMulai: mitraPhotographers.tanggalMulai,
         tanggalSelesai: mitraPhotographers.tanggalSelesai,
@@ -212,8 +210,6 @@ mitraRouter.get("/me/photographers", async (c) => {
       contractStatus: row.contractStatus,
       invitationStatus: row.invitationStatus,
       initiatedBy: row.initiatedBy,
-      mitraPercent: row.mitraPercent,
-      photographerPercent: row.photographerPercent,
       minimumFeePerEvent: row.minimumFeePerEvent || row.pgBaseMinFee || 0,
       tanggalMulai: row.tanggalMulai,
       tanggalSelesai: row.tanggalSelesai,
@@ -235,8 +231,6 @@ mitraRouter.get("/me/photographers", async (c) => {
 // ---------------------------------------------------------------------------
 const invitePhotographerSchema = z.object({
   username: z.string().min(1),
-  mitraPercent: z.number().min(0).max(100),
-  photographerPercent: z.number().min(0).max(100),
   minimumFeePerEvent: z.number().int().min(0).optional(),
   tanggalMulai: z.string().datetime(),
   tanggalSelesai: z.string().datetime(),
@@ -250,14 +244,6 @@ mitraRouter.post(
     try {
       const { clerkId } = await requireRole("mitra")
       const body = c.req.valid("json")
-
-      // Validasi: mitraPercent + photographerPercent harus = 100
-      if (Math.round(body.mitraPercent + body.photographerPercent) !== 100) {
-        return c.json(
-          { success: false, error: "mitraPercent + photographerPercent harus = 100" },
-          400
-        )
-      }
 
       const [mitra] = await db
         .select({ id: mitraProfiles.id })
@@ -322,8 +308,6 @@ mitraRouter.post(
           initiatedBy: "mitra",
           invitationStatus: "pending",
           invitationMessage: body.invitationMessage,
-          mitraPercent: body.mitraPercent,
-          photographerPercent: body.photographerPercent,
           minimumFeePerEvent: body.minimumFeePerEvent ?? pg.baseMinimumFee,
           tanggalMulai: new Date(body.tanggalMulai),
           tanggalSelesai: new Date(body.tanggalSelesai),
@@ -347,8 +331,6 @@ mitraRouter.post(
 const respondJoinRequestSchema = z.object({
   status: z.enum(["accepted", "rejected"]),
   // Wajib saat accepted
-  mitraPercent: z.number().min(0).max(100).optional(),
-  photographerPercent: z.number().min(0).max(100).optional(),
   minimumFeePerEvent: z.number().int().min(0).optional(),
   tanggalMulai: z.string().datetime().optional(),
   tanggalSelesai: z.string().datetime().optional(),
@@ -401,8 +383,6 @@ mitraRouter.post(
       if (body.status === "accepted") {
         // Validasi field wajib saat accepted
         if (
-          body.mitraPercent === undefined ||
-          body.photographerPercent === undefined ||
           body.minimumFeePerEvent === undefined ||
           !body.tanggalMulai ||
           !body.tanggalSelesai
@@ -411,15 +391,8 @@ mitraRouter.post(
             {
               success: false,
               error:
-                "mitraPercent, photographerPercent, minimumFeePerEvent, tanggalMulai, tanggalSelesai wajib diisi saat menerima request",
+                "minimumFeePerEvent, tanggalMulai, tanggalSelesai wajib diisi saat menerima request",
             },
-            400
-          )
-        }
-
-        if (Math.round(body.mitraPercent + body.photographerPercent) !== 100) {
-          return c.json(
-            { success: false, error: "mitraPercent + photographerPercent harus = 100" },
             400
           )
         }
@@ -429,8 +402,6 @@ mitraRouter.post(
             .update(mitraPhotographers)
             .set({
               invitationStatus: "accepted",
-              mitraPercent: body.mitraPercent,
-              photographerPercent: body.photographerPercent,
               minimumFeePerEvent: body.minimumFeePerEvent,
               tanggalMulai: new Date(body.tanggalMulai!),
               tanggalSelesai: new Date(body.tanggalSelesai!),

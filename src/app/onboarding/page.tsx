@@ -446,7 +446,7 @@ export default function OnboardingPage() {
                   name="namaOrganisasi"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="text-xs font-bold text-foreground">Nama Organisasi / WO / Event Organizer</FormLabel>
+                      <FormLabel className="text-xs font-bold text-foreground">Nama Organisasi / Kampus / Event Organizer</FormLabel>
                       <FormControl>
                         <Input
                           placeholder="Contoh: Budi Wedding"
