@@ -92,15 +92,11 @@ export function EventCard({ event, showRecruitmentInfo = false, isPhotographer =
       </CardContent>
 
       <CardFooter className="p-5 pt-0 mt-auto">
-        {showRecruitmentInfo && isPhotographer ? (
-          <RequestEventButton eventId={event.id} isPhotographer={isPhotographer} />
-        ) : (
-          <Link href={`/events/${event.id}`} className="w-full">
-            <Button variant="outline" className="w-full group-hover:bg-primary group-hover:text-primary-foreground transition-all cursor-pointer">
-              {showRecruitmentInfo ? "Gabung Event" : "Lihat Detail"}
-            </Button>
-          </Link>
-        )}
+        <Link href={`/events/${event.id}`} className="w-full">
+          <Button variant="outline" className="w-full group-hover:bg-primary group-hover:text-primary-foreground transition-all cursor-pointer">
+            {showRecruitmentInfo ? "Gabung Event" : "Lihat Detail"}
+          </Button>
+        </Link>
       </CardFooter>
     </Card>
   )

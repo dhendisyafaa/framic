@@ -1245,6 +1245,87 @@ eventsRouter.patch(
 )
 
 // ---------------------------------------------------------------------------
+// DELETE /api/events/:id — [MITRA]
+// Hapus event secara aman jika tidak memiliki order aktif
+// ---------------------------------------------------------------------------
+eventsRouter.delete("/:id", async (c) => {
+  try {
+    const { clerkId } = await requireRole("mitra")
+    const eventId = c.req.param("id")
+
+    const [mitra] = await db
+      .select({ id: mitraProfiles.id })
+      .from(mitraProfiles)
+      .where(eq(mitraProfiles.clerkId, clerkId))
+      .limit(1)
+
+    if (!mitra) {
+      return c.json({ success: false, error: "Profil mitra tidak ditemukan" }, 404)
+    }
+
+    // Validasi: event harus milik mitra ini
+    const [event] = await db
+      .select()
+      .from(events)
+      .where(and(eq(events.id, eventId), eq(events.mitraId, mitra.id)))
+      .limit(1)
+
+    if (!event) {
+      return c.json(
+        { success: false, error: "Event tidak ditemukan atau bukan milik mitra Anda" },
+        404
+      )
+    }
+
+    // Cek apakah ada order aktif/ongoing/selesai
+    const eventOrders = await db
+      .select()
+      .from(orders)
+      .where(eq(orders.eventId, eventId))
+
+    const activeOrder = eventOrders.find(o => 
+      ["dp_paid", "ongoing", "delivered", "completed"].includes(o.status)
+    )
+
+    if (activeOrder) {
+      return c.json(
+        { 
+          success: false, 
+          error: "Tidak dapat menghapus event karena sudah memiliki order yang sedang berjalan atau sudah selesai." 
+        }, 
+        400
+      )
+    }
+
+    // Jika aman, jalankan transaksi penghapusan
+    await db.transaction(async (tx) => {
+      // 1. Ambil semua order terkait event ini
+      const orderIds = eventOrders.map(o => o.id)
+      
+      if (orderIds.length > 0) {
+        // Hapus payments terkait orders
+        await tx.delete(payments).where(inArray(payments.orderId, orderIds))
+        // Hapus orders
+        await tx.delete(orders).where(inArray(orders.id, orderIds))
+      }
+
+      // 2. Hapus semua photographer dari event
+      await tx.delete(eventPhotographers).where(eq(eventPhotographers.eventId, eventId))
+
+      // 3. Hapus event itu sendiri
+      await tx.delete(events).where(eq(events.id, eventId))
+    })
+
+    return c.json({ success: true, message: "Event berhasil dihapus" })
+  } catch (err) {
+    if (err instanceof AuthError) {
+      return c.json({ success: false, error: err.message }, err.statusCode)
+    }
+    throw err
+  }
+})
+
+// ---------------------------------------------------------------------------
 // GET /api/events/debug/db-diag — [DIAGNOSTIC]
 // ---------------------------------------------------------------------------
 eventsRouter.get("/debug/db-diag", async (c) => {

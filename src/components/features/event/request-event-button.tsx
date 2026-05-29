@@ -49,7 +49,7 @@ export function RequestEventButton({ eventId, isPhotographer }: { eventId: strin
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         <Button disabled={requestMutation.isPending} className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-bold transition-all shadow-md cursor-pointer disabled:cursor-not-allowed disabled:opacity-50">
-          Request Masuk
+          Gabung Event
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-md rounded-[2rem]">

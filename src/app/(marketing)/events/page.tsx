@@ -9,14 +9,20 @@ import { and, eq, sql, gte, desc } from "drizzle-orm"
 async function getEvents(openOnly: boolean) {
   const now = new Date()
 
+  const conditions = [
+    eq(events.isPublished, true),
+    gte(events.tanggalSelesai, now)
+  ]
+
+  if (openOnly) {
+    conditions.push(eq(events.isOpenRecruitment, true))
+    conditions.push(gte(events.deadlineRequest, now))
+  }
+
   const query = db
     .select()
     .from(events)
-    .where(
-      openOnly
-        ? and(eq(events.isOpenRecruitment, true), gte(events.deadlineRequest, now))
-        : undefined
-    )
+    .where(and(...conditions))
     .orderBy(desc(events.tanggalMulai))
     .limit(20)
 
@@ -87,7 +93,7 @@ export default async function EventsPage({
               className={`rounded-2xl font-black gap-2 h-14 px-8 border-2 ${isOpenOnly ? 'bg-primary hover:bg-primary/90 text-primary-foreground border-primary' : 'border-muted text-foreground hover:bg-muted/50 hover:border-muted'}`}
             >
               <Users className="w-5 h-5" />
-              {isOpenOnly ? "Menampilkan Open Recruitment" : "Cari Lowongan PG"}
+              {isOpenOnly ? "Menampilkan Open Recruitment" : "Cari Lowongan Fotografer"}
             </Button>
           </Link>
           <Link href="/mitra">

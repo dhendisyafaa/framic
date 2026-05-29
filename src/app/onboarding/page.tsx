@@ -262,7 +262,7 @@ export default function OnboardingPage() {
               onClick={() => (!isMitraRegistered || mitraStatus === 'rejected') && setSelectedRole("mitra")}
               disabled={isMitraRegistered && mitraStatus !== 'rejected'}
               className={`group flex flex-col text-left bg-card p-8 rounded-[32px] border border-muted shadow-sm transition-all duration-500 relative overflow-hidden ${isMitraRegistered && mitraStatus !== 'rejected'
-                ? 'opacity-60 cursor-not-allowed border-muted/80'
+                ? 'cursor-not-allowed border-muted/80'
                 : 'hover:shadow-xl hover:border-primary/20'
                 }`}
             >
