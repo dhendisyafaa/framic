@@ -2,7 +2,7 @@ import { zValidator } from "@hono/zod-validator"
 import { Hono } from "hono"
 import { z } from "zod"
 import { db } from "@/db"
-import { photographerProfiles, packages, reviews, orders } from "@/db/schema"
+import { photographerProfiles, packages, reviews, orders, withdrawals, payments } from "@/db/schema"
 import { and, eq, ilike, sql, inArray, isNotNull, exists, ne, or } from "drizzle-orm"
 import { clerkClient } from "@clerk/nextjs/server"
 import { requireRole, AuthError } from "@/lib/clerk"
@@ -906,4 +906,213 @@ photographersRouter.patch(
     }
   }
 )
+
+// ---------------------------------------------------------------------------
+// GET /api/photographers/me/balance
+// ---------------------------------------------------------------------------
+photographersRouter.get("/me/balance", async (c) => {
+  try {
+    const { clerkId } = await requireRole("photographer")
+
+    // Get PG Profile
+    const [pg] = await db
+      .select({ id: photographerProfiles.id })
+      .from(photographerProfiles)
+      .where(eq(photographerProfiles.clerkId, clerkId))
+      .limit(1)
+
+    if (!pg) {
+      return c.json({ success: false, error: "Profil tidak ditemukan" }, 404)
+    }
+
+    // 1. Get total revenue (jumlahFotografer for paid/completed orders)
+    const ordersList = await db
+      .select({
+        jumlahFotografer: payments.jumlahFotografer,
+      })
+      .from(orders)
+      .innerJoin(payments, eq(orders.id, payments.orderId))
+      .where(
+        and(
+          eq(orders.photographerId, pg.id),
+          inArray(orders.status, ["completed", "dp_paid", "ongoing", "delivered"])
+        )
+      )
+
+    const totalRevenue = ordersList.reduce((sum, o) => sum + Number(o.jumlahFotografer || 0), 0)
+
+    // 2. Get all withdrawals (success + pending)
+    const withdrawalsList = await db
+      .select({
+        jumlah: withdrawals.jumlah,
+        status: withdrawals.status,
+      })
+      .from(withdrawals)
+      .where(eq(withdrawals.photographerId, pg.id))
+
+    const totalWithdrawn = withdrawalsList
+      .filter((w) => w.status === "success")
+      .reduce((sum, w) => sum + w.jumlah, 0)
+
+    const pendingPayouts = withdrawalsList
+      .filter((w) => w.status === "pending")
+      .reduce((sum, w) => sum + w.jumlah, 0)
+
+    const availableBalance = totalRevenue - totalWithdrawn - pendingPayouts
+
+    return c.json({
+      success: true,
+      data: {
+        totalRevenue,
+        totalWithdrawn,
+        pendingPayouts,
+        availableBalance,
+      },
+    })
+  } catch (err) {
+    if (err instanceof AuthError) {
+      return c.json({ success: false, error: err.message }, err.statusCode)
+    }
+    captureError(err, { context: "photographer-balance" })
+    return c.json({ success: false, error: "Gagal mengambil data saldo" }, 500)
+  }
+})
+
+// ---------------------------------------------------------------------------
+// GET /api/photographers/me/withdrawals
+// ---------------------------------------------------------------------------
+photographersRouter.get("/me/withdrawals", async (c) => {
+  try {
+    const { clerkId } = await requireRole("photographer")
+
+    // Get PG Profile
+    const [pg] = await db
+      .select({ id: photographerProfiles.id })
+      .from(photographerProfiles)
+      .where(eq(photographerProfiles.clerkId, clerkId))
+      .limit(1)
+
+    if (!pg) {
+      return c.json({ success: false, error: "Profil tidak ditemukan" }, 404)
+    }
+
+    const list = await db
+      .select()
+      .from(withdrawals)
+      .where(eq(withdrawals.photographerId, pg.id))
+      .orderBy(sql`${withdrawals.createdAt} desc`)
+
+    return c.json({
+      success: true,
+      data: list,
+    })
+  } catch (err) {
+    if (err instanceof AuthError) {
+      return c.json({ success: false, error: err.message }, err.statusCode)
+    }
+    captureError(err, { context: "photographer-withdrawals-list" })
+    return c.json({ success: false, error: "Gagal mengambil riwayat penarikan" }, 500)
+  }
+})
+
+// ---------------------------------------------------------------------------
+// POST /api/photographers/me/withdrawals
+// ---------------------------------------------------------------------------
+photographersRouter.post(
+  "/me/withdrawals",
+  zValidator(
+    "json",
+    z.object({
+      jumlah: z.number().int().positive("Jumlah penarikan harus bernilai positif"),
+      bankName: z.string().min(1, "Nama bank wajib diisi"),
+      rekeningNumber: z.string().min(1, "Nomor rekening wajib diisi"),
+      rekeningName: z.string().min(1, "Nama pemilik rekening wajib diisi"),
+    })
+  ),
+  async (c) => {
+    try {
+      const { clerkId } = await requireRole("photographer")
+      const { jumlah, bankName, rekeningNumber, rekeningName } = c.req.valid("json")
+
+      // Get PG Profile
+      const [pg] = await db
+        .select({ id: photographerProfiles.id })
+        .from(photographerProfiles)
+        .where(eq(photographerProfiles.clerkId, clerkId))
+        .limit(1)
+
+      if (!pg) {
+        return c.json({ success: false, error: "Profil tidak ditemukan" }, 404)
+      }
+
+      // Calculate available balance
+      const ordersList = await db
+        .select({
+          jumlahFotografer: payments.jumlahFotografer,
+        })
+        .from(orders)
+        .innerJoin(payments, eq(orders.id, payments.orderId))
+        .where(
+          and(
+            eq(orders.photographerId, pg.id),
+            inArray(orders.status, ["completed", "dp_paid", "ongoing", "delivered"])
+          )
+        )
+
+      const totalRevenue = ordersList.reduce((sum, o) => sum + Number(o.jumlahFotografer || 0), 0)
+
+      const withdrawalsList = await db
+        .select({
+          jumlah: withdrawals.jumlah,
+          status: withdrawals.status,
+        })
+        .from(withdrawals)
+        .where(eq(withdrawals.photographerId, pg.id))
+
+      const totalWithdrawn = withdrawalsList
+        .filter((w) => w.status === "success")
+        .reduce((sum, w) => sum + w.jumlah, 0)
+
+      const pendingPayouts = withdrawalsList
+        .filter((w) => w.status === "pending")
+        .reduce((sum, w) => sum + w.jumlah, 0)
+
+      const availableBalance = totalRevenue - totalWithdrawn - pendingPayouts
+
+      if (jumlah > availableBalance) {
+        return c.json(
+          {
+            success: false,
+            error: `Saldo tidak mencukupi. Saldo tersedia saat ini: Rp ${availableBalance.toLocaleString("id-ID")}`,
+          },
+          400
+        )
+      }
+
+      const [newWithdrawal] = await db
+        .insert(withdrawals)
+        .values({
+          photographerId: pg.id,
+          jumlah,
+          bankName,
+          rekeningNumber,
+          rekeningName,
+          status: "pending",
+        })
+        .returning()
+
+      return c.json({
+        success: true,
+        data: newWithdrawal,
+      }, 201)
+    } catch (err) {
+      if (err instanceof AuthError) {
+        return c.json({ success: false, error: err.message }, err.statusCode)
+      }
+      captureError(err, { context: "photographer-withdrawal-create" })
+      return c.json({ success: false, error: "Gagal memproses pengajuan penarikan" }, 500)
+    }
+  }
+)
+
 

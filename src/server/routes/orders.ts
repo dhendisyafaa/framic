@@ -19,6 +19,13 @@ import { format, startOfDay, endOfDay } from "date-fns"
 import { requireAuth } from "@/server/middleware/auth"
 import { clerkClient } from "@clerk/nextjs/server"
 import { photos, reviews } from "@/db/schema"
+import {
+  sendNewOrderEmails,
+  sendOrderConfirmedEmail,
+  sendOrderRejectedEmail,
+  sendOrderCancelledEmail,
+  sendOrderCompletedEmails
+} from "@/lib/email-service"
 
 const ordersRouter = new Hono<{ Variables: { clerkId: string } }>()
 
@@ -194,6 +201,11 @@ ordersRouter.post("/", zValidator("json", createOrderSchema), async (c) => {
 
       return newOrder
     })
+
+    // Trigger email notifications in background
+    sendNewOrderEmails(result.id).catch((err) =>
+      console.error("Failed to send new order emails:", err)
+    )
 
     return c.json({ success: true, data: result }, 201)
   } catch (err) {
@@ -431,6 +443,11 @@ ordersRouter.patch("/:id/confirm", async (c) => {
       return updated
     })
 
+    // Trigger email notification in background
+    sendOrderConfirmedEmail(order.id).catch((err) =>
+      console.error("Failed to send order confirmed email:", err)
+    )
+
     return c.json({ success: true, data: order })
   } catch (err) {
     const message = err instanceof Error ? err.message : "Terjadi kesalahan"
@@ -468,6 +485,11 @@ ordersRouter.patch("/:id/reject", async (c) => {
 
       return updated
     })
+
+    // Trigger email notification in background
+    sendOrderRejectedEmail(order.id).catch((err) =>
+      console.error("Failed to send order rejected email:", err)
+    )
 
     return c.json({ success: true, data: order })
   } catch (err) {
@@ -580,6 +602,11 @@ ordersRouter.patch("/:id/complete", async (c) => {
       .where(eq(orders.id, orderId))
       .returning()
 
+    // Trigger email notification in background
+    sendOrderCompletedEmails(updated.id).catch((err) =>
+      console.error("Failed to send order completed emails:", err)
+    )
+
     return c.json({ success: true, data: updated })
   } catch (err) {
     const message = err instanceof Error ? err.message : "Terjadi kesalahan"
@@ -621,6 +648,11 @@ ordersRouter.patch("/:id/cancel", async (c) => {
       })
       .where(eq(orders.id, orderId))
       .returning()
+
+    // Trigger email notification in background
+    sendOrderCancelledEmail(updated.id, clerkId).catch((err) =>
+      console.error("Failed to send order cancelled email:", err)
+    )
 
     return c.json({ success: true, data: updated })
   } catch (err) {

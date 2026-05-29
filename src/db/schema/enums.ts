@@ -115,3 +115,9 @@ export const photographerTypeEnum = pgEnum("photographer_type", [
   "mitra_permanent", // PG anggota tetap mitra (ada di mitra_photographers aktif)
   "event_only", // PG kontrak per-event saja
 ])
+
+export const withdrawalStatusEnum = pgEnum("withdrawal_status", [
+  "pending",
+  "success",
+  "rejected",
+])

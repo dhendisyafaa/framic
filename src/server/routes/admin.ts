@@ -1,7 +1,7 @@
 import { Hono } from "hono"
-import { eq } from "drizzle-orm"
+import { eq, desc } from "drizzle-orm"
 import { db } from "@/db"
-import { photographerProfiles, mitraProfiles, users } from "@/db/schema"
+import { photographerProfiles, mitraProfiles, users, withdrawals } from "@/db/schema"
 import { createClerkClient } from "@clerk/nextjs/server"
 import { requireAuth } from "@/server/middleware/auth"
 import { getRolesFromMetadata, isAdmin } from "@/lib/clerk"
@@ -427,6 +427,143 @@ adminRouter.post("/verifications/:targetClerkId/reject-mitra", async (c) => {
   } catch (err: any) {
     captureError(err, { context: "admin-reject-mitra", targetClerkId })
     return c.json({ success: false, error: err.message || "Failed to reject" }, 500)
+  }
+})
+
+/**
+ * GET /api/admin/withdrawals
+ * Menampilkan semua pengajuan penarikan dana
+ */
+adminRouter.get("/withdrawals", async (c) => {
+  const clerk = createClerkClient({ secretKey: process.env.CLERK_SECRET_KEY })
+
+  try {
+    // 1. Fetch raw withdrawals joined with photographerProfiles
+    const rawWithdrawals = await db
+      .select({
+        id: withdrawals.id,
+        photographerId: withdrawals.photographerId,
+        clerkId: photographerProfiles.clerkId,
+        jumlah: withdrawals.jumlah,
+        bankName: withdrawals.bankName,
+        rekeningNumber: withdrawals.rekeningNumber,
+        rekeningName: withdrawals.rekeningName,
+        status: withdrawals.status,
+        rejectedReason: withdrawals.rejectedReason,
+        createdAt: withdrawals.createdAt,
+        updatedAt: withdrawals.updatedAt,
+      })
+      .from(withdrawals)
+      .innerJoin(photographerProfiles, eq(withdrawals.photographerId, photographerProfiles.id))
+      .orderBy(desc(withdrawals.createdAt))
+
+    // 2. Fetch photographer user details from Clerk
+    const clerkIds = Array.from(new Set(rawWithdrawals.map(w => w.clerkId)))
+    const clerkUsersResult = clerkIds.length > 0
+      ? await clerk.users.getUserList({ userId: clerkIds, limit: clerkIds.length })
+      : null
+
+    const clerkUsers = clerkUsersResult ?? { data: [] }
+    const clerkMap = mapClerkUsers(clerkUsers)
+
+    // 3. Merge data
+    const merged = rawWithdrawals.map(w => {
+      const clerkData = clerkMap.get(w.clerkId)
+      return {
+        ...w,
+        photographerName: clerkData?.name || "Fotografer",
+        photographerEmail: clerkData?.email || null,
+        photographerUsername: clerkData?.username || null,
+      }
+    })
+
+    return c.json({
+      success: true,
+      data: merged,
+    })
+  } catch (err) {
+    captureError(err, { context: "admin-withdrawals-list" })
+    return c.json({ success: false, error: "Gagal mengambil daftar penarikan dana" }, 500)
+  }
+})
+
+/**
+ * PATCH /api/admin/withdrawals/:id/respond
+ * Menyetujui atau menolak pengajuan penarikan dana
+ */
+adminRouter.patch("/withdrawals/:id/respond", async (c) => {
+  const id = c.req.param("id")
+  const clerk = createClerkClient({ secretKey: process.env.CLERK_SECRET_KEY })
+
+  try {
+    const { status, rejectedReason } = await c.req.json()
+
+    if (!["success", "rejected"].includes(status)) {
+      return c.json({ success: false, error: "Status tidak valid" }, 400)
+    }
+
+    const [updated] = await db
+      .update(withdrawals)
+      .set({
+        status,
+        rejectedReason: status === "rejected" ? rejectedReason || "Pengajuan ditolak" : null,
+        updatedAt: new Date(),
+      })
+      .where(eq(withdrawals.id, id))
+      .returning()
+
+    if (!updated) {
+      return c.json({ success: false, error: "Pengajuan tidak ditemukan" }, 404)
+    }
+
+    // Send email notification to photographer
+    try {
+      const [pg] = await db
+        .select({ clerkId: photographerProfiles.clerkId })
+        .from(photographerProfiles)
+        .where(eq(photographerProfiles.id, updated.photographerId))
+        .limit(1)
+
+      if (pg) {
+        const clerkUser = await clerk.users.getUser(pg.clerkId)
+        const userEmail = clerkUser.emailAddresses?.[0]?.emailAddress
+        const userName = clerkUser.fullName || `${clerkUser.firstName || ''} ${clerkUser.lastName || ''}`.trim()
+
+        if (userEmail) {
+          const isSuccess = status === "success"
+          const subject = isSuccess ? "Penarikan Dana Berhasil!" : "Penarikan Dana Ditolak"
+          const titleColor = isSuccess ? "#059669" : "#dc2626"
+          const statusText = isSuccess ? "Disetujui" : "Ditolak"
+          const messageContent = isSuccess
+            ? `Dana sebesar <strong>Rp ${updated.jumlah.toLocaleString("id-ID")}</strong> telah ditransfer ke rekening Anda (${updated.bankName} - ${updated.rekeningNumber} a.n. ${updated.rekeningName}).`
+            : `Pengajuan penarikan dana sebesar <strong>Rp ${updated.jumlah.toLocaleString("id-ID")}</strong> ditolak.<br/>Alasan: <em>${updated.rejectedReason}</em>`
+
+          await sendEmail({
+            to: userEmail,
+            subject,
+            html: `
+              <div style="font-family: sans-serif; padding: 24px; color: #334155; max-width: 600px; margin: 0 auto; border: 1px solid #e2e8f0; border-radius: 16px;">
+                <h2 style="color: ${titleColor}; font-size: 24px; margin-bottom: 16px;">Penarikan Dana ${statusText}</h2>
+                <p style="font-size: 16px; line-height: 1.6;">Halo ${userName},</p>
+                <p style="font-size: 16px; line-height: 1.6;">${messageContent}</p>
+                <hr style="border: 0; border-top: 1px solid #e2e8f0; margin: 24px 0;" />
+                <p style="font-size: 12px; color: #64748b; line-height: 1.5;">Email ini dikirimkan secara otomatis oleh sistem Framic. Harap tidak membalas email ini secara langsung.</p>
+              </div>
+            `
+          })
+        }
+      }
+    } catch (emailErr) {
+      console.error("Gagal mengirim email notifikasi penarikan dana:", emailErr)
+    }
+
+    return c.json({
+      success: true,
+      data: updated,
+    })
+  } catch (err) {
+    captureError(err, { context: "admin-withdrawals-respond" })
+    return c.json({ success: false, error: "Gagal memproses penarikan dana" }, 500)
   }
 })
 
