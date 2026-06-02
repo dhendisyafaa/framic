@@ -1,7 +1,7 @@
 export const dynamic = "force-dynamic"
 
 import { Card, CardContent } from "@/components/ui/card"
-import { Calendar, MapPin, Users, Building, ShieldCheck, Clock } from "lucide-react"
+import { Calendar, MapPin, Users, Building, ShieldCheck, Clock, XCircle } from "lucide-react"
 import { notFound } from "next/navigation"
 import { format } from "date-fns"
 import { id as idLocale } from "date-fns/locale"
@@ -123,9 +123,9 @@ export default async function EventDetailPage({
 
   // Periksa role dari Clerk
   let isPhotographer = user?.publicMetadata?.role === "photographer"
+  let pgProfileId: string | null = null
 
-  // Fallback: Periksa ke DB jika Clerk metadata belum terpasang
-  if (!isPhotographer && user?.id) {
+  if (user?.id) {
     const [pgProfile] = await db
       .select({ id: photographerProfiles.id })
       .from(photographerProfiles)
@@ -134,6 +134,39 @@ export default async function EventDetailPage({
 
     if (pgProfile) {
       isPhotographer = true
+      pgProfileId = pgProfile.id
+    }
+  }
+
+  let userRequestStatus: "pending" | "accepted" | "rejected" | "none" = "none"
+
+  if (pgProfileId && event) {
+    const [existingRequest] = await db
+      .select({ invitationStatus: eventPhotographers.invitationStatus })
+      .from(eventPhotographers)
+      .where(
+        and(
+          eq(eventPhotographers.eventId, event.id),
+          eq(eventPhotographers.photographerId, pgProfileId)
+        )
+      )
+      .limit(1)
+
+    if (existingRequest) {
+      userRequestStatus = (existingRequest.invitationStatus || "pending") as any
+    }
+  }
+
+  let isOwnEvent = false
+  if (user?.id && event) {
+    const [mitraProfile] = await db
+      .select({ id: mitraProfiles.id })
+      .from(mitraProfiles)
+      .where(eq(mitraProfiles.clerkId, user.id))
+      .limit(1)
+
+    if (mitraProfile && event.mitraId === mitraProfile.id) {
+      isOwnEvent = true
     }
   }
 
@@ -193,18 +226,46 @@ export default async function EventDetailPage({
                     </div>
                   </div>
 
-                  {isPhotographer ? (
+                  {isOwnEvent ? (
+                    <Link href={`/dashboard/mitra/events/${event.id}`} className="w-full mt-2 block">
+                      <Button className="w-full bg-[#CF4500] hover:bg-[#CF4500]/90 text-white font-black rounded-2xl h-12 shadow-md">
+                        Kelola Event Ini
+                      </Button>
+                    </Link>
+                  ) : isPhotographer ? (
                     (() => {
-                      // Cek apakah fotografer ini sudah ada di daftar pengisi acara (termasuk yang sudah accepted/mitra tetap)
-                      const isAlreadyAssigned = event.photographers?.some(
-                        (p: any) => p.clerkId === user?.id
-                      );
-
-                      if (isAlreadyAssigned) {
+                      if (userRequestStatus === "accepted") {
                         return (
-                          <div className="bg-blue-500/10 text-blue-500 p-4 rounded-xl text-sm border border-blue-500/20 mt-2 font-bold flex items-center gap-2">
-                            <ShieldCheck className="w-4 h-4 text-blue-500" />
+                          <div className="bg-emerald-500/10 text-emerald-600 p-4 rounded-xl text-sm border border-emerald-500/20 mt-2 font-bold flex items-center gap-2">
+                            <ShieldCheck className="w-4 h-4 text-emerald-600" />
                             Anda sudah terdaftar di event ini.
+                          </div>
+                        );
+                      }
+
+                      if (userRequestStatus === "pending") {
+                        return (
+                          <div className="bg-amber-500/10 text-amber-600 p-4 rounded-xl text-sm border border-amber-500/20 mt-2 font-bold flex items-center gap-2">
+                            <Clock className="w-4 h-4 text-amber-600 animate-pulse" />
+                            Pengajuan Anda sedang ditinjau mitra.
+                          </div>
+                        );
+                      }
+
+                      if (userRequestStatus === "rejected") {
+                        return (
+                          <div className="bg-rose-500/10 text-rose-600 p-4 rounded-xl text-sm border border-rose-500/20 mt-2 font-bold flex items-center gap-2">
+                            <XCircle className="w-4 h-4 text-rose-600" />
+                            Pengajuan Anda ditolak oleh mitra.
+                          </div>
+                        );
+                      }
+
+                      if (isExpired) {
+                        return (
+                          <div className="bg-rose-500/10 text-rose-600 p-4 rounded-xl text-sm border border-rose-500/20 mt-2 font-bold flex items-center gap-2">
+                            <Clock className="w-4 h-4 text-rose-600" />
+                            Pendaftaran event telah ditutup.
                           </div>
                         );
                       }

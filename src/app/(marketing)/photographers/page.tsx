@@ -1,8 +1,5 @@
-export const dynamic = "force-dynamic"
-
-import { PhotographerCard } from "@/components/features/photographer/photographer-card"
 import { PhotographerFilter } from "@/components/features/photographer/photographer-filter"
-import { Camera } from "lucide-react"
+import { PhotographerList } from "@/components/features/photographer/photographer-list"
 import { db } from "@/db"
 import { photographerProfiles, packages } from "@/db/schema"
 import { and, eq, ilike, sql, isNotNull, exists, ne } from "drizzle-orm"
@@ -166,41 +163,7 @@ export default async function PhotographersPage({
           </aside>
 
           {/* Grid Catalogue */}
-          <main className="flex-1 flex flex-col gap-8">
-            <div className="flex items-center justify-between bg-card border border-muted p-4 rounded-[20px] shadow-sm">
-              <span className="text-sm font-medium text-foreground">
-                Menampilkan <span className="font-bold">{photographers.length}</span> dari {meta.total} fotografer
-              </span>
-              <div className="hidden sm:block h-px flex-1 mx-4 bg-muted" />
-            </div>
-
-            {photographers.length > 0 ? (
-              <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6">
-                {photographers.map((pg: any) => (
-                  <PhotographerCard key={pg.id} pg={pg} />
-                ))}
-              </div>
-            ) : (
-              <div className="flex flex-col items-center justify-center py-24 text-center gap-4 bg-card border border-dashed border-muted rounded-[24px]">
-                <div className="w-16 h-16 bg-card rounded-full border border-muted shadow-sm flex items-center justify-center">
-                  <Camera className="w-8 h-8 text-muted-foreground" />
-                </div>
-                <div className="flex flex-col gap-1 max-w-xs">
-                  <h3 className="font-medium text-lg">Tidak ada hasil</h3>
-                  <p className="text-sm text-muted-foreground">
-                    Maaf, tidak ada fotografer yang sesuai dengan kriteria filter Anda saat ini. Coba ubah filter atau reset.
-                  </p>
-                </div>
-              </div>
-            )}
-
-            {/* Pagination Placeholder (Simple) */}
-            {meta.totalPages > 1 && (
-              <div className="flex justify-center mt-4">
-                <p className="text-xs text-muted-foreground">Fitur paginasi lengkap segera hadir di development berikutnya.</p>
-              </div>
-            )}
-          </main>
+          <PhotographerList initialPhotographers={photographers} initialMeta={meta} />
         </div>
       </div>
     </div>

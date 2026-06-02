@@ -34,6 +34,7 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Skeleton } from "@/components/ui/skeleton"
 import { DashboardSkeleton } from "./dashboard-skeleton"
+import { WithdrawalDialog } from "./withdrawal-dialog"
 
 // 4. Types
 import { OrderWithPackage, OrderDetail, PhotographerProfile, Review } from "@/types"
@@ -140,6 +141,46 @@ export function PhotographerDashboard({ clerkId }: { clerkId: string }) {
     },
   })
 
+  // 6. Fetch balance
+  const { data: balanceRes, isLoading: balanceLoading } = useQuery({
+    queryKey: ["photographer-balance", clerkId],
+    queryFn: async () => {
+      const res = await fetch("/api/photographers/me/balance")
+      if (!res.ok) throw new Error("Gagal mengambil data saldo")
+      return res.json() as Promise<{
+        success: boolean
+        data: {
+          totalRevenue: number
+          totalWithdrawn: number
+          pendingPayouts: number
+          availableBalance: number
+        }
+      }>
+    }
+  })
+
+  // 7. Fetch withdrawals
+  const { data: withdrawalsRes, isLoading: withdrawalsLoading } = useQuery({
+    queryKey: ["photographer-withdrawals", clerkId],
+    queryFn: async () => {
+      const res = await fetch("/api/photographers/me/withdrawals")
+      if (!res.ok) throw new Error("Gagal mengambil riwayat penarikan")
+      return res.json() as Promise<{
+        success: boolean
+        data: Array<{
+          id: string
+          jumlah: number
+          bankName: string
+          rekeningNumber: string
+          rekeningName: string
+          status: "pending" | "success" | "rejected"
+          rejectedReason: string | null
+          createdAt: string
+        }>
+      }>
+    }
+  })
+
   const queryClient = useQueryClient()
   const actionMutation = useMutation({
     mutationFn: async ({ path, method = "PATCH", body, invalidateKeys }: { path: string, method?: string, body?: Record<string, unknown>, invalidateKeys?: string[] }) => {
@@ -169,7 +210,7 @@ export function PhotographerDashboard({ clerkId }: { clerkId: string }) {
   })
 
   // Early return check (after all hooks are initialized unconditionally)
-  if (ordersLoading || profileLoading) return <DashboardSkeleton />
+  if (ordersLoading || profileLoading || balanceLoading || withdrawalsLoading) return <DashboardSkeleton />
 
   const ordersList = response?.data || []
   const pendingOrders = ordersList.filter(o => o.status === "pending")
@@ -184,7 +225,7 @@ export function PhotographerDashboard({ clerkId }: { clerkId: string }) {
   // Calculate real revenue from completed or paid orders
   const realRevenue = ordersList
     .filter(o => ["completed", "dp_paid", "ongoing", "delivered"].includes(o.status))
-    .reduce((sum, o) => sum + Number(o.package?.harga || 0), 0)
+    .reduce((sum, o) => sum + Number(o.payment?.jumlahFotografer || 0), 0)
   const displayRevenue = `Rp ${realRevenue.toLocaleString('id-ID')}`
 
   const reviewsList = reviewsRes?.data || []
@@ -264,11 +305,21 @@ export function PhotographerDashboard({ clerkId }: { clerkId: string }) {
           <div className="lg:col-span-8 space-y-8">
             {/* Stats Summary */}
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-              <div className="bg-card p-8 rounded-[32px] md:rounded-[40px] border border-border shadow-sm flex flex-col justify-between hover:shadow-md transition-all h-[180px] group">
-                <BanknoteIcon className="text-accent w-8 h-8 mb-4 group-hover:scale-110 transition-transform" />
+              <div className="bg-card p-8 rounded-[32px] md:rounded-[40px] border border-border shadow-sm flex flex-col justify-between hover:shadow-md transition-all h-[180px] group relative overflow-hidden">
+                <div className="flex justify-between items-start">
+                  <BanknoteIcon className="text-accent w-8 h-8 mb-4 group-hover:scale-110 transition-transform" />
+                  <WithdrawalDialog
+                    availableBalance={balanceRes?.data?.availableBalance ?? 0}
+                    balanceData={balanceRes?.data}
+                    withdrawals={withdrawalsRes?.data ?? []}
+                    clerkId={clerkId}
+                  />
+                </div>
                 <div>
-                  <p className="text-xs font-bold text-muted-foreground mb-1">Total Pendapatan</p>
-                  <h3 className="text-2xl font-bold text-foreground tracking-tight">{displayRevenue}</h3>
+                  <p className="text-xs font-bold text-muted-foreground mb-1">Saldo Tersedia</p>
+                  <h3 className="text-2xl font-bold text-foreground tracking-tight">
+                    Rp {(balanceRes?.data?.availableBalance ?? 0).toLocaleString("id-ID")}
+                  </h3>
                 </div>
               </div>
               <div className="bg-card p-8 rounded-[32px] md:rounded-[40px] border border-border shadow-sm flex flex-col justify-between hover:shadow-md transition-all h-[180px] group">

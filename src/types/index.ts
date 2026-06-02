@@ -18,6 +18,7 @@ import {
   reviews,
   disputes,
   messages,
+  withdrawals,
 } from "@/db/schema"
 
 // ---------------------------------------------------------------------------
@@ -86,8 +87,10 @@ export type OrderDetail = Order & {
   event?: Event | null
 }
 
-// ---------------------------------------------------------------------------
 // Support
 // ---------------------------------------------------------------------------
 export type Message = InferSelectModel<typeof messages>
 export type MessageInsert = InferInsertModel<typeof messages>
+
+export type Withdrawal = InferSelectModel<typeof withdrawals>
+export type WithdrawalInsert = InferInsertModel<typeof withdrawals>

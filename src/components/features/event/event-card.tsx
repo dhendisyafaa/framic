@@ -30,7 +30,7 @@ export function EventCard({ event, showRecruitmentInfo = false, isPhotographer =
   const slotsLeft = (event.kuotaPgPerEvent || 0) - (event.slotTerisi || 0)
 
   return (
-    <Card className="overflow-hidden group hover:shadow-xl transition-all duration-300 border-border/50 flex flex-col h-full bg-card text-foreground">
+    <Card className="overflow-hidden group hover:shadow-xl hover:border-primary/30 transition-all duration-300 border-border/50 flex flex-col h-full bg-card text-foreground">
       <CardHeader className="p-0 aspect-video relative overflow-hidden bg-muted">
         {event.coverImageUrl ? (
           <img
@@ -62,7 +62,7 @@ export function EventCard({ event, showRecruitmentInfo = false, isPhotographer =
           </div>
         </div>
 
-        <div className="flex flex-col gap-2 border-y border-muted py-3">
+        <div className="flex flex-col gap-2 border-y border-border/60 py-3">
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
             <MapPin className="w-3.5 h-3.5 text-muted-foreground" />
             <span className="line-clamp-1">{event.lokasi || "Lokasi menyusul"}</span>
@@ -92,15 +92,14 @@ export function EventCard({ event, showRecruitmentInfo = false, isPhotographer =
       </CardContent>
 
       <CardFooter className="p-5 pt-0 mt-auto">
-        {showRecruitmentInfo && isPhotographer ? (
-          <RequestEventButton eventId={event.id} isPhotographer={isPhotographer} />
-        ) : (
-          <Link href={`/events/${event.id}`} className="w-full">
-            <Button variant="outline" className="w-full group-hover:bg-primary group-hover:text-primary-foreground transition-all cursor-pointer">
-              {showRecruitmentInfo ? "Gabung Event" : "Lihat Detail"}
-            </Button>
-          </Link>
-        )}
+        <Link href={`/events/${event.id}`} className="w-full">
+          <Button
+            variant="outline"
+            className="w-full transition-all duration-300 cursor-pointer font-bold group-hover:bg-primary group-hover:text-primary-foreground group-hover:border-primary dark:group-hover:bg-primary dark:group-hover:text-primary-foreground dark:group-hover:border-primary hover:!bg-primary/90 hover:!text-primary-foreground hover:!border-primary/90 dark:hover:!bg-primary/90 dark:hover:!text-primary-foreground dark:hover:!border-primary/90"
+          >
+            {showRecruitmentInfo ? "Gabung Event" : "Lihat Detail"}
+          </Button>
+        </Link>
       </CardFooter>
     </Card>
   )

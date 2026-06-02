@@ -13,12 +13,13 @@ import {
   payments,
   orders,
 } from "@/db/schema"
-import { getRolesFromMetadata, isPhotographer, isMitra } from "@/lib/clerk"
+import { getRolesFromMetadata, isPhotographer, isMitra, isAdmin } from "@/lib/clerk"
 
 import { CustomerDashboard } from "@/components/features/dashboard/customer-dashboard"
 import { PhotographerDashboard } from "@/components/features/dashboard/photographer-dashboard"
 import { MitraDashboard } from "@/components/features/dashboard/mitra-dashboard"
 import { SuspendedDashboard } from "@/components/features/dashboard/suspended-dashboard"
+import { AdminDashboard } from "@/components/features/dashboard/admin-dashboard"
 
 /**
  * Halaman Dashboard Utama.
@@ -49,7 +50,35 @@ export default async function DashboardPage() {
 
   // B. Tentukan Dashboard yang ditampilkan berdasarkan prioritas & status suspensi
 
-  // 1. Mitra (Hanya jika tidak disuspend)
+  // 1. Admin Dashboard (Highest Priority)
+  if (isAdmin(roles)) {
+    const [pgCountRes, mitraCountRes, revenueRes] = await Promise.all([
+      db.select({ count: sql<number>`cast(count(*) as int)` })
+        .from(photographerProfiles)
+        .where(eq(photographerProfiles.verificationStatus, "verified"))
+        .then(r => r[0]?.count || 0),
+      db.select({ count: sql<number>`cast(count(*) as int)` })
+        .from(mitraProfiles)
+        .where(eq(mitraProfiles.verificationStatus, "verified"))
+        .then(r => r[0]?.count || 0),
+      db.select({ sum: sql<number>`cast(sum(${orders.totalHarga}) as int)` })
+        .from(orders)
+        .where(inArray(orders.status, ["completed", "delivered", "confirmed"]))
+        .then(r => r[0]?.sum || 0)
+    ])
+
+    return (
+      <AdminDashboard
+        stats={{
+          totalPhotographers: pgCountRes,
+          totalMitras: mitraCountRes,
+          totalRevenue: revenueRes,
+        }}
+      />
+    )
+  }
+
+  // 2. Mitra (Hanya jika tidak disuspend)
   if (isMitra(roles) && !isMitraSuspended && mitra) {
     // Fetch stats secara paralel di server untuk meminimalkan load client-side
     const [fixedCountResult, perEventCountResult, earningsResult, topPerformersData] = await Promise.all([
@@ -112,20 +141,26 @@ export default async function DashboardPage() {
 
     // Fetch detail dari Clerk untuk top performers
     const performerClerkIds = topPerformersData.map(p => p.clerkId)
-    const clerk = await clerkClient()
-    const clerkUsers = performerClerkIds.length > 0
-      ? await clerk.users.getUserList({ userId: performerClerkIds })
-      : { data: [] }
+    let clerkUserMap: Record<string, { nama: string; avatarUrl: string }> = {}
 
-    const clerkUserMap = Object.fromEntries(
-      clerkUsers.data.map(u => [
-        u.id,
-        {
-          nama: `${u.firstName ?? ""} ${u.lastName ?? ""}`.trim() || "Fotografer",
-          avatarUrl: u.imageUrl,
-        }
-      ])
-    )
+    try {
+      const clerk = await clerkClient()
+      const clerkUsers = performerClerkIds.length > 0
+        ? await clerk.users.getUserList({ userId: performerClerkIds })
+        : { data: [] }
+
+      clerkUserMap = Object.fromEntries(
+        clerkUsers.data.map(u => [
+          u.id,
+          {
+            nama: `${u.firstName ?? ""} ${u.lastName ?? ""}`.trim() || "Fotografer",
+            avatarUrl: u.imageUrl,
+          }
+        ])
+      )
+    } catch (err) {
+      console.error("Failed to fetch top performers info from Clerk:", err)
+    }
 
     const topPerformers = topPerformersData.map(p => ({
       id: p.id,

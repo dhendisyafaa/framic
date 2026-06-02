@@ -37,6 +37,7 @@ import {
   ChevronDownIcon,
   InfoIcon,
   ChevronRightIcon,
+  TrashIcon,
 } from "lucide-react"
 import {
   Accordion,
@@ -75,6 +76,8 @@ export function MitraEventsClient({ mitraId }: EventsClientProps) {
   const queryClient = useQueryClient()
   const searchParams = useSearchParams()
   const [isDialogOpen, setIsDialogOpen] = useState(false)
+  const [activeTab, setActiveTab] = useState<"active" | "past">("active")
+  const [deleteEventId, setDeleteEventId] = useState<string | null>(null)
 
   useEffect(() => {
     if (searchParams.get("create") === "true") {
@@ -96,7 +99,23 @@ export function MitraEventsClient({ mitraId }: EventsClientProps) {
   })
 
   // -- Mutations --
-  // REMOVED: publishMutation as events are now auto-published
+  const deleteMutation = useMutation({
+    mutationFn: async (eventId: string) => {
+      const res = await fetch(`/api/events/${eventId}`, {
+        method: "DELETE",
+      })
+      const json = await res.json()
+      if (!res.ok || !json.success) throw new Error(json.error || "Gagal menghapus event")
+      return json
+    },
+    onSuccess: () => {
+      toast.success("Event berhasil dihapus!")
+      queryClient.invalidateQueries({ queryKey: ["mitra-events-list"] })
+    },
+    onError: (err: any) => {
+      toast.error(err.message)
+    }
+  })
 
   if (isLoading) {
     return (
@@ -113,6 +132,10 @@ export function MitraEventsClient({ mitraId }: EventsClientProps) {
   }
 
   const events = response?.data || []
+
+  const activeEvents = events.filter(e => new Date(e.tanggalSelesai) >= new Date())
+  const pastEvents = events.filter(e => new Date(e.tanggalSelesai) < new Date())
+  const filteredEvents = activeTab === "active" ? activeEvents : pastEvents
 
   return (
     <div className="container mx-auto p-4 md:p-8 max-w-5xl animate-in fade-in duration-700">
@@ -136,24 +159,53 @@ export function MitraEventsClient({ mitraId }: EventsClientProps) {
         </Button>
       </div>
 
+      {/* Tabs */}
+      <div className="flex gap-2 mb-6 border-b border-border pb-2">
+        <button
+          onClick={() => setActiveTab("active")}
+          className={`pb-2 px-4 text-sm font-bold border-b-2 transition-all cursor-pointer ${
+            activeTab === "active"
+              ? "border-accent text-accent font-black"
+              : "border-transparent text-muted-foreground hover:text-foreground font-medium"
+          }`}
+        >
+          Event Aktif ({activeEvents.length})
+        </button>
+        <button
+          onClick={() => setActiveTab("past")}
+          className={`pb-2 px-4 text-sm font-bold border-b-2 transition-all cursor-pointer ${
+            activeTab === "past"
+              ? "border-accent text-accent font-black"
+              : "border-transparent text-muted-foreground hover:text-foreground font-medium"
+          }`}
+        >
+          Riwayat Event ({pastEvents.length})
+        </button>
+      </div>
+
       <div className="space-y-4">
-        {events.length === 0 ? (
+        {filteredEvents.length === 0 ? (
           <div className="bg-muted/10 border-2 border-dashed border-border rounded-3xl p-16 text-center">
             <TentIcon className="w-12 h-12 text-muted-foreground/30 mx-auto mb-4" />
             <h3 className="text-xl font-black text-foreground mb-2">Belum Ada Event</h3>
             <p className="text-muted-foreground font-medium max-w-sm mx-auto mb-6">
-              Mulai buat event pertama Anda untuk menugaskan tim fotografer atau mencari talenta baru.
+              {activeTab === "active"
+                ? "Mulai buat event pertama Anda untuk menugaskan tim fotografer atau mencari talenta baru."
+                : "Tidak ada riwayat event yang sudah selesai."}
             </p>
-            <Button onClick={() => setIsDialogOpen(true)} className="rounded-full font-bold px-8 cursor-pointer bg-accent text-white hover:bg-accent/90">
-              Buat Event Sekarang
-            </Button>
+            {activeTab === "active" && (
+              <Button onClick={() => setIsDialogOpen(true)} className="rounded-full font-bold px-8 cursor-pointer bg-accent text-white hover:bg-accent/90">
+                Buat Event Sekarang
+              </Button>
+            )}
           </div>
         ) : (
-          events.map((event) => {
+          filteredEvents.map((event) => {
             const totalKuota = event.kuotaPgTetap + event.kuotaPgPerEvent
+            const isPast = new Date(event.tanggalSelesai) < new Date()
 
             return (
-              <Card key={event.id} className="border-border bg-card shadow-md shadow-black/5 rounded-3xl overflow-hidden hover:shadow-lg transition-all group">
+              <Card key={event.id} className={`border-border bg-card shadow-md shadow-black/5 rounded-3xl overflow-hidden hover:shadow-lg transition-all group ${isPast ? 'opacity-80' : ''}`}>
                 <CardContent className="p-0 sm:flex items-stretch">
                   <div className="sm:w-48 h-48 sm:h-auto bg-muted relative shrink-0">
                     {event.coverImageUrl ? (
@@ -168,8 +220,8 @@ export function MitraEventsClient({ mitraId }: EventsClientProps) {
                         <TentIcon className="w-12 h-12" />
                       </div>
                     )}
-                    <Badge className="absolute top-4 left-4 border-2 font-black bg-emerald-500/10 text-emerald-500 border-emerald-500/20">
-                      PUBLISHED
+                    <Badge className={`absolute top-4 left-4 border-2 font-black ${isPast ? 'bg-slate-500/10 text-slate-500 border-slate-500/20' : 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20'}`}>
+                      {isPast ? 'EXPIRED' : 'ACTIVE'}
                     </Badge>
                   </div>
 
@@ -183,7 +235,14 @@ export function MitraEventsClient({ mitraId }: EventsClientProps) {
                       </div>
                     </div>
 
-                    <div className="mt-6 flex items-center justify-end gap-3 border-t border-border pt-5">
+                    <div className="mt-6 flex items-center justify-between border-t border-border pt-5">
+                      <Button
+                        variant="ghost"
+                        onClick={() => setDeleteEventId(event.id)}
+                        className="rounded-xl font-bold text-rose-500 hover:text-rose-600 hover:bg-rose-500/10 gap-2 cursor-pointer"
+                      >
+                        <TrashIcon className="w-4 h-4" /> Hapus
+                      </Button>
                       <Link href={`/dashboard/mitra/events/${event.id}`}>
                         <Button className="rounded-xl font-bold bg-primary hover:bg-primary/90 text-primary-foreground cursor-pointer">
                           Kelola <ChevronRightIcon className="w-4 h-4 ml-1" />
@@ -197,6 +256,40 @@ export function MitraEventsClient({ mitraId }: EventsClientProps) {
           })
         )}
       </div>
+
+      <Dialog open={!!deleteEventId} onOpenChange={(v) => { if (!v) setDeleteEventId(null) }}>
+        <DialogContent className="sm:max-w-md rounded-[2rem]">
+          <DialogHeader>
+            <DialogTitle className="text-xl font-black text-foreground">Hapus Event</DialogTitle>
+            <DialogDescription className="font-medium text-slate-500">
+              Apakah Anda yakin ingin menghapus event ini? Tindakan ini permanen dan tidak dapat dibatalkan.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="mt-4 gap-2">
+            <Button
+              variant="ghost"
+              onClick={() => setDeleteEventId(null)}
+              className="rounded-xl font-bold cursor-pointer"
+            >
+              Batal
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={() => {
+                if (deleteEventId) {
+                  deleteMutation.mutate(deleteEventId, {
+                    onSuccess: () => setDeleteEventId(null)
+                  })
+                }
+              }}
+              disabled={deleteMutation.isPending}
+              className="rounded-xl font-bold bg-rose-600 hover:bg-rose-700 text-white cursor-pointer"
+            >
+              {deleteMutation.isPending ? "Menghapus..." : "Hapus"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       <CreateEventDialog
         open={isDialogOpen}

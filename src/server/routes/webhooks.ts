@@ -7,6 +7,11 @@ import {
   parseExternalId
 } from "@/lib/xendit"
 import { captureError } from "@/lib/sentry"
+import {
+  sendDpPaidEmails,
+  sendPelunasanPaidEmails,
+  sendOrderCompletedEmails
+} from "@/lib/email-service"
 
 const webhooksRouter = new Hono()
 
@@ -93,6 +98,18 @@ webhooksRouter.post("/xendit", async (c) => {
           .where(eq(orders.id, orderId))
       }
     })
+
+    // Trigger email notifications after successful transaction
+    if (type === "dp") {
+      sendDpPaidEmails(orderId).catch((err) =>
+        console.error("Failed to send DP paid email:", err)
+      )
+    } else {
+      // Settle
+      sendPelunasanPaidEmails(orderId)
+        .then(() => sendOrderCompletedEmails(orderId))
+        .catch((err) => console.error("Failed to send settle/complete emails:", err))
+    }
   } catch (err) {
     captureError(err, { context: "xendit-webhook", external_id })
     console.error(`[Xendit Webhook] Internal Error:`, err)

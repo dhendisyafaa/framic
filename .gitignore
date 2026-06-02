@@ -46,3 +46,7 @@ docs
 
 #ai
 skills-lock.json
+
+# Playwright
+playwright-report/
+test-results/

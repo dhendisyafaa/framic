@@ -27,8 +27,21 @@ export const mitraRouter = new Hono()
 // GET /api/mitra
 // List semua mitra yang sudah verified (Public)
 // ---------------------------------------------------------------------------
-mitraRouter.get("/", async (c) => {
+const listMitraSchema = z.object({
+  page: z.coerce.number().min(1).optional().default(1),
+  limit: z.coerce.number().min(1).max(50).optional().default(12),
+})
+
+mitraRouter.get("/", zValidator("query", listMitraSchema), async (c) => {
   try {
+    const { page, limit } = c.req.valid("query")
+    const offset = (page - 1) * limit
+
+    const [{ count }] = await db
+      .select({ count: sql<number>`cast(count(${mitraProfiles.id}) as int)` })
+      .from(mitraProfiles)
+      .where(eq(mitraProfiles.verificationStatus, "verified"))
+
     const verifiedMitra = await db
       .select({
         id: mitraProfiles.id,
@@ -39,6 +52,8 @@ mitraRouter.get("/", async (c) => {
       })
       .from(mitraProfiles)
       .where(eq(mitraProfiles.verificationStatus, "verified"))
+      .limit(limit)
+      .offset(offset)
 
     // Get event count for each mitra
     const mitraIds = verifiedMitra.map((m) => m.id)
@@ -64,7 +79,16 @@ mitraRouter.get("/", async (c) => {
       totalEvent: eventCounts[m.id] || 0,
     }))
 
-    return c.json({ success: true, data })
+    return c.json({
+      success: true,
+      data,
+      meta: {
+        total: count,
+        page,
+        limit,
+        totalPages: Math.ceil(count / limit) || 1,
+      },
+    })
   } catch (err) {
     return c.json({ success: false, error: "Gagal mengambil daftar mitra" }, 500)
   }
