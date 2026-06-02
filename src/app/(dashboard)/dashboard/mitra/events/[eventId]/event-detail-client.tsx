@@ -301,7 +301,7 @@ function PgTetapTab({ event }: { event: EventDetail }) {
         <CardContent>
           <div className="space-y-3">
             {assignedList.length === 0 ? (
-              <div className="text-center py-6 text-muted-foreground/60 font-medium text-sm">Belum ada PG yang ditugaskan.</div>
+              <div className="text-center py-6 text-muted-foreground/60 font-medium text-sm">Belum ada fotografer yang ditugaskan.</div>
             ) : (
               assignedList.map(pg => (
                 <div key={pg.id} className="flex justify-between items-center bg-muted/30 p-3 rounded-2xl border border-border/50">
@@ -642,7 +642,7 @@ function PgPerEventTab({ event }: { event: EventDetail }) {
                     </div>
                   )}
 
-                   {pg.invitationStatus === "accepted" && (() => {
+                  {pg.invitationStatus === "accepted" && (() => {
                     const bothSigned = !!pg.photographerSignedAt && !!pg.mitraSignedAt;
                     const canCancel = pg.paymentStatusDp !== "paid" && (!pg.photographerSignedAt || !pg.mitraSignedAt);
 

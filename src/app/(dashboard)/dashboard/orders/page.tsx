@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import Link from "next/link"
-import { useQuery } from "@tanstack/react-query"
+import { useInfiniteQuery } from "@tanstack/react-query"
 import { OrderWithPackage } from "@/types"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -12,15 +12,13 @@ import {
   CalendarIcon,
   CameraIcon,
   ChevronRightIcon,
-  FilterIcon,
-  SearchIcon,
   ShoppingBagIcon,
-  ArrowLeftIcon,
 } from "lucide-react"
 import { format } from "date-fns"
 import { id as localeId } from "date-fns/locale"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { useIntersectionObserver } from "@/hooks/use-intersection-observer"
 
 /**
  * Halaman List order
@@ -29,17 +27,40 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 export default function OrdersPage() {
   const [activeTab, setActiveTab] = useState<string>("all")
 
-  const { data: response, isLoading, error } = useQuery({
+  const {
+    data: response,
+    isLoading,
+    error,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+  } = useInfiniteQuery({
     queryKey: ["orders-list", activeTab],
-    queryFn: async () => {
-      const url = activeTab === "all" ? "/api/orders" : `/api/orders?status=${activeTab}`
+    queryFn: async ({ pageParam = 1 }) => {
+      const baseUrl = activeTab === "all" ? "/api/orders" : `/api/orders?status=${activeTab}`
+      const separator = baseUrl.includes("?") ? "&" : "?"
+      const url = `${baseUrl}${separator}page=${pageParam}&limit=10`
       const res = await fetch(url)
       if (!res.ok) throw new Error("Gagal mengambil data order")
-      return res.json() as Promise<{ success: boolean; data: OrderWithPackage[] }>
+      return res.json() as Promise<{
+        success: boolean
+        data: OrderWithPackage[]
+        meta: { total: number; page: number; limit: number; totalPages: number }
+      }>
+    },
+    initialPageParam: 1,
+    getNextPageParam: (lastPage) => {
+      const { page, totalPages } = lastPage.meta
+      return page < totalPages ? page + 1 : undefined
     },
   })
 
-  const orders = response?.data || []
+  const orders = response?.pages.flatMap((page) => page.data) || []
+
+  const loadMoreRef = useIntersectionObserver({
+    callback: fetchNextPage,
+    enabled: !!hasNextPage && !isFetchingNextPage,
+  })
 
   return (
     <div className="container mx-auto p-4 md:p-8 animate-in fade-in slide-in-from-bottom-2 duration-500 text-foreground">
@@ -73,57 +94,76 @@ export default function OrdersPage() {
             Terjadi kesalahan: {(error as Error).message}
           </div>
         ) : orders.length > 0 ? (
-          orders.map((order) => (
-            <Link key={order.id} href={`/dashboard/orders/${order.id}`}>
-              <Card className="border-muted shadow-xs hover:shadow-xl hover:border-muted/80 hover:-translate-y-1 transition-all group overflow-hidden bg-card text-foreground">
-                <CardContent className="p-0">
-                  <div className="flex flex-col md:flex-row md:items-center justify-between p-5 gap-6">
-                    {/* Info Utama */}
-                    <div className="flex items-center gap-5">
-                      <div className="w-14 h-14 bg-muted rounded-2xl flex items-center justify-center text-muted-foreground group-hover:bg-accent/10 group-hover:text-accent transition-colors">
-                        <CameraIcon className="w-7 h-7" />
+          <>
+            {orders.map((order) => (
+              <Link key={order.id} href={`/dashboard/orders/${order.id}`}>
+                <Card className="border-muted shadow-xs hover:shadow-xl hover:border-muted/80 hover:-translate-y-1 transition-all group overflow-hidden bg-card text-foreground">
+                  <CardContent className="p-0">
+                    <div className="flex flex-col md:flex-row md:items-center justify-between p-5 gap-6">
+                      {/* Info Utama */}
+                      <div className="flex items-center gap-5">
+                        <div className="w-14 h-14 bg-muted rounded-2xl flex items-center justify-center text-muted-foreground group-hover:bg-accent/10 group-hover:text-accent transition-colors">
+                          <CameraIcon className="w-7 h-7" />
+                        </div>
+                        <div>
+                          <div className="flex items-center gap-2 mb-1">
+                            <h3 className="font-black text-foreground leading-none">
+                              {order.orderType === "event" 
+                                ? `Sesi Event: ${order.event?.namaEvent || "Mitra"}` 
+                                : "Sesi Privat"}
+                            </h3>
+                            <Badge variant="outline" className="text-[10px] font-black uppercase tracking-widest px-1.5 border-muted text-muted-foreground">
+                              #{order.id.slice(0, 8)}
+                            </Badge>
+                          </div>
+                          <div className="flex items-center gap-3 text-sm text-muted-foreground font-medium whitespace-nowrap">
+                            <span className="flex items-center gap-1">
+                              <CalendarIcon className="w-3.5 h-3.5" />
+                              {format(new Date(order.tanggalPotret), "d MMM yyyy", { locale: localeId })}
+                            </span>
+                            <span className="w-1 h-1 bg-muted rounded-full" />
+                            <span className="font-bold text-accent">Rp {order.totalHarga.toLocaleString("id-ID")}</span>
+                          </div>
+                        </div>
                       </div>
-                      <div>
-                        <div className="flex items-center gap-2 mb-1">
-                          <h3 className="font-black text-foreground leading-none">
-                            {order.orderType === "event" 
-                              ? `Sesi Event: ${order.event?.namaEvent || "Mitra"}` 
-                              : "Sesi Privat"}
-                          </h3>
-                          <Badge variant="outline" className="text-[10px] font-black uppercase tracking-widest px-1.5 border-muted text-muted-foreground">
-                            #{order.id.slice(0, 8)}
+
+                      {/* Progress & Actions */}
+                      <div className="flex items-center justify-between md:justify-end gap-6 border-t border-muted md:border-0 pt-4 md:pt-0">
+                        <div className="text-left md:text-right">
+                          <div className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em] mb-1.5 flex items-center gap-1 md:justify-end">
+                            Status
+                          </div>
+                          <Badge variant="outline" className={`rounded-full px-5 border-2 font-black tracking-tighter shadow-sm ${getStatusStyles(order.status)}`}>
+                            {order.status.toUpperCase()}
                           </Badge>
                         </div>
-                        <div className="flex items-center gap-3 text-sm text-muted-foreground font-medium whitespace-nowrap">
-                          <span className="flex items-center gap-1">
-                            <CalendarIcon className="w-3.5 h-3.5" />
-                            {format(new Date(order.tanggalPotret), "d MMM yyyy", { locale: localeId })}
-                          </span>
-                          <span className="w-1 h-1 bg-muted rounded-full" />
-                          <span className="font-bold text-accent">Rp {order.totalHarga.toLocaleString("id-ID")}</span>
+                        <div className="w-10 h-10 rounded-full border border-muted bg-muted/20 flex items-center justify-center group-hover:bg-accent group-hover:text-white transition-all shadow-sm">
+                          <ChevronRightIcon className="w-5 h-5" />
                         </div>
                       </div>
                     </div>
+                  </CardContent>
+                </Card>
+              </Link>
+            ))}
 
-                    {/* Progress & Actions */}
-                    <div className="flex items-center justify-between md:justify-end gap-6 border-t border-muted md:border-0 pt-4 md:pt-0">
-                      <div className="text-left md:text-right">
-                        <div className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em] mb-1.5 flex items-center gap-1 md:justify-end">
-                          Status
-                        </div>
-                        <Badge variant="outline" className={`rounded-full px-5 border-2 font-black tracking-tighter shadow-sm ${getStatusStyles(order.status)}`}>
-                          {order.status.toUpperCase()}
-                        </Badge>
-                      </div>
-                      <div className="w-10 h-10 rounded-full border border-muted bg-muted/20 flex items-center justify-center group-hover:bg-accent group-hover:text-white transition-all shadow-sm">
-                        <ChevronRightIcon className="w-5 h-5" />
-                      </div>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </Link>
-          ))
+            {/* Infinite Scroll Trigger */}
+            {hasNextPage && (
+              <div ref={loadMoreRef} className="flex justify-center py-6">
+                {isFetchingNextPage ? (
+                  <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-accent" />
+                ) : (
+                  <p className="text-xs text-muted-foreground font-medium">Scroll down to load more...</p>
+                )}
+              </div>
+            )}
+
+            {!hasNextPage && (
+              <div className="text-center py-8 text-xs text-muted-foreground font-semibold">
+                Semua order telah ditampilkan.
+              </div>
+            )}
+          </>
         ) : (
           <div className="text-center py-24 bg-muted/5 rounded-3xl border-2 border-dashed border-muted">
             <ShoppingBagIcon className="w-12 h-12 text-muted-foreground/30 mx-auto mb-4" />

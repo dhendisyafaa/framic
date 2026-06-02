@@ -1,10 +1,11 @@
 export const dynamic = "force-dynamic"
 
-import { CalendarView } from "@/components/features/calendar/calendar-view"
 import { Card, CardContent } from "@/components/ui/card"
 import { Star, MapPin, Camera, CheckCircle, ShieldCheck, Instagram, Globe, Clock, Users } from "lucide-react"
 import { PortfolioGallery } from "@/components/features/portfolio/portfolio-gallery"
 import { BookingButton } from "@/components/features/booking/booking-button"
+import { PhotographerReviews } from "@/components/features/review/photographer-reviews"
+import { LazyCalendarView } from "@/components/features/calendar/lazy-calendar-view"
 import Link from "next/link"
 import { notFound } from "next/navigation"
 import { cn } from "@/lib/utils"
@@ -254,7 +255,7 @@ export default async function PhotographerDetailPage({
             <div className="flex flex-col gap-6 h-full">
               <h2 className="text-2xl font-bold tracking-tight text-foreground">Cek Jadwal</h2>
               <div className="bg-card rounded-[2rem] border border-border/50 shadow-sm p-2">
-                <CalendarView photographerId={pg.id} />
+                <LazyCalendarView photographerId={pg.id} />
               </div>
             </div>
           </div>
@@ -265,50 +266,14 @@ export default async function PhotographerDetailPage({
           </div>
 
           {/* Reviews Section */}
-          <div className="flex flex-col gap-6 mt-6">
-            <h2 className="text-2xl font-bold tracking-tight text-foreground">Apa Kata Kustomer ({pg.ratingCount})</h2>
-            <div className="flex flex-col gap-6">
-              {reviews.length > 0 ? (
-                reviews.map((rev: any, i: number) => (
-                  <div key={i} className="flex flex-col gap-3 pb-6 border-b border-muted last:border-0">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center text-muted-foreground font-black text-sm uppercase tracking-widest overflow-hidden">
-                          {rev.customerAvatarUrl ? (
-                            <img src={rev.customerAvatarUrl} alt={rev.customerName} className="w-full h-full object-cover" />
-                          ) : (
-                            (rev.customerName || "C").slice(0, 1)
-                          )}
-                        </div>
-                        <div className="flex flex-col">
-                          <span className="font-bold text-sm text-foreground">
-                            {(() => {
-                              const name = rev.customerName || "Customer"
-                              if (name.length <= 2) return name + "*"
-                              return name.slice(0, 2) + "****" + name.slice(-1)
-                            })()}
-                          </span>
-                          <div className="flex items-center gap-1">
-                            {Array.from({ length: 5 }).map((_, j) => (
-                              <Star key={j} className={cn("w-3 h-3", j < rev.rating ? "fill-accent text-accent" : "text-muted")} />
-                            ))}
-                          </div>
-                        </div>
-                      </div>
-                      <span className="text-xs text-muted-foreground">
-                        {new Date(rev.createdAt).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })}
-                      </span>
-                    </div>
-                    <p className="text-muted-foreground text-sm">"{rev.komentar || "Tidak ada komentar."}"</p>
-                  </div>
-                ))
-              ) : (
-                <div className="py-12 bg-muted/10 rounded-2xl border border-muted flex items-center justify-center text-muted-foreground text-sm text-center">
-                  Belum ada ulasan untuk fotografer ini.
-                </div>
-              )}
-            </div>
-          </div>
+          <PhotographerReviews
+            photographerId={pg.id}
+            initialReviews={reviews.map(r => ({
+              ...r,
+              createdAt: r.createdAt.toISOString()
+            }))}
+            initialCount={pg.ratingCount}
+          />
         </div>
       </div>
     </div>

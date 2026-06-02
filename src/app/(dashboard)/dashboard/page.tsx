@@ -141,20 +141,26 @@ export default async function DashboardPage() {
 
     // Fetch detail dari Clerk untuk top performers
     const performerClerkIds = topPerformersData.map(p => p.clerkId)
-    const clerk = await clerkClient()
-    const clerkUsers = performerClerkIds.length > 0
-      ? await clerk.users.getUserList({ userId: performerClerkIds })
-      : { data: [] }
+    let clerkUserMap: Record<string, { nama: string; avatarUrl: string }> = {}
 
-    const clerkUserMap = Object.fromEntries(
-      clerkUsers.data.map(u => [
-        u.id,
-        {
-          nama: `${u.firstName ?? ""} ${u.lastName ?? ""}`.trim() || "Fotografer",
-          avatarUrl: u.imageUrl,
-        }
-      ])
-    )
+    try {
+      const clerk = await clerkClient()
+      const clerkUsers = performerClerkIds.length > 0
+        ? await clerk.users.getUserList({ userId: performerClerkIds })
+        : { data: [] }
+
+      clerkUserMap = Object.fromEntries(
+        clerkUsers.data.map(u => [
+          u.id,
+          {
+            nama: `${u.firstName ?? ""} ${u.lastName ?? ""}`.trim() || "Fotografer",
+            avatarUrl: u.imageUrl,
+          }
+        ])
+      )
+    } catch (err) {
+      console.error("Failed to fetch top performers info from Clerk:", err)
+    }
 
     const topPerformers = topPerformersData.map(p => ({
       id: p.id,

@@ -1,10 +1,11 @@
-import { EventCard } from "@/components/features/event/event-card"
+import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { Calendar, Search, SlidersHorizontal, Users } from "lucide-react"
+import { Calendar, Users } from "lucide-react"
 import Link from "next/link"
 import { db } from "@/db"
 import { events, eventPhotographers } from "@/db/schema"
-import { and, eq, sql, gte, desc } from "drizzle-orm"
+import { and, eq, sql, gte, desc, inArray } from "drizzle-orm"
+import { EventList } from "@/components/features/event/event-list"
 
 async function getEvents(openOnly: boolean) {
   const now = new Date()
@@ -19,12 +20,18 @@ async function getEvents(openOnly: boolean) {
     conditions.push(gte(events.deadlineRequest, now))
   }
 
+  // Count total items
+  const [{ count }] = await db
+    .select({ count: sql<number>`cast(count(${events.id}) as int)` })
+    .from(events)
+    .where(and(...conditions))
+
   const query = db
     .select()
     .from(events)
     .where(and(...conditions))
     .orderBy(desc(events.tanggalMulai))
-    .limit(20)
+    .limit(12)
 
   const eventList = await query
 
@@ -52,13 +59,19 @@ async function getEvents(openOnly: boolean) {
     })
   }
 
-  return eventList.map(e => ({
-    ...e,
-    slotTerisi: pgCounts[e.id] || 0
-  }))
+  return {
+    data: eventList.map(e => ({
+      ...e,
+      slotTerisi: pgCounts[e.id] || 0
+    })),
+    meta: {
+      total: count,
+      page: 1,
+      limit: 12,
+      totalPages: Math.ceil(count / 12) || 1,
+    }
+  }
 }
-
-import { inArray } from "drizzle-orm"
 
 export default async function EventsPage({
   searchParams,
@@ -67,7 +80,7 @@ export default async function EventsPage({
 }) {
   const { openOnly } = await searchParams
   const isOpenOnly = openOnly === "true"
-  const eventsData = await getEvents(isOpenOnly)
+  const { data: eventsData, meta } = await getEvents(isOpenOnly)
 
   return (
     <div className="container mx-auto px-4 md:px-8 py-12 md:py-20 flex flex-col gap-12">
@@ -109,36 +122,7 @@ export default async function EventsPage({
       </div>
 
       {/* Grid Events */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
-        {eventsData.length > 0 ? (
-          eventsData.map((ev: any) => (
-            <EventCard
-              key={ev.id}
-              event={ev}
-              showRecruitmentInfo={ev.isOpenRecruitment}
-            />
-          ))
-        ) : (
-          <div className="col-span-full py-32 flex flex-col items-center justify-center gap-6 bg-muted/10 border-2 border-dashed border-muted rounded-[3rem]">
-            <div className="w-20 h-20 bg-card rounded-3xl flex items-center justify-center shadow-sm">
-              <Calendar className="w-10 h-10 text-muted-foreground/30" />
-            </div>
-            <div className="text-center">
-              <p className="text-foreground font-black text-xl mb-1">Event Tidak Ditemukan</p>
-              <p className="text-muted-foreground font-medium">Coba ganti filter atau jelajahi mitra kami.</p>
-            </div>
-            {isOpenOnly && (
-              <Link href="/events">
-                <Button variant="link" className="text-accent hover:text-accent/90 font-black">
-                  Lihat Semua Event
-                </Button>
-              </Link>
-            )}
-          </div>
-        )}
-      </div>
+      <EventList initialEvents={eventsData} initialMeta={meta} />
     </div>
   )
 }
-
-import { Badge } from "@/components/ui/badge"

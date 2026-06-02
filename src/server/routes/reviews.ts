@@ -4,6 +4,7 @@ import { z } from "zod"
 import { db } from "@/db"
 import { reviews } from "@/db/schema"
 import { desc, eq, sql } from "drizzle-orm"
+import { clerkClient } from "@clerk/nextjs/server"
 
 import { requireAuth } from "@/server/middleware/auth"
 
@@ -38,9 +39,34 @@ reviewsRouter.get(
       .limit(limit)
       .offset(offset)
 
+    // Batch fetch customer details from Clerk
+    const clerkIds = rows.map((r) => r.customerClerkId)
+    const clerkUsersMap: Record<string, { customerName: string; customerAvatarUrl: string }> = {}
+
+    if (clerkIds.length > 0) {
+      try {
+        const clerk = await clerkClient()
+        const userList = await clerk.users.getUserList({ userId: clerkIds })
+        userList.data.forEach((u) => {
+          clerkUsersMap[u.id] = {
+            customerName: `${u.firstName || ""} ${u.lastName || ""}`.trim() || "Customer",
+            customerAvatarUrl: u.imageUrl,
+          }
+        })
+      } catch (err) {
+        console.error("Failed to fetch customer info from Clerk:", err)
+      }
+    }
+
+    const data = rows.map((r) => ({
+      ...r,
+      customerName: clerkUsersMap[r.customerClerkId]?.customerName || "Customer",
+      customerAvatarUrl: clerkUsersMap[r.customerClerkId]?.customerAvatarUrl || "",
+    }))
+
     return c.json({
       success: true,
-      data: rows,
+      data,
       meta: {
         total: count,
         page,

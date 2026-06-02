@@ -1,7 +1,7 @@
 import { Hono } from "hono"
 import { z } from "zod"
 import { zValidator } from "@hono/zod-validator"
-import { and, eq, desc, or, ne } from "drizzle-orm"
+import { and, eq, desc, or, ne, sql } from "drizzle-orm"
 import { db } from "@/db"
 import {
   orders,
@@ -312,7 +312,25 @@ ordersRouter.get("/", async (c) => {
     }
   })
 
-  return c.json({ success: true, data: result })
+  // Get total count for pagination metadata
+  const [countResult] = await db
+    .select({ count: sql<number>`cast(count(*) as int)` })
+    .from(orders)
+    .where(and(...conditions))
+
+  const total = countResult?.count ?? 0
+  const totalPages = Math.ceil(total / limit)
+
+  return c.json({
+    success: true,
+    data: result,
+    meta: {
+      total,
+      page,
+      limit,
+      totalPages
+    }
+  })
 })
 
 /**
