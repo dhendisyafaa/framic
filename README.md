@@ -1,5 +1,7 @@
 # Framic
 
+<img width="1366" height="720" alt="image" src="https://github.com/user-attachments/assets/7b3d3967-4ef8-40fc-aa67-29c52711ba51" />
+
 > **Book the moment, own the memory.**
 
 Framic adalah platform marketplace dan manajemen _booking_ jasa fotografer profesional terkurasi. Kami hadir untuk mempertemukan **Kustomer** yang membutuhkan jasa dokumentasi premium dengan **Fotografer Independen** berkualitas, serta **Mitra Studio** untuk penanganan acara berskala besar.
