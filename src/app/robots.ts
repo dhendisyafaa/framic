@@ -1,5 +1,9 @@
 import type { MetadataRoute } from 'next'
 
+const baseUrl = (
+  process.env.NEXT_PUBLIC_APP_URL ?? 'https://www.framic.my.id'
+).replace(/\/$/, '')
+
 export default function robots(): MetadataRoute.Robots {
   return {
     rules: {
@@ -7,6 +11,6 @@ export default function robots(): MetadataRoute.Robots {
       allow: '/',
       disallow: ['/dashboard/', '/onboarding/', '/pending/', '/api/'],
     },
-    sitemap: 'https://www.framic.my.id/sitemap.xml',
+    sitemap: `${baseUrl}/sitemap.xml`,
   }
 }
