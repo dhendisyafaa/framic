@@ -26,8 +26,8 @@ const nextConfig: NextConfig = {
 };
 
 export default withSentryConfig(nextConfig, {
-  org: "framic",
-  project: "framic-web",
+  org: "dhendisyafaa-organization",
+  project: "framic",
   silent: !process.env.CI,
   widenClientFileUpload: true,
   tunnelRoute: "/monitoring",
